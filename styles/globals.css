@@ -3,6 +3,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body { @apply bg-bg-main text-white font-inter; }
+body { @apply bg-bg-main text-white; }
 
 .card { @apply bg-card; }
