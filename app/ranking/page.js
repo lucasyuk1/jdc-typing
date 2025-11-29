@@ -1,27 +1,81 @@
-
 "use client";
+
 import { useEffect, useState } from "react";
 
 export default function RankingPage() {
-  const [rows, setRows] = useState([]);
+  const [user, setUser] = useState(null);
+  const [mode, setMode] = useState("geral");
+  const [ranking, setRanking] = useState([]);
 
-  useEffect(()=> {
-    async function load() {
-      const res = await fetch('/api/ranking');
-      const data = await res.json();
-      setRows(data || []);
-    }
-    load();
+  useEffect(() => {
+    const u = localStorage.getItem("jdc-user");
+    if (!u) return (window.location.href = "/auth");
+    setUser(JSON.parse(u));
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    loadRanking();
+  }, [mode, user]);
+
+  async function loadRanking() {
+    const res = await fetch("/api/results/ranking", {
+      method: "POST",
+      body: JSON.stringify({
+        mode,
+        username: user.username,
+        turma: user.turma,
+      }),
+    });
+
+    const json = await res.json();
+    if (json.success) {
+      setRanking(json.data);
+    }
+  }
+
+  if (!user) return <p>Carregando...</p>;
+
   return (
-    <div>
-      <h2>Ranking Geral</h2>
-      <table style={{width:'100%', marginTop:8}}>
-        <thead><tr><th>Aluno</th><th>Turma</th><th>WPM</th><th>Data</th></tr></thead>
+    <div style={{ padding: 40 }}>
+      <h1>Ranking</h1>
+
+      <div style={{ marginBottom: 20 }}>
+        <button onClick={() => setMode("geral")}>
+          Geral
+        </button>
+        <button onClick={() => setMode("turma")}>
+          Sua Turma ({user.turma})
+        </button>
+        <button onClick={() => setMode("pessoal")}>
+          Seus Resultados
+        </button>
+      </div>
+
+      <table border="1" cellPadding="8">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Usuário</th>
+            <th>Turma</th>
+            <th>WPM</th>
+            <th>Accuracy</th>
+            <th>Tempo (s)</th>
+            <th>Data</th>
+          </tr>
+        </thead>
+
         <tbody>
-          {rows.map(r => (
-            <tr key={r.id}><td>{r.username || r.name}</td><td>{r.turma}</td><td>{r.wpm}</td><td>{new Date(r.created_at).toLocaleString()}</td></tr>
+          {ranking.map((r, i) => (
+            <tr key={r.id}>
+              <td>{i + 1}</td>
+              <td>{r.username}</td>
+              <td>{r.turma}</td>
+              <td>{r.wpm}</td>
+              <td>{r.accuracy ?? "-"}</td>
+              <td>{r.tempo_segundos ?? 180}</td>
+              <td>{new Date(r.created_at).toLocaleString("pt-BR")}</td>
+            </tr>
           ))}
         </tbody>
       </table>
