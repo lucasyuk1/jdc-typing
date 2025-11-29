@@ -1,16 +1,33 @@
-
 import { supabase } from "@/lib/supabase";
 import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const { username, email, idade, turma, password } = body;
-    const hash = bcrypt.hashSync(password, 10);
-    const { error } = await supabase.from('users').insert({ username, email, idade: Number(idade), turma, password_hash: hash });
-    if (error) return new Response(JSON.stringify({ success:false, error: error.message }), { status:400 });
-    return new Response(JSON.stringify({ success:true }), { status:200 });
+    const { username, email, idade, turma, password } = await req.json();
+
+    if (!username || !email || !password)
+      return new Response(JSON.stringify({ success: false, error: "Campos obrigatórios faltando" }), { status: 400 });
+
+    // Hash da senha
+    const password_hash = bcrypt.hashSync(password, 10);
+
+    // Insere no Supabase
+    const { error } = await supabase
+      .from("users")
+      .insert({
+        username,
+        email,
+        idade: Number(idade),
+        turma,
+        password_hash,
+      });
+
+    if (error)
+      return new Response(JSON.stringify({ success: false, error: error.message }), { status: 400 });
+
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
+
   } catch (err) {
-    return new Response(JSON.stringify({ success:false, error: String(err) }), { status:500 });
+    return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500 });
   }
 }
