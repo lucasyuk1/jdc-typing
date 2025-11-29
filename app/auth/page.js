@@ -51,7 +51,7 @@ try {
   if (!data.success) return setMessage("❌ " + data.error);
 
   // Armazena usuário no localStorage
-  localStorage.setItem("jdc_user", JSON.stringify(data.user));
+  localStorage.setItem("user", JSON.stringify(data.user));
 
   // Redireciona para dashboard
   router.replace("/dashboard");
