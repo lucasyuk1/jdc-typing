@@ -86,6 +86,35 @@ export default function TestePage() {
   // palavra atual destacada
   const words = text.split(" ");
   const currentWordIndex = text.slice(0, pos).split(" ").length - 1;
+  
+  // salva no Supabase ao terminar
+  async function salvarResultado() {
+    try {
+      // recuperar usuario do localStorage (ou estado global)
+      const user = JSON.parse(localStorage.getItem("usuario_logado"));
+      if (!user) {
+        console.log("Nenhum usuário logado. Não salvando.");
+        return;
+      }
+  
+      await fetch("/api/result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuario_id: user.id,
+          username: user.username,
+          turma: user.turma,
+          wpm,
+          accuracy,
+          tempo_segundos: 180
+        })
+      });
+  
+      console.log("Resultado salvo com sucesso!");
+    } catch (err) {
+      console.error("Erro ao salvar resultado:", err);
+    }
+  }
 
   return (
     <div style={{ padding: 40, fontFamily: "sans-serif" }}>
