@@ -136,3 +136,56 @@ export default function TestePage() {
           padding: 20,
           border: "1px solid #999",
           minHeight: 260,
+          fontFamily: "monospace",
+          cursor: "text",
+          whiteSpace: "pre-wrap",
+          lineHeight: "1.6"
+        }}
+      >
+        {text.split("").map((ch, i) => {
+          let color = "#555";
+
+          if (states[i] === "correct") color = "green";
+          if (states[i] === "wrong") color = "red";
+
+          const isCursor = i === pos;
+
+          return (
+            <span
+              key={i}
+              style={{
+                background: isCursor ? "#ffeb3b" : "none",
+                borderBottom: isCursor ? "2px solid black" : "none",
+                animation: isCursor ? "blink 1s step-start 0s infinite" : "none",
+                color
+              }}
+            >
+              {ch}
+            </span>
+          );
+        })}
+      </div>
+
+      {/* input invisível */}
+      <input
+        ref={inputRef}
+        autoFocus
+        onKeyDown={handleKey}
+        style={{
+          opacity: 0,
+          position: "absolute",
+          pointerEvents: "none"
+        }}
+      />
+
+      {/* cursor animado */}
+      <style>
+        {`
+          @keyframes blink {
+            50% { border-color: transparent; }
+          }
+        `}
+      </style>
+    </div>
+  );
+}
