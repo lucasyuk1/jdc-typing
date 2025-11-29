@@ -41,7 +41,6 @@ if (!isValid)
 delete user.password_hash;
 
 return new Response(JSON.stringify({ success: true, user }), { status: 200 });
-```
 
 } catch (err) {
 return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500 });
