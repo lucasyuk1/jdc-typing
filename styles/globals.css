@@ -1,8 +1,8 @@
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-body { @apply bg-bg-main text-white; }
-
-.card { @apply bg-card; }
+/* minimal styles */
+.input { width:100%; padding:8px; margin:6px 0; border-radius:6px; border:1px solid #333; background:#0b1220; color:#fff; }
+button { background:#9747FF; color:#fff; padding:8px 12px; border-radius:6px; border:none; }
+body { background:#071025; color:#fff; font-family: Inter, system-ui, sans-serif; }
+a { color:#9ad7ff; margin-right:8px; }
+table { border-collapse: collapse; width:100%; }
+th, td { padding:8px; border-bottom:1px solid #1f2937; text-align:left; }
