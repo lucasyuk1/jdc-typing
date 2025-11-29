@@ -15,7 +15,7 @@ export default function LoginPage() {
     const data = await res.json();
     if (data.success) {
       // store minimal user info
-      localStorage.setItem('jdc_user', JSON.stringify({ id: data.user.id, username: data.user.username, is_admin: data.user.is_admin }));
+      localStorage.setItem('user', JSON.stringify({ id: data.user.id, username: data.user.username, is_admin: data.user.is_admin }));
       window.location.href = '/test';
     } else {
       alert('Erro: ' + (data.error || ''));
