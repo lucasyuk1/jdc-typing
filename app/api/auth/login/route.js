@@ -15,16 +15,16 @@ export async function POST(req) {
       .or(`username.eq.${username},email.eq.${username}`)
       .single();
 
-    if (error || !user)
+    if (error || !users)
       return new Response(JSON.stringify({ success: false, error: "Usuário não encontrado" }), { status: 404 });
 
     // Confere senha
-    const isValid = bcrypt.compareSync(password, user.password_hash);
+    const isValid = bcrypt.compareSync(password, users.password_hash);
     if (!isValid)
       return new Response(JSON.stringify({ success: false, error: "Senha incorreta" }), { status: 401 });
 
     // Remove info sensível
-    delete user.password_hash;
+    delete users.password_hash;
 
     return new Response(JSON.stringify({ success: true, user }), { status: 200 });
 
