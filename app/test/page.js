@@ -1,88 +1,93 @@
-
 "use client";
-import { useEffect, useRef, useState } from "react";
 
-const TEXTS = [
-  "A programação ensina lógica e persistência. Pratique todos os dias.",
-  "A digitação rápida ajuda na produtividade em sala de aula e nos estudos.",
-  "Escreva frases e trechos curtos para melhorar a velocidade e precisão."
-];
+import { useEffect, useState } from "react";
 
 export default function TestPage() {
+  const [user, setUser] = useState(null);
   const [text, setText] = useState("");
-  const [input, setInput] = useState("");
-  const [timeLeft, setTimeLeft] = useState(180);
-  const [running, setRunning] = useState(false);
-  const intervalRef = useRef(null);
-  const [result, setResult] = useState(null);
+  const [typed, setTyped] = useState("");
+  const [timeLeft, setTimeLeft] = useState(180); // 3 minutos
+  const [finished, setFinished] = useState(false);
 
-  useEffect(()=> {
-    setText(TEXTS[Math.floor(Math.random()*TEXTS.length)]);
+  useEffect(() => {
+    const u = localStorage.getItem("jdc-user");
+    if (!u) return (window.location.href = "/auth");
+    setUser(JSON.parse(u));
+
+    loadNewText();
   }, []);
 
-  useEffect(()=> {
-    if (running) {
-      intervalRef.current = setInterval(()=> {
-        setTimeLeft(t => {
-          if (t <= 1) {
-            clearInterval(intervalRef.current);
-            setRunning(false);
-            finish();
-            return 0;
-          }
-          return t-1;
-        });
-      }, 1000);
-    }
-    return ()=> clearInterval(intervalRef.current);
-  }, [running]);
-
-  function start() {
-    setRunning(true);
+  function loadNewText() {
+    const texts = [
+      "A computação é uma ferramenta essencial no mundo moderno...",
+      "Os alunos devem sempre praticar digitação para melhorar...",
+      "Aprender lógica e tecnologia abre portas para o futuro...",
+    ];
+    setText(texts[Math.floor(Math.random() * texts.length)]);
   }
 
-  function computeErrors(target, typed) {
-    let errs = 0;
-    const minl = Math.min(target.length, typed.length);
-    for (let i=0;i<minl;i++){
-      if (target[i] !== typed[i]) errs++;
-    }
-    errs += Math.abs(target.length - typed.length);
-    return errs;
+  useEffect(() => {
+    if (finished) return;
+
+    const i = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          finishTest();
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(i);
+  }, [finished]);
+
+  function finishTest() {
+    setFinished(true);
+
+    const words = typed.trim().split(/\s+/).length;
+    const wpm = Math.round(words / 3);
+
+    saveResult(wpm);
   }
 
-  async function finish() {
-    const wordsTyped = input.trim().split(/\s+/).filter(Boolean).length;
-    const minutes = 3;
-    const wpm = Math.round(wordsTyped / minutes);
-    const errors = computeErrors(text, input);
-    const accuracy = Math.max(0, Math.round((1 - (errors / Math.max(1, wordsTyped))) * 100));
-    const payload = { wpm, accuracy, errors, wordsTyped, tempo: 180 };
-    setResult(payload);
-
-    // save to backend
-    const user = JSON.parse(localStorage.getItem('jdc_user')||'null');
-    await fetch('/api/results', { method:'POST', body: JSON.stringify({ ...payload, user_id: user?.id || null })});
+  async function saveResult(wpm) {
+    await fetch("/api/results/save", {
+      method: "POST",
+      body: JSON.stringify({
+        wpm,
+        username: user.username,
+        turma: user.turma
+      }),
+    });
   }
+
+  if (!user) return <p>Carregando...</p>;
 
   return (
-    <div>
-      <h2>Teste (3 minutos)</h2>
-      <div style={{background:'#0f1724', padding:12, borderRadius:8}}>
-        <div style={{marginBottom:8}}>Tempo: {Math.floor(timeLeft/60).toString().padStart(2,'0')}:{(timeLeft%60).toString().padStart(2,'0')}</div>
-        <div style={{background:'#081026', padding:12, minHeight:120}}>{text}</div>
-        <textarea value={input} onChange={e=>setInput(e.target.value)} style={{width:'100%', marginTop:8, minHeight:120}} placeholder="Digite aqui..."></textarea>
-        <div style={{marginTop:8}}>
-          {!running ? <button onClick={start}>Iniciar</button> : <button disabled>Executando...</button>}
-        </div>
+    <div style={{ padding: 40 }}>
+      <h1>Teste de Digitação – 3 minutos</h1>
+
+      <p><b>Tempo restante:</b> {timeLeft}s</p>
+
+      <div style={{ marginTop: 20 }}>
+        <p style={{ background: "#eee", padding: 10 }}>{text}</p>
       </div>
 
-      {result && (
-        <div style={{marginTop:12, background:'#031226', padding:10}}>
-          <div>WPM: {result.wpm}</div>
-          <div>Accuracy: {result.accuracy}%</div>
-          <div>Erros: {result.errors}</div>
-        </div>
+      {!finished ? (
+        <>
+          <textarea
+            style={{ width: "100%", height: 150, marginTop: 10 }}
+            placeholder="Digite aqui..."
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+          />
+          <button onClick={loadNewText}>Gerar novo texto</button>
+        </>
+      ) : (
+        <p style={{ marginTop: 20, fontSize: 20, color: "green" }}>
+          Teste finalizado! Vá ao ranking para ver seu resultado.
+        </p>
       )}
     </div>
   );
