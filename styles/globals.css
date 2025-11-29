@@ -1,0 +1,8 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { @apply bg-bg-main text-white font-inter; }
+
+.card { @apply bg-card; }
