@@ -1,32 +1,31 @@
 "use client";
 
-export default function Dashboard() {
-  let user = null;
-  if (typeof window !== "undefined") {
-    user = JSON.parse(localStorage.getItem("jdc_user") || "null");
-  }
+import { useEffect, useState } from "react";
 
-  function logout() {
-    localStorage.removeItem("jdc_user");
-    document.cookie = "user_session=; Max-Age=0; path=/;";
-    window.location.href = "/auth";
-  }
+export default function DashboardPage() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const u = localStorage.getItem("jdc-user");
+    if (!u) {
+      window.location.href = "/auth";
+    } else {
+      setUser(JSON.parse(u));
+    }
+  }, []);
+
+  if (!user) return <p>Carregando...</p>;
 
   return (
-    <main style={{ padding: 40 }}>
-      <h1>Bem-vindo{user ? `, ${user.username}` : ""}</h1>
-      <p>Turma: {user?.turma || "-"}</p>
-      <p>Idade: {user?.idade || "-"}</p>
+    <div style={{ padding: 40 }}>
+      <h1>Olá, {user.username}!</h1>
+      <p>Turma: {user.turma}</p>
+      <p>Idade: {user.idade}</p>
 
-      <div style={{ marginTop: 20 }}>
-        <a href="/typing">Iniciar teste</a> {" | "} 
-        <a href="/ranking">Ranking</a> {" | "}
-        <a href="/admin">Admin</a>
-      </div>
-
-      <div style={{ marginTop: 20 }}>
-        <button onClick={logout}>Sair</button>
-      </div>
-    </main>
+      <nav style={{ marginTop: 20 }}>
+        <a href="/test">Fazer teste de digitação</a><br />
+        <a href="/ranking">Ver ranking</a>
+      </nav>
+    </div>
   );
 }
