@@ -1,24 +1,24 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const user = localStorage.getItem("jdc_user");
+    if (user) {
+      router.replace("/dashboard");
+    } else {
+      router.replace("/auth");
+    }
+  }, [router]);
+
   return (
-    <main style={{ padding: 40 }}>
+    <main style={{ padding: 40, textAlign: "center" }}>
       <h1>JDC Typing</h1>
       <p>Redirecionando...</p>
-      <script dangerouslySetInnerHTML={{
-        __html: `
-          (function(){
-            try {
-              const user = localStorage.getItem('jdc_user');
-              if (user) {
-                window.location.href = '/dashboard';
-              } else {
-                window.location.href = '/auth';
-              }
-            } catch(e) {
-              window.location.href = '/auth';
-            }
-          })();
-        `
-      }} />
     </main>
   );
 }
