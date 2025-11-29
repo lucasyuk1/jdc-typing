@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
-    const { username, email, idade, turma, password } = await req.json();
+    const { username,fullname, email, idade, turma, password } = await req.json();
 
     if (!username || !email || !password)
       return new Response(JSON.stringify({ success: false, error: "Campos obrigatórios faltando" }), { status: 400 });
@@ -16,6 +16,7 @@ export async function POST(req) {
       .from("users")
       .insert({
         username,
+        fullname,
         email,
         idade: Number(idade),
         turma,
