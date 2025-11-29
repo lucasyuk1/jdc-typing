@@ -9,7 +9,7 @@ export async function POST(req) {
       return new Response(JSON.stringify({ success: false, error: "Preencha todos os campos" }), { status: 400 });
 
     // Procura por username OU email
-    const { data: user, error } = await supabase
+    const { data: users, error } = await supabase
       .from("users")
       .select("*")
       .or(`username.eq.${username},email.eq.${username}`)
