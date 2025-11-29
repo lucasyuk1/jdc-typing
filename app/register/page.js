@@ -4,6 +4,7 @@ import { useState } from "react";
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
+  const [fullname, setFullname] = useState("");
   const [email, setEmail] = useState("");
   const [idade, setIdade] = useState("");
   const [turma, setTurma] = useState("");
@@ -13,7 +14,7 @@ export default function RegisterPage() {
     e.preventDefault();
     const res = await fetch('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ username, email, idade, turma, password })
+      body: JSON.stringify({ username, fullname, email, idade, turma, password })
     });
     const data = await res.json();
     if (data.success) {
@@ -28,6 +29,7 @@ export default function RegisterPage() {
     <form onSubmit={handleRegister} style={{maxWidth:420}}>
       <h2>Cadastrar</h2>
       <input placeholder='Usuário' onChange={e=>setUsername(e.target.value)} className="input" /><br/>
+      <input placeholder='Nome Completo' onChange={e=>setFullname(e.target.value)} className="input" /><br/>
       <input placeholder='Email' onChange={e=>setEmail(e.target.value)} className="input" /><br/>
       <input placeholder='Idade' onChange={e=>setIdade(e.target.value)} className="input" /><br/>
       <input placeholder='Turma' onChange={e=>setTurma(e.target.value)} className="input" /><br/>
