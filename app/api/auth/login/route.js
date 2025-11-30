@@ -39,6 +39,25 @@ if (!isValid)
 
 // Remove info sensível
 delete user.password_hash;
+// Confere senha
+const isValid = await bcrypt.compare(password, user.password_hash);
+if (!isValid)
+  return new Response(JSON.stringify({ success: false, error: "Senha incorreta" }), { status: 401 });
+
+// Remove info sensível
+delete user.password_hash;
+
+// Cria cookie (exemplo simples)
+const cookie = `user_session=${user.id}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=3600`;
+
+// Retorna resposta com cookie
+return new Response(JSON.stringify({ success: true, user }), {
+  status: 200,
+  headers: {
+    "Set-Cookie": cookie,
+    "Content-Type": "application/json"
+  }
+});
 
 return new Response(JSON.stringify({ success: true, user }), { status: 200 });
 
