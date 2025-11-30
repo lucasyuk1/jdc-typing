@@ -12,7 +12,6 @@ export async function POST(req) {
         tempo_segundos,
         created_at: 
     } = body;
-  }
 
     const { error } = await supabase
       .from("results")
