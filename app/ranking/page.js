@@ -47,7 +47,7 @@ data.forEach(r => {
   if (!grouped[r.usuario_id]) {
     grouped[r.usuario_id] = {
       usuario_id: r.usuario_id,
-      username: r.username,
+      fullname: r.fullname ?? r.username,
       turma: r.turma,
       totalWPM: r.wpm,
       totalAcc: r.accuracy ?? 0,
@@ -66,7 +66,7 @@ data.forEach(r => {
 
 const uniqueRanking = Object.values(grouped).map(u => ({
   usuario_id: u.usuario_id,
-  username: u.username,
+  fullname: u.fullname,
   turma: u.turma,
   wpm: Math.round(u.totalWPM / u.count),
   accuracy: Math.round(u.totalAcc / u.count),
@@ -88,16 +88,16 @@ return (
 <button onClick={() => window.location.href = "/dashboard"} style={backButtonStyle}>Voltar</button> </div> </div>
 
   <div style={{ marginBottom: 20 }}>
-    <button onClick={() => setMode("geral")} style={modeButtonStyle}>Geral</button>
-    <button onClick={() => setMode("turma")} style={modeButtonStyle}>Sua Turma ({user.turma})</button>
-    <button onClick={() => setMode("pessoal")} style={modeButtonStyle}>Seus Resultados</button>
+    <button onClick={() => setMode("geral")} style={{ ...modeButtonStyle, background: mode === "geral" ? "#357ABD" : "#4a90e2" }}>Geral</button>
+    <button onClick={() => setMode("turma")} style={{ ...modeButtonStyle, background: mode === "turma" ? "#357ABD" : "#4a90e2" }}>Sua Turma ({user.turma})</button>
+    <button onClick={() => setMode("pessoal")} style={{ ...modeButtonStyle, background: mode === "pessoal" ? "#357ABD" : "#4a90e2" }}>Seus Resultados</button>
   </div>
 
   <table style={{ width: "100%", borderCollapse: "collapse" }}>
     <thead>
       <tr style={{ background: "#1f2937", textAlign: "center" }}>
         <th style={thTdStyle}>#</th>
-        <th style={thTdStyle}>Usuário</th>
+        <th style={thTdStyle}>Nome</th>
         <th style={thTdStyle}>Turma</th>
         <th style={thTdStyle}>{mode === "pessoal" ? "WPM" : "WPM Médio"}</th>
         <th style={thTdStyle}>{mode === "pessoal" ? "Precisão" : "Precisão Média"}</th>
@@ -108,7 +108,7 @@ return (
       {ranking.map((r, i) => (
         <tr key={r.usuario_id} style={{ textAlign: "center", borderBottom: "1px solid #333" }}>
           <td style={thTdStyle}>{i + 1}</td>
-          <td style={thTdStyle}>{r.username}</td>
+          <td style={thTdStyle}>{r.fullname}</td>
           <td style={thTdStyle}>{r.turma}</td>
           <td style={thTdStyle}>{r.wpm}</td>
           <td style={thTdStyle}>{r.accuracy ?? "-"}</td>
@@ -123,5 +123,26 @@ return (
 }
 
 const thTdStyle = { padding: "10px", fontSize: 16, textAlign: "center" };
-const backButtonStyle = { marginLeft: 10, padding: "8px 15px", borderRadius: 8, border: "none", cursor: "pointer", background: "#4a90e2", color: "#fff", fontWeight: "bold" };
-const modeButtonStyle = { marginRight: 10, padding: "8px 15px", borderRadius: 8, border: "none", cursor: "pointer", background: "#4a90e2", color: "#fff", fontWeight: "bold" };
+const backButtonStyle = {
+marginLeft: 10,
+padding: "8px 15px",
+borderRadius: 8,
+border: "none",
+cursor: "pointer",
+background: "#4a90e2",
+color: "#fff",
+fontWeight: "bold",
+boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+transition: "all 0.3s",
+};
+const modeButtonStyle = {
+marginRight: 10,
+padding: "8px 15px",
+borderRadius: 8,
+border: "none",
+cursor: "pointer",
+color: "#fff",
+fontWeight: "bold",
+boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+transition: "all 0.3s",
+};
