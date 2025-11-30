@@ -77,7 +77,7 @@ if (!user) return <p>Carregando...</p>;
 return (
 <div style={{ padding: 40, fontFamily: "Arial, sans-serif", color: "#fff", minHeight: "100vh", background: "#0A0F1F" }}>
 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
-<h1 style={{ fontSize: 36 }}>Ranking</h1> <div> <Image src="/images/mascote.png" width={50} height={50} alt="Mascote" />
+<h1 style={{ fontSize: 36 }}>Ranking</h1> <div> <Image src="styles/images/mascote.png" width={50} height={50} alt="Mascote" />
 <button onClick={() => window.location.href = "/dashboard"} style={linkStyle}>Voltar</button> </div> </div>
 
   <div style={{ marginBottom: 20 }}>

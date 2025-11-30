@@ -115,7 +115,7 @@ return (
 <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
 <div style={{ width: 60, height: 60, background: "#111827", borderRadius: "12px" }}></div>
 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-<h1 style={{ fontSize: 36, marginBottom: 5 }}>Olá, {user.username}!</h1> <Image src="/images/mascote.png" width={50} height={50} alt="Mascote" /> </div>
+<h1 style={{ fontSize: 36, marginBottom: 5 }}>Olá, {user.username}!</h1> <Image src="styles/images/mascote.png" width={50} height={50} alt="Mascote" /> </div>
 <p style={{ color: "#ccc" }}>Turma: <b>{user.turma}</b> | Idade: <b>{user.idade}</b></p> </div> <nav> <a href="/test" style={linkStyle}>Fazer teste</a> <a href="/ranking" style={linkStyle}>Ranking</a>
 <button onClick={handleLogout} style={{ ...linkStyle, background: "transparent", border: "none", cursor: "pointer" }}>Sair</button> </nav> </div>
 
