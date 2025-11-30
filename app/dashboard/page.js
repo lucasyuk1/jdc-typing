@@ -122,16 +122,21 @@ export default function DashboardPage() {
 
   return (
     <div style={{ padding: 40, fontFamily: "Arial, sans-serif", color: "#fff", minHeight: "100vh", background: "#0A0F1F" }}>
-      {/* Header com foto de perfil */}
+      {/* Header com foto de perfil e mascote */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
           <div style={{ width: 60, height: 60, background: "#111827", borderRadius: "12px" }}>
-            {/* Aqui futuramente será a foto de perfil */}
+            {/* Futuro avatar */}
           </div>
-          <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <h1 style={{ fontSize: 36, marginBottom: 5 }}>Olá, {user.username}!</h1>
-            <p style={{ color: "#ccc" }}>Turma: <b>{user.turma}</b> | Idade: <b>{user.idade}</b></p>
+            <img
+              src="/styles/images/mascote.png"
+              alt="Mascote"
+              style={{ width: 50, height: 50 }}
+            />
           </div>
+          <p style={{ color: "#ccc" }}>Turma: <b>{user.turma}</b> | Idade: <b>{user.idade}</b></p>
         </div>
         <nav>
           <a href="/test" style={linkStyle}>Fazer teste</a>
@@ -139,8 +144,13 @@ export default function DashboardPage() {
         </nav>
       </div>
 
-      {/* Média de WPM */}
-      <div style={cardStyle}>
+      {/* Média de WPM com mascote animado */}
+      <div style={{ ...cardStyle, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+        <img
+          src="/styles/images/mascote.png"
+          alt="Mascote"
+          style={{ width: 100, height: 100, animation: "bounce 1.2s infinite" }}
+        />
         <h2 style={{ fontSize: 22, marginBottom: 5 }}>Sua média de WPM</h2>
         <p style={{ fontSize: 48, fontWeight: "bold", color: "#4a90e2", margin: 0, textAlign: "center" }}>
           {mediaWPM !== null ? mediaWPM : "—"}
@@ -178,6 +188,10 @@ export default function DashboardPage() {
           <canvas ref={accuracyChartRef} />
         </div>
       </div>
+
+      <style>{`
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+      `}</style>
     </div>
   );
 }
