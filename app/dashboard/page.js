@@ -147,18 +147,6 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Gráficos */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, marginTop: 40 }}>
-        <div style={cardStyle}>
-          <h3 style={graphTitleStyle}>Evolução do WPM</h3>
-          <canvas ref={wpmChartRef} />
-        </div>
-        <div style={cardStyle}>
-          <h3 style={graphTitleStyle}>Evolução da Acurácia (%)</h3>
-          <canvas ref={accuracyChartRef} />
-        </div>
-      </div>
-
       {/* Últimos resultados */}
       <div style={{ marginTop: 50 }}>
         <h2 style={{ fontSize: 26, marginBottom: 20 }}>Seus últimos resultados</h2>
@@ -177,6 +165,18 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Gráficos */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, marginTop: 40 }}>
+        <div style={cardStyle}>
+          <h3 style={graphTitleStyle}>Evolução do WPM</h3>
+          <canvas ref={wpmChartRef} />
+        </div>
+        <div style={cardStyle}>
+          <h3 style={graphTitleStyle}>Evolução da Precisão (%)</h3>
+          <canvas ref={accuracyChartRef} />
+        </div>
       </div>
     </div>
   );
