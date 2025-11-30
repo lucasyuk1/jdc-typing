@@ -26,12 +26,17 @@ export default function TestePage() {
 
   const [user, setUser] = useState(null);
 
-  // Carrega usuário logado e força rolagem ao topo
+  // Carrega usuário logado, força topo e foca cursor
   useEffect(() => {
-    window.scrollTo(0, 0); // garante que o topo seja exibido ao abrir
+    window.scrollTo(0, 0); // garante que a página abra no topo
     const u = localStorage.getItem("jdc-user");
     if (!u) return router.push("/auth");
     setUser(JSON.parse(u));
+
+    // Foca automaticamente o input após render
+    setTimeout(() => {
+      if (inputRef.current) inputRef.current.focus();
+    }, 100);
   }, [router]);
 
   useEffect(() => {
