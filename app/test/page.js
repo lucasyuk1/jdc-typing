@@ -20,7 +20,7 @@ loadInitialText();
 }, []);
 
 useEffect(() => {
-// faz o scroll do caractere atual para dentro do container
+// scroll suave do caractere atual para o centro do container
 if (charRefs.current[pos]) {
 charRefs.current[pos].scrollIntoView({
 behavior: "smooth",
@@ -44,12 +44,13 @@ const newText = text + " " + extra;
 
 setText(newText);
 setStates(prev => [...prev, ...new Array(extra.length + 1).fill("pending")]);
+
 }
 
 function handleKey(e) {
 if (!started) setStarted(true);
-e.preventDefault(); // previne scroll ou comportamento padrão
-  
+e.preventDefault(); // previne scroll padrão
+
 const key = e.key;
 if (key.length !== 1) return;
 
@@ -92,7 +93,7 @@ const currentWordIndex = text.slice(0, pos).split(" ").length - 1;
 
 return (
 <div style={{ padding: 40, fontFamily: "sans-serif" }}>
-<h1 style={{ fontSize: 24, marginBottom: 10 }}>Teste de Digitação - 3 Minutos</h1>
+<h1 style={{ fontSize: 28, marginBottom: 10 }}>Teste de Digitação - 3 Minutos</h1>
 
   <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
     <p><b>Tempo:</b> {timeLeft}s</p>
@@ -103,7 +104,7 @@ return (
 
   <div style={{ marginBottom: 15 }}>
     <b>Palavra atual:</b>{" "}
-    <span style={{ background: "#ffee99", padding: "4px 8px", borderRadius: 4 }}>
+    <span style={{ background: "#ffee99", padding: "6px 10px", borderRadius: 4, fontSize: 22 }}>
       {words[currentWordIndex] || ""}
     </span>
   </div>
@@ -122,8 +123,9 @@ return (
       fontFamily: "monospace",
       cursor: "text",
       whiteSpace: "pre-wrap",
-      lineHeight: "1.6",
-      overflowY: "auto"
+      lineHeight: "1.8",
+      overflowY: "auto",
+      fontSize: 20
     }}
   >
     {text.split("").map((ch, i) => {
@@ -158,5 +160,6 @@ return (
 
   <style>{`@keyframes blink { 50% { border-color: transparent; } }`}</style>
 </div>
+
 );
 }
