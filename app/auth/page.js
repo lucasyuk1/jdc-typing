@@ -3,19 +3,30 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Mascote from "../images/mascote.png"; // Import da imagem
+import Mascote from "../images/mascote.png";
 
 export default function AuthPage() {
 const [isLogin, setIsLogin] = useState(true);
 const [message, setMessage] = useState("");
+const [password, setPassword] = useState("");
+const [confirmPassword, setConfirmPassword] = useState("");
 const router = useRouter();
+
+const passwordsMatch = password === confirmPassword;
 
 async function handleRegister(e) {
 e.preventDefault();
-setMessage("Enviando...");
+setMessage("");
+
+if (!passwordsMatch) {
+  setMessage("❌ As senhas não coincidem!");
+  return;
+}
 
 const form = new FormData(e.target);
 const body = Object.fromEntries(form.entries());
+
+setMessage("Enviando...");
 
 try {
   const res = await fetch("/api/auth/register", {
@@ -37,7 +48,7 @@ try {
 
 async function handleLogin(e) {
 e.preventDefault();
-setMessage("Verificando...");
+setMessage("");
 
 const form = new FormData(e.target);
 const body = Object.fromEntries(form.entries());
@@ -86,7 +97,7 @@ return ( <div style={containerStyle}>
     </button>
   </div>
 
-  <div style={{ position: "relative", minHeight: "380px" }}>
+  <div style={{ position: "relative", minHeight: "450px" }}>
     <form
       onSubmit={isLogin ? handleLogin : handleRegister}
       style={{ ...formStyle, opacity: 1, transition: "opacity 0.5s ease" }}
@@ -105,20 +116,39 @@ return ( <div style={containerStyle}>
           <input name="email" type="email" placeholder="Email" required style={inputStyle} />
           <input name="idade" placeholder="Idade" required style={inputStyle} />
           <input name="turma" placeholder="Turma" required style={inputStyle} />
-          <input name="password" type="password" placeholder="Senha" required style={inputStyle} />
-          <button type="submit" style={submitStyle}>Registrar</button>
+          <input
+            name="password"
+            type="password"
+            placeholder="Senha"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ ...inputStyle, borderColor: passwordsMatch ? "#ccc" : "red" }}
+          />
+          <input
+            name="confirmPassword"
+            type="password"
+            placeholder="Confirme a Senha"
+            required
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            style={{ ...inputStyle, borderColor: passwordsMatch ? "#ccc" : "red" }}
+          />
+          <button type="submit" style={{ ...submitStyle, cursor: passwordsMatch ? "pointer" : "not-allowed", opacity: passwordsMatch ? 1 : 0.6 }} disabled={!passwordsMatch}>
+            Registrar
+          </button>
         </>
       )}
     </form>
   </div>
 
-  {message && <p style={messageStyle}>{message}</p>}
+  {message && <p style={{ ...messageStyle, color: passwordsMatch ? "#fff" : "red" }}>{message}</p>}
 </div>
 
 );
 }
 
-// Estilos (mantidos iguais)
+// Estilos
 const containerStyle = {
 maxWidth: "400px",
 margin: "60px auto",
@@ -130,81 +160,13 @@ color: "#fff",
 boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
 fontFamily: "Arial, sans-serif"
 };
-
-const avatarContainerStyle = {
-display: "flex",
-justifyContent: "center",
-marginBottom: "20px"
-};
-
-const avatarStyle = {
-width: "80px",
-height: "80px",
-background: "#4a90e2",
-borderRadius: "12px",
-border: "2px solid #fff"
-};
-
-const titleStyle = {
-marginBottom: "25px",
-fontSize: "28px"
-};
-
-const toggleStyle = {
-display: "flex",
-justifyContent: "center",
-marginBottom: "10px",
-gap: "10px"
-};
-
-const activeButtonStyle = {
-padding: "10px 20px",
-border: "none",
-borderRadius: "8px",
-background: "#4a90e2",
-color: "#fff",
-cursor: "default",
-fontWeight: "bold"
-};
-
-const inactiveButtonStyle = {
-padding: "10px 20px",
-border: "1px solid #4a90e2",
-borderRadius: "8px",
-background: "transparent",
-color: "#4a90e2",
-cursor: "pointer",
-fontWeight: "bold",
-transition: "0.3s"
-};
-
-const formStyle = {
-display: "flex",
-flexDirection: "column",
-gap: "15px"
-};
-
-const inputStyle = {
-padding: "12px 15px",
-borderRadius: "8px",
-border: "1px solid #ccc",
-fontSize: "16px",
-outline: "none"
-};
-
-const submitStyle = {
-padding: "12px 15px",
-borderRadius: "8px",
-border: "none",
-background: "#4a90e2",
-color: "#fff",
-fontSize: "16px",
-fontWeight: "bold",
-cursor: "pointer",
-transition: "0.3s"
-};
-
-const messageStyle = {
-marginTop: "20px",
-fontSize: "16px"
-};
+const avatarContainerStyle = { display: "flex", justifyContent: "center", marginBottom: "20px" };
+const avatarStyle = { width: "80px", height: "80px", background: "#4a90e2", borderRadius: "12px", border: "2px solid #fff" };
+const titleStyle = { marginBottom: "25px", fontSize: "28px" };
+const toggleStyle = { display: "flex", justifyContent: "center", marginBottom: "10px", gap: "10px" };
+const activeButtonStyle = { padding: "10px 20px", border: "none", borderRadius: "8px", background: "#4a90e2", color: "#fff", cursor: "default", fontWeight: "bold" };
+const inactiveButtonStyle = { padding: "10px 20px", border: "1px solid #4a90e2", borderRadius: "8px", background: "transparent", color: "#4a90e2", cursor: "pointer", fontWeight: "bold", transition: "0.3s" };
+const formStyle = { display: "flex", flexDirection: "column", gap: "15px" };
+const inputStyle = { padding: "12px 15px", borderRadius: "8px", border: "1px solid #ccc", fontSize: "16px", outline: "none" };
+const submitStyle = { padding: "12px 15px", borderRadius: "8px", border: "none", background: "#4a90e2", color: "#fff", fontSize: "16px", fontWeight: "bold", transition: "0.3s" };
+const messageStyle = { marginTop: "20px", fontSize: "16px" };

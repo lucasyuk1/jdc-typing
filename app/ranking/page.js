@@ -9,18 +9,21 @@ const [user, setUser] = useState(null);
 const [mode, setMode] = useState("geral");
 const [ranking, setRanking] = useState([]);
 
+// Carrega usuário do localStorage
 useEffect(() => {
 const u = localStorage.getItem("jdc-user");
 if (!u) return (window.location.href = "/auth");
 setUser(JSON.parse(u));
 }, []);
 
+// Recarrega ranking sempre que o modo ou usuário mudam
 useEffect(() => {
 if (!user) return;
 loadRanking();
 }, [mode, user]);
 
 async function loadRanking() {
+try {
 const res = await fetch("/api/results/ranking", {
 method: "POST",
 headers: { "Content-Type": "application/json" },
@@ -31,50 +34,58 @@ turma: user.turma,
 }),
 });
 
-const json = await res.json();
-if (!json.success) return;
+  const json = await res.json();
+  if (!json.success) return;
 
-let data = json.data;
+  let data = json.data;
 
-if (mode === "pessoal") {
-  data.sort((a, b) => b.wpm - a.wpm);
-  setRanking(data);
-  return;
-}
-
-const grouped = {};
-data.forEach(r => {
-  if (!grouped[r.usuario_id]) {
-    grouped[r.usuario_id] = {
-      usuario_id: r.usuario_id,
-      fullname: r.fullname ?? r.username,
-      turma: r.turma,
-      totalWPM: r.wpm,
-      totalAcc: r.accuracy ?? 0,
-      count: 1,
-      lastDate: r.created_at
-    };
-  } else {
-    grouped[r.usuario_id].totalWPM += r.wpm;
-    grouped[r.usuario_id].totalAcc += r.accuracy ?? 0;
-    grouped[r.usuario_id].count += 1;
-    if (new Date(r.created_at) > new Date(grouped[r.usuario_id].lastDate)) {
-      grouped[r.usuario_id].lastDate = r.created_at;
-    }
+  // Modo pessoal: apenas ordenar pelo WPM
+  if (mode === "pessoal") {
+    data.sort((a, b) => b.wpm - a.wpm);
+    setRanking(data);
+    return;
   }
-});
 
-const uniqueRanking = Object.values(grouped).map(u => ({
-  usuario_id: u.usuario_id,
-  fullname: u.fullname,
-  turma: u.turma,
-  wpm: Math.round(u.totalWPM / u.count),
-  accuracy: Math.round(u.totalAcc / u.count),
-  created_at: u.lastDate
-}));
+  // Modo geral ou turma: agrupar por usuário e calcular médias
+  const grouped = data.reduce((acc, r) => {
+    if (!acc[r.usuario_id]) {
+      acc[r.usuario_id] = {
+        usuario_id: r.usuario_id,
+        fullname: r.fullname ?? r.username,
+        turma: r.turma,
+        totalWPM: r.wpm,
+        totalAcc: r.accuracy ?? 0,
+        count: 1,
+        lastDate: r.created_at
+      };
+    } else {
+      acc[r.usuario_id].totalWPM += r.wpm;
+      acc[r.usuario_id].totalAcc += r.accuracy ?? 0;
+      acc[r.usuario_id].count += 1;
+      if (new Date(r.created_at) > new Date(acc[r.usuario_id].lastDate)) {
+        acc[r.usuario_id].lastDate = r.created_at;
+      }
+    }
+    return acc;
+  }, {});
 
-uniqueRanking.sort((a, b) => b.wpm - a.wpm);
-setRanking(uniqueRanking);
+  // Calcula média e transforma em array
+  const finalRanking = Object.values(grouped).map(u => ({
+    usuario_id: u.usuario_id,
+    fullname: u.fullname,
+    turma: u.turma,
+    wpm: Math.round(u.totalWPM / u.count),
+    accuracy: Math.round(u.totalAcc / u.count),
+    created_at: u.lastDate
+  }));
+
+  // Ordena por WPM
+  finalRanking.sort((a, b) => b.wpm - a.wpm);
+  setRanking(finalRanking);
+
+} catch (err) {
+  console.error("Erro ao carregar ranking:", err);
+}
 
 }
 
@@ -106,7 +117,14 @@ return (
     </thead>
     <tbody>
       {ranking.map((r, i) => (
-        <tr key={r.usuario_id} style={{ textAlign: "center", borderBottom: "1px solid #333" }}>
+        <tr
+          key={r.usuario_id}
+          style={{
+            textAlign: "center",
+            borderBottom: "1px solid #333",
+            background: r.usuario_id === user.usuario_id ? "rgba(30,144,255,0.3)" : "transparent"
+          }}
+        >
           <td style={thTdStyle}>{i + 1}</td>
           <td style={thTdStyle}>{r.fullname}</td>
           <td style={thTdStyle}>{r.turma}</td>
