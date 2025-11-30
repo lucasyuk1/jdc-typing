@@ -88,9 +88,9 @@ return (
 <button onClick={() => window.location.href = "/dashboard"} style={backButtonStyle}>Voltar</button> </div> </div>
 
   <div style={{ marginBottom: 20 }}>
-    <button onClick={() => setMode("geral")} style={{ ...modeButtonStyle, background: mode === "geral" ? "#357ABD" : "#4a90e2" }}>Geral</button>
-    <button onClick={() => setMode("turma")} style={{ ...modeButtonStyle, background: mode === "turma" ? "#357ABD" : "#4a90e2" }}>Sua Turma ({user.turma})</button>
-    <button onClick={() => setMode("pessoal")} style={{ ...modeButtonStyle, background: mode === "pessoal" ? "#357ABD" : "#4a90e2" }}>Seus Resultados</button>
+    <button onClick={() => setMode("geral")} style={{ ...modeButtonStyle, background: mode === "geral" ? "#1E90FF" : "#4a90e2", boxShadow: mode === "geral" ? "0 6px 12px rgba(30,144,255,0.6)" : "0 4px 8px rgba(0,0,0,0.2)" }}>Geral</button>
+    <button onClick={() => setMode("turma")} style={{ ...modeButtonStyle, background: mode === "turma" ? "#1E90FF" : "#4a90e2", boxShadow: mode === "turma" ? "0 6px 12px rgba(30,144,255,0.6)" : "0 4px 8px rgba(0,0,0,0.2)" }}>Sua Turma ({user.turma})</button>
+    <button onClick={() => setMode("pessoal")} style={{ ...modeButtonStyle, background: mode === "pessoal" ? "#1E90FF" : "#4a90e2", boxShadow: mode === "pessoal" ? "0 6px 12px rgba(30,144,255,0.6)" : "0 4px 8px rgba(0,0,0,0.2)" }}>Seus Resultados</button>
   </div>
 
   <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -143,6 +143,5 @@ border: "none",
 cursor: "pointer",
 color: "#fff",
 fontWeight: "bold",
-boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
 transition: "all 0.3s",
 };
