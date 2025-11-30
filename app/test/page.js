@@ -26,8 +26,9 @@ export default function TestePage() {
 
   const [user, setUser] = useState(null);
 
-  // Carrega usuário logado
+  // Carrega usuário logado e força rolagem ao topo
   useEffect(() => {
+    window.scrollTo(0, 0); // garante que o topo seja exibido ao abrir
     const u = localStorage.getItem("jdc-user");
     if (!u) return router.push("/auth");
     setUser(JSON.parse(u));
@@ -112,7 +113,7 @@ export default function TestePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          usuario_id: user.id, // UUID do Supabase
+          usuario_id: user.id,
           username: user.username,
           turma: user.turma,
           wpm,
@@ -144,7 +145,6 @@ export default function TestePage() {
     return () => clearInterval(i);
   }, [started, timeLeft, finished, router]);
 
-  // Cores dinâmicas
   const wpmColor = wpm < 30 ? "#F44336" : wpm < 60 ? "#FFC107" : "#4CAF50";
   const accuracyColor = accuracy < 70 ? "#F44336" : accuracy < 90 ? "#FF9800" : "#4CAF50";
   const progressColor = correctCount / totalTyped > 0.9 ? "#4CAF50" : correctCount / totalTyped > 0.7 ? "#FFC107" : "#F44336";

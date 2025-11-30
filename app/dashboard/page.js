@@ -121,12 +121,17 @@ export default function DashboardPage() {
   if (!user) return <p>Carregando...</p>;
 
   return (
-    <div style={{ padding: 40, fontFamily: "Arial", color: "#fff" }}>
-      {/* Header */}
+    <div style={{ padding: 40, fontFamily: "Arial, sans-serif", color: "#fff", minHeight: "100vh", background: "#0A0F1F" }}>
+      {/* Header com foto de perfil */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
-        <div>
-          <h1 style={{ fontSize: 36, marginBottom: 5 }}>Olá, {user.username}!</h1>
-          <p style={{ color: "#ccc" }}>Turma: <b>{user.turma}</b> | Idade: <b>{user.idade}</b></p>
+        <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
+          <div style={{ width: 60, height: 60, background: "#111827", borderRadius: "12px" }}>
+            {/* Aqui futuramente será a foto de perfil */}
+          </div>
+          <div>
+            <h1 style={{ fontSize: 36, marginBottom: 5 }}>Olá, {user.username}!</h1>
+            <p style={{ color: "#ccc" }}>Turma: <b>{user.turma}</b> | Idade: <b>{user.idade}</b></p>
+          </div>
         </div>
         <nav>
           <a href="/test" style={linkStyle}>Fazer teste</a>
