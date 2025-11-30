@@ -23,17 +23,18 @@ async function loadRanking() {
 const res = await fetch("/api/results/ranking", {
 method: "POST",
 headers: { "Content-Type": "application/json" },
-body: JSON.stringify({
-mode,
-username: user.username,
-turma: user.turma,
-}),
+body: JSON.stringify({ mode, username: user.username, turma: user.turma }),
 });
-
 const json = await res.json();
 if (!json.success) return;
 
 let data = json.data;
+
+if (mode === "pessoal") {
+  data.sort((a, b) => b.wpm - a.wpm);
+  setRanking(data);
+  return;
+}
 
 const grouped = {};
 data.forEach(r => {
@@ -51,9 +52,7 @@ data.forEach(r => {
     grouped[r.usuario_id].totalWPM += r.wpm;
     grouped[r.usuario_id].totalAcc += r.accuracy ?? 0;
     grouped[r.usuario_id].count += 1;
-    if (new Date(r.created_at) > new Date(grouped[r.usuario_id].lastDate)) {
-      grouped[r.usuario_id].lastDate = r.created_at;
-    }
+    if (new Date(r.created_at) > new Date(grouped[r.usuario_id].lastDate)) grouped[r.usuario_id].lastDate = r.created_at;
   }
 });
 
@@ -67,7 +66,6 @@ const uniqueRanking = Object.values(grouped).map(u => ({
 }));
 
 uniqueRanking.sort((a, b) => b.wpm - a.wpm);
-
 setRanking(uniqueRanking);
 
 }
@@ -77,8 +75,9 @@ if (!user) return <p>Carregando...</p>;
 return (
 <div style={{ padding: 40, fontFamily: "Arial, sans-serif", color: "#fff", minHeight: "100vh", background: "#0A0F1F" }}>
 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
-<h1 style={{ fontSize: 36 }}>Ranking</h1> <div> <Image src="styles/images/mascote.png" width={50} height={50} alt="Mascote" />
-<button onClick={() => window.location.href = "/dashboard"} style={linkStyle}>Voltar</button> </div> </div>
+<h1 style={{ fontSize: 36 }}>Ranking</h1>
+<div style={{ display: "flex", alignItems: "center", gap: 15 }}> <Image src="/images/mascote.png" width={50} height={50} alt="Mascote" />
+<button onClick={() => window.location.href = "/dashboard"} style={buttonStyle}>Voltar</button> </div> </div>
 
   <div style={{ marginBottom: 20 }}>
     <button onClick={() => setMode("geral")} style={buttonStyle}>Geral</button>
@@ -88,12 +87,12 @@ return (
 
   <table style={{ width: "100%", borderCollapse: "collapse" }}>
     <thead>
-      <tr style={{ background: "#1f2937", textAlign: "center" }}>
+      <tr style={{ background: "#1f2937" }}>
         <th style={thTdStyle}>#</th>
         <th style={thTdStyle}>Usuário</th>
         <th style={thTdStyle}>Turma</th>
-        <th style={thTdStyle}>WPM Médio</th>
-        <th style={thTdStyle}>Precisão Média</th>
+        <th style={thTdStyle}>{mode === "pessoal" ? "WPM" : "WPM Médio"}</th>
+        <th style={thTdStyle}>{mode === "pessoal" ? "Precisão" : "Precisão Média"}</th>
         <th style={thTdStyle}>Último Teste</th>
       </tr>
     </thead>
@@ -115,6 +114,5 @@ return (
 );
 }
 
-const thTdStyle = { padding: "10px", fontSize: 16 };
-const linkStyle = { color: "#4a90e2", marginLeft: 20, textDecoration: "none", fontWeight: "bold", background: "transparent", border: "none", cursor: "pointer" };
-const buttonStyle = { marginRight: 10, padding: "8px 15px", borderRadius: 8, border: "none", cursor: "pointer", background: "#4a90e2", color: "#fff", fontWeight: "bold" };
+const thTdStyle = { padding: "10px", fontSize: 16, textAlign: "center" };
+const buttonStyle = { padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer", background: "#4a90e2", color: "#fff", fontWeight: "bold" };
