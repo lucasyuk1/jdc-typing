@@ -3,18 +3,18 @@ import { supabase } from "@/lib/supabase";
 export async function POST(req) {
   try {
     const body = await req.json();
+
     const {
-        usuario_id,
-        username,
-        turma,
-        wpm,
-        accuracy,
-        tempo_segundos,
-        created_at: 
-    } = body;
+      usuario_id,
+      username,
+      turma,
+      wpm,
+      accuracy,
+      tempo_segundos
+    } = body; // <-- DESSE jeito está certo
 
     const { error } = await supabase
-      .from("results")
+      .from("resultados")
       .insert({
         usuario_id,
         username,
@@ -22,7 +22,7 @@ export async function POST(req) {
         wpm,
         accuracy,
         tempo_segundos,
-        created_at: 
+        created_at: new Date().toISOString()
       });
 
     if (error)
