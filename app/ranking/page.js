@@ -29,7 +29,7 @@ method: "POST",
 headers: { "Content-Type": "application/json" },
 body: JSON.stringify({
 mode,
-username: user.username,
+fullname: user.fullname,
 turma: user.turma,
 }),
 });
@@ -39,10 +39,20 @@ turma: user.turma,
 
   let data = json.data;
 
+  // Filtra por turma se estiver no modo "turma"
+  if (mode === "turma") {
+    data = data.filter(r => r.turma === user.turma);
+  }
+
   // Modo pessoal: apenas ordenar pelo WPM
   if (mode === "pessoal") {
     data.sort((a, b) => b.wpm - a.wpm);
-    setRanking(data);
+    setRanking(
+      data.map(r => ({
+        ...r,
+        fullname: r.fullname && r.fullname.trim() !== "" ? r.fullname : r.username
+      }))
+    );
     return;
   }
 
@@ -51,7 +61,7 @@ turma: user.turma,
     if (!acc[r.usuario_id]) {
       acc[r.usuario_id] = {
         usuario_id: r.usuario_id,
-        fullname: r.fullname ?? r.username,
+        fullname: r.fullname && r.fullname.trim() !== "" ? r.fullname : r.username,
         turma: r.turma,
         totalWPM: r.wpm,
         totalAcc: r.accuracy ?? 0,
@@ -69,10 +79,10 @@ turma: user.turma,
     return acc;
   }, {});
 
-  // Calcula média e transforma em array
+  // Calcula média e transforma em array, garantindo que fullname não fique vazio
   const finalRanking = Object.values(grouped).map(u => ({
     usuario_id: u.usuario_id,
-    fullname: u.fullname,
+    fullname: u.fullname && u.fullname.trim() !== "" ? u.fullname : user.username,
     turma: u.turma,
     wpm: Math.round(u.totalWPM / u.count),
     accuracy: Math.round(u.totalAcc / u.count),
@@ -122,7 +132,8 @@ return (
           style={{
             textAlign: "center",
             borderBottom: "1px solid #333",
-            background: r.usuario_id === user.usuario_id ? "rgba(30,144,255,0.3)" : "transparent"
+            background: r.usuario_id === user.usuario_id ? "linear-gradient(90deg, rgba(30,144,255,0.3), rgba(30,144,255,0.1))" : "transparent",
+            fontWeight: r.usuario_id === user.usuario_id ? "bold" : "normal"
           }}
         >
           <td style={thTdStyle}>{i + 1}</td>
