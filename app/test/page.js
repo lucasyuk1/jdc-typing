@@ -61,7 +61,7 @@ if (charRefs.current[pos]) {
 }, [pos]);
 
 function loadInitialText() {
-const t = generateRandomText(400);
+const t = generateRandomText(200);
 setText(t);
 setStates(new Array(t.length).fill("pending"));
 }
