@@ -60,7 +60,7 @@ try {
 
 return ( <div style={containerStyle}>
 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-  <img src="/styles/images/mascote.png" alt="Mascote" style={{ width: 64, height: 64 }} />
+  <img src="/images/mascote.png" alt="Mascote" style={{ width: 64, height: 64 }} />
   <h1>JDC Teste de Digitação</h1>
 </div>
 {/* Foto de perfil */} <div style={avatarContainerStyle}> <div style={avatarStyle}></div> </div>
