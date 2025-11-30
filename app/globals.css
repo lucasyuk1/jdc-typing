@@ -1,4 +1,11 @@
 /* ============================
+   TAILWIND CORE
+============================ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================
    RESET GLOBAL
 ============================ */
 * {
@@ -7,7 +14,6 @@
   box-sizing: border-box;
 }
 
-/* Remove estilo default de botão no mobile */
 button {
   -webkit-tap-highlight-color: transparent;
 }
@@ -37,7 +43,6 @@ a:hover {
 /* ============================
    INPUTS GERAIS
 ============================ */
-.input,
 input,
 textarea,
 select {
@@ -52,7 +57,6 @@ select {
   transition: border 0.25s, background 0.25s, transform 0.2s;
 }
 
-.input:focus,
 input:focus,
 textarea:focus,
 select:focus {
@@ -116,7 +120,7 @@ td {
 }
 
 /* ============================
-   FORM AUTH (Tailwind Friendly)
+   FORM AUTH (Tailwind apply)
 ============================ */
 .input-auth {
   @apply px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 outline-none focus:border-blue-400 transition;
@@ -127,14 +131,10 @@ td {
 }
 
 /* ============================
-   CARDS E CONTAINERS
+   CARDS
 ============================ */
 .card {
-  background: #0d1424;
-  padding: 22px;
-  border-radius: 14px;
-  box-shadow: 0 4px 22px rgba(0,0,0,0.2);
-  border: 1px solid #1b2640;
+  @apply bg-gray-800/70 backdrop-blur-lg p-6 rounded-xl shadow-xl border border-white/10;
 }
 
 .card-highlight {
@@ -146,14 +146,14 @@ td {
 }
 
 /* ============================
-   TIPOGRAFIA AUXILIAR
+   TIPOGRAFIA
 ============================ */
 .text-center { text-align: center; }
 .text-sm { font-size: 0.875rem; }
 .text-lg { font-size: 1.125rem; font-weight: 600; }
 
 /* ============================
-   ERROS E FEEDBACK DO TYPING TEST
+   FEEDBACK DO TYPING TEST
 ============================ */
 .typing-error {
   color: #ff6b6b;
@@ -175,7 +175,6 @@ td {
   border-radius: 4px;
 }
 
-/* Filosofia: “não dá para voltar” */
 .no-back-message {
   font-size: 0.85rem;
   margin-top: 4px;
@@ -185,7 +184,7 @@ td {
 }
 
 /* ============================
-   RANKING: CONTAINER E HEADER
+   RANKING
 ============================ */
 .ranking-container {
   padding: 40px;
@@ -211,9 +210,6 @@ td {
   gap: 15px;
 }
 
-/* ============================
-   BUTTONS DO RANKING
-============================ */
 .ranking-modes {
   margin-bottom: 22px;
 }
@@ -239,9 +235,6 @@ td {
   box-shadow: 0px 0px 12px rgba(30,144,255,0.4);
 }
 
-/* ============================
-   TABELA DO RANKING
-============================ */
 .ranking-table th {
   background: #0e1a32;
   text-align: center;
@@ -252,21 +245,15 @@ td {
   padding: 12px;
 }
 
-/* destaque para usuário */
 .highlight-row {
-  background: linear-gradient(
-    90deg,
-    rgba(0, 132, 255, 0.22),
-    rgba(0, 132, 255, 0.10)
-  );
+  background: linear-gradient(90deg, rgba(0,132,255,0.22), rgba(0,132,255,0.10));
   font-weight: bold;
   border-left: 4px solid #1e90ff;
 }
 
-.card {
-  @apply bg-gray-800/70 backdrop-blur-lg p-6 rounded-xl shadow-xl border border-white/10;
-}
-
+/* ============================
+   NAV E LOGOUT BUTTON
+============================ */
 .link-nav {
   @apply text-blue-400 hover:text-blue-300 font-semibold transition;
 }

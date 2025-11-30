@@ -17,7 +17,7 @@ export default function Home() {
 
   return (
     <main style={{ padding: 40, textAlign: "center" }}>
-      <h1>JDC Typing</h1>
+      <h1>Kalangus</h1>
       <p>Redirecionando...</p>
     </main>
   );
