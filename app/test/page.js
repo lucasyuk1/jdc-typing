@@ -26,6 +26,7 @@ export default function TestePage() {
 
   const [user, setUser] = useState(null);
   const [media, setMedia] = useState(null);
+  const [mediaLoaded, setMediaLoaded] = useState(false);
   const [comparisonText, setComparisonText] = useState("");
 
   const [redirectCounter, setRedirectCounter] = useState(5);
@@ -50,8 +51,12 @@ export default function TestePage() {
         } else {
           setMedia(Number(data.media));
         }
+        setMediaLoaded(true);
       })
-      .catch(() => setMedia(null));
+      .catch(() => {
+        setMedia(null);
+        setMediaLoaded(true);
+      });
 
     setTimeout(() => {
       inputRef.current?.focus();
@@ -68,20 +73,19 @@ export default function TestePage() {
   }, []);
 
   // ================
-  // Scroll do cursor
+  // Cursor scroll
   // ================
   useEffect(() => {
     if (charRefs.current[pos]) {
       charRefs.current[pos].scrollIntoView({
-      behavior: "smooth",
-       block: "center"
-  });
-
-  }
+        behavior: "smooth",
+        block: "center",
+      });
+    }
   }, [pos]);
 
   // ================
-  // Estender texto quando perto do fim
+  // Extende texto
   // ================
   function maybeExtendText() {
     if (pos < text.length - 200) return;
@@ -92,17 +96,14 @@ export default function TestePage() {
   }
 
   // ================
-  // Ao digitar
+  // Digitação
   // ================
   function handleKey(e) {
     const key = e.key;
 
-    // se pressionou Backspace → mostra mensagem filosófica e não permite apagar
     if (key === "Backspace") {
       setErrorMessage("Não tente apagar o passado. Cada tecla errada é um passo para a frente.");
-      setTimeout(() => {
-        setErrorMessage("");
-      }, 5000);
+      setTimeout(() => setErrorMessage(""), 5000);
       e.preventDefault();
       return;
     }
@@ -120,11 +121,8 @@ export default function TestePage() {
       return updated;
     });
 
-    if (expected === key) {
-      setCorrectCount(c => c + 1);
-    } else {
-      setWrongCount(w => w + 1);
-    }
+    if (expected === key) setCorrectCount(c => c + 1);
+    else setWrongCount(w => w + 1);
 
     setPos(pos + 1);
     maybeExtendText();
@@ -140,7 +138,7 @@ export default function TestePage() {
   const wpm = elapsed > 0 ? Math.round((correctCount / 5) / (elapsed / 60)) : 0;
 
   // ================
-  // Animação dos valores ao final
+  // Animação final
   // ================
   function animateResults() {
     let w = 0;
@@ -160,7 +158,7 @@ export default function TestePage() {
   }
 
   // ================
-  // Salvar resultado no backend
+  // Salvar resultado
   // ================
   async function salvarResultado() {
     if (!user) return;
@@ -187,7 +185,7 @@ export default function TestePage() {
   }
 
   // ================
-  // Timer principal
+  // Timer
   // ================
   useEffect(() => {
     if (!started || finished) return;
@@ -202,15 +200,13 @@ export default function TestePage() {
   }, [started, timeLeft, finished]);
 
   // ================
-  // Finalizar teste
+  // Finalização
   // ================
   function finalizarTeste() {
     setFinished(true);
     salvarResultado();
     animateResults();
-    // gerarMensagemComparativa será chamado depois que `media` estiver disponível
-    // e usaremos efeito abaixo
-    // iniciar contador de redirecionamento
+
     const c = setInterval(() => {
       setRedirectCounter(t => {
         if (t <= 1) {
@@ -223,210 +219,191 @@ export default function TestePage() {
   }
 
   // ================
-  // Quando média for atualizada e teste estiver finalizado, calcula comparação
+  // Comparação com média
   // ================
   useEffect(() => {
-    if (finished) {
-      if (media === null) {
-        setComparisonText("Primeiro teste — ainda sem média!");
-      } else {
-        if (wpm > media + 3) {
-          setComparisonText("Excelente! Você ficou ACIMA da sua média!");
-        } else if (wpm < media - 3) {
-          setComparisonText("Você ficou ABAIXO da sua média. Continue praticando!");
-        } else {
-          setComparisonText("Você ficou NA MÉDIA. Consistência é importante!");
-        }
-      }
-    }
-  }, [media, finished, wpm]);
+    if (!finished) return;
+    if (!mediaLoaded) return;
 
-  const wpmColor = wpm < 10 ? "#F44336" : wpm < 20 ? "#FFC107": wpm < 30 ? "#2f8adfff" : "#2e5f30ff";
+    if (media === null) {
+      setComparisonText("Primeiro teste — ainda sem média!");
+      return;
+    }
+
+    if (wpm > media + 3) {
+      setComparisonText("Excelente! Você ficou ACIMA da sua média!");
+    } else if (wpm < media - 3) {
+      setComparisonText("Você ficou ABAIXO da sua média. Continue praticando!");
+    } else {
+      setComparisonText("Você ficou NA MÉDIA. Consistência importa!");
+    }
+  }, [media, mediaLoaded, finished, wpm]);
+
+  const wpmColor = wpm < 10 ? "#F44336" : wpm < 20 ? "#FFC107" : wpm < 30 ? "#2f8adf" : "#2e5f30";
   const accuracyColor = accuracy < 70 ? "#F44336" : accuracy < 90 ? "#FF9800" : "#4CAF50";
 
   if (!user) return <p>Carregando...</p>;
 
+  //=================================
+  // LAYOUT CENTRALIZADO — AQUI É A MUDANÇA PRINCIPAL
+  //=================================
   return (
-    <div style={{ padding: 40, fontFamily: "sans-serif" }}>
-      {/* HEADER */}
-      {!finished && (
-        <div
-          style={{
-            position: "sticky",
-            top: 0,
-            background: "#222",
-            color: "#fff",
-            zIndex: 10,
-            padding: "20px 40px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
-          }}
-        >
-          <h1 style={{ fontSize: 28, marginBottom: 10 }}>Teste de Digitação - 3 Minutos</h1>
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            <p><b>Tempo:</b> {timeLeft}s</p>
-            <p><b>WPM:</b> <span style={{ color: wpmColor }}>{wpm}</span></p>
-            <p><b>Precisão:</b> <span style={{ color: accuracyColor }}>{accuracy}%</span></p>
-            <p><b>Digitado:</b> {totalTyped}</p>
-          </div>
-        </div>
-      )}
+    <div style={{
+      minHeight: "100vh",
+      width: "100%",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "flex-start",
+      paddingTop: 30
+    }}>
+      <div style={{ width: "100%", maxWidth: 900 }}>
 
-      {/* ÁREA DO TEXTO */}
-      {!finished ? (
-        <>
-          {/* barra de progresso */}
-          <div style={{
-            width: "100%",
-            height: 12,
-            background: "#ccc",
-            borderRadius: 4,
-            marginBottom: 20
-          }}>
-            <div style={{
-              height: "100%",
-              width: `${((pos / text.length) * 100).toFixed(2)}%`,
-              background: "#4CAF50",
-              transition: "width .15s"
-            }} />
-          </div>
-
-          {/* mensagem filosófica se backspace for pressionado */}
-          {errorMessage && (
-            <p style={{
-              color: "#c0392b",
-              marginBottom: 15,
-              fontStyle: "italic",
-              fontWeight: "bold"
-            }}>{errorMessage}</p>
-          )}
-
-          {/* texto que usuário deve digitar */}
+        {/* HEADER */}
+        {!finished && (
           <div
-            onClick={() => inputRef.current.focus()}
             style={{
-              padding: 20,
-              border: "1px solid #999",
-              minHeight: 260,
-              fontFamily: "monospace",
-              cursor: "text",
-              whiteSpace: "pre-wrap",
-              lineHeight: "1.8",
-              overflowY: "auto",
-              fontSize: 20,
-              borderRadius: 12
+              position: "sticky",
+              top: 0,
+              background: "#222",
+              color: "#fff",
+              zIndex: 10,
+              padding: "20px 40px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
             }}
           >
-            {text.split("").map((ch, i) => {
-              let color = "#555";
-              let fontWeight = "normal";
+            <h1 style={{ fontSize: 28, marginBottom: 10 }}>Teste de Digitação - 3 Minutos</h1>
 
-              if (states[i] === "correct") color = "lightgreen";
-              if (states[i] === "wrong") {
-                color = "red";
-                fontWeight = "bold";
-              }
-
-              const isCursor = i === pos;
-
-              return (
-                <span
-                  key={i}
-                  ref={el => (charRefs.current[i] = el)}
-                  style={{
-                    background: isCursor ? "#ffeb3b" : "none",
-                    borderBottom: isCursor ? "2px solid black" : "none",
-                    animation: isCursor ? "blink 1s step-start infinite" : "none",
-                    color,
-                    fontWeight
-                  }}
-                >
-                  {ch}
-                </span>
-              );
-            })}
+            <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+              <p><b>Tempo:</b> {timeLeft}s</p>
+              <p><b>WPM:</b> <span style={{ color: wpmColor }}>{wpm}</span></p>
+              <p><b>Precisão:</b> <span style={{ color: accuracyColor }}>{accuracy}%</span></p>
+              <p><b>Digitado:</b> {totalTyped}</p>
+            </div>
           </div>
+        )}
 
-          <input
-            ref={inputRef}
-            onKeyDown={handleKey}
-            style={{ opacity: 0, position: "absolute", pointerEvents: "none" }}
-          />
-        </>
-      ) : (
-        // =========================
-        // CARD FINAL ESTILOSO + RESULTADO
-        // =========================
-        <div
-          style={{
-            marginTop: 40,
-            background: "linear-gradient(135deg, #ffffff, #f1f1f1)",
-            padding: 40,
-            borderRadius: 24,
-            boxShadow: "0px 6px 30px rgba(0,0,0,0.15)",
-            width: "90%",
-            maxWidth: 600,
-            marginInline: "auto",
-            textAlign: "center",
-            animation: "bounceIn .8s"
-          }}
-        >
-          <h2 style={{ fontSize: 34, marginBottom: 15 }}>Tempo Encerrado!</h2>
+        {/* TEXTO */}
+        {!finished ? (
+          <>
 
-          <p style={{ fontSize: 28, color: wpmColor, margin: 8 }}>
-            WPM: <b>{animatedWPM}</b>
-          </p>
+            {/* barra de progresso */}
+            <div style={{
+              width: "100%",
+              height: 12,
+              background: "#ccc",
+              borderRadius: 4,
+              marginBottom: 20
+            }}>
+              <div style={{
+                height: "100%",
+                width: `${((pos / text.length) * 100).toFixed(2)}%`,
+                background: "#4CAF50",
+                transition: "width .15s"
+              }} />
+            </div>
 
-          <p style={{ fontSize: 28, color: accuracyColor, margin: 8 }}>
-            Precisão: <b>{animatedAccuracy}%</b>
-          </p>
+            {errorMessage && (
+              <p style={{
+                color: "#c0392b",
+                marginBottom: 15,
+                fontStyle: "italic",
+                fontWeight: "bold",
+                textAlign: "center"
+              }}>{errorMessage}</p>
+            )}
 
-          <p style={{
-            marginTop: 25,
-            fontSize: 20,
-            fontWeight: "bold",
-            color: "#333"
-          }}>
-            {comparisonText}
-          </p>
+            <div
+              onClick={() => inputRef.current.focus()}
+              style={{
+                padding: 20,
+                border: "1px solid #999",
+                minHeight: 260,
+                fontFamily: "monospace",
+                cursor: "text",
+                whiteSpace: "pre-wrap",
+                lineHeight: "1.8",
+                overflowY: "auto",
+                fontSize: 20,
+                borderRadius: 12,
+                background: "#fff"
+              }}
+            >
+              {text.split("").map((ch, i) => {
+                let color = "#555";
+                let fontWeight = "normal";
 
-          <p style={{
-            marginTop: 30,
-            fontSize: 18,
-            color: "#666"
-          }}>
-            Redirecionando em <b>{redirectCounter}</b> segundos...
-          </p>
+                if (states[i] === "correct") color = "lightgreen";
+                if (states[i] === "wrong") {
+                  color = "red";
+                  fontWeight = "bold";
+                }
 
-          <button
-            onClick={() => router.push("/teste")}
+                const isCursor = i === pos;
+
+                return (
+                  <span
+                    key={i}
+                    ref={el => (charRefs.current[i] = el)}
+                    style={{
+                      background: isCursor ? "#ffeb3b" : "none",
+                      borderBottom: isCursor ? "2px solid black" : "none",
+                      animation: isCursor ? "blink 1s step-start infinite" : "none",
+                      color,
+                      fontWeight
+                    }}
+                  >
+                    {ch}
+                  </span>
+                );
+              })}
+            </div>
+
+            <input
+              ref={inputRef}
+              onKeyDown={handleKey}
+              style={{ opacity: 0, position: "absolute", pointerEvents: "none" }}
+            />
+          </>
+        ) : (
+          <div
             style={{
-              marginTop: 30,
-              padding: "15px 38px",
-              fontSize: 20,
-              borderRadius: 15,
-              background: "#007bff",
-              color: "white",
-              border: "none",
-              cursor: "pointer",
-              boxShadow: "0px 4px 14px rgba(0,0,0,0.2)",
-              transition: "0.2s",
+              marginTop: 40,
+              background: "linear-gradient(135deg, #ffffff, #f1f1f1)",
+              padding: 40,
+              borderRadius: 24,
+              boxShadow: "0px 6px 30px rgba(0,0,0,0.15)",
+              width: "90%",
+              maxWidth: 600,
+              marginInline: "auto",
+              textAlign: "center"
             }}
           >
-            Refazer Teste
-          </button>
-        </div>
-      )}
+            <h2 style={{ fontSize: 34, marginBottom: 15 }}>Tempo Encerrado!</h2>
 
-      {/* ANIMAÇÕES */}
-      <style>{`
-        @keyframes blink { 50% { border-color: transparent; } }
+            <p style={{ fontSize: 28, color: wpmColor, margin: 8 }}>
+              WPM: <b>{animatedWPM}</b>
+            </p>
 
-        @keyframes bounceIn {
-          0% { transform: scale(.6); opacity: 0; }
-          60% { transform: scale(1.05); opacity: 1; }
-          100% { transform: scale(1); }
-        }
-      `}</style>
+            <p style={{ fontSize: 28, color: accuracyColor, margin: 8 }}>
+              Precisão: <b>{animatedAccuracy}%</b>
+            </p>
+
+            <p style={{
+              marginTop: 25,
+              fontSize: 20,
+              fontWeight: "bold",
+              color: "#333"
+            }}>
+              {comparisonText}
+            </p>
+
+            <p style={{ marginTop: 20, fontSize: 18, opacity: 0.7 }}>
+              Redirecionando em {redirectCounter}...
+            </p>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
