@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Mascote from "../images/mascote.png";
+import { useRouter } from "next/navigation";
 
 export default function RankingPage() {
+  const router = useRouter();
   const [user, setUser] = useState(null);
   const [mode, setMode] = useState("geral");
   const [ranking, setRanking] = useState([]);
@@ -13,9 +15,12 @@ export default function RankingPage() {
   // Carrega usuário
   useEffect(() => {
     const stored = localStorage.getItem("jdc-user");
-    if (!stored) return (window.location.href = "/auth");
+    if (!stored) {
+      router.push("/auth");
+      return;
+    }
     setUser(JSON.parse(stored));
-  }, []);
+  }, [router]);
 
   // Recarrega ranking
   useEffect(() => {
@@ -42,9 +47,9 @@ export default function RankingPage() {
     } catch (err) {
       console.error("Erro:", err);
       setRanking([]);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   if (!user) return <p className="text-center mt-10">Carregando...</p>;
@@ -58,7 +63,7 @@ export default function RankingPage() {
 
         <div className="ranking-header-side">
           <Image src={Mascote} width={50} height={50} alt="Mascote" />
-          <button className="btn" onClick={() => (window.location.href = "/dashboard")}>
+          <button className="btn" onClick={() => router.push("/dashboard")}>
             Voltar
           </button>
         </div>
@@ -119,13 +124,11 @@ export default function RankingPage() {
           <tbody>
             {ranking.map((r, i) => (
               <tr
-                key={r.usuario_id + "-" + i}
-                className={
-                  r.usuario_id === user.id ? "highlight-row" : ""
-                }
+                key={r.id ?? `${r.usuario_id}-${i}`}
+                className={r.usuario_id === user.id ? "highlight-row" : ""}
               >
                 <td>{i + 1}</td>
-                <td>{r.fullname}</td>
+                <td>{r.fullname ?? "Sem nome"}</td>
                 <td>{r.turma}</td>
                 <td>{r.wpm}</td>
                 <td>{r.accuracy ?? "-"}</td>

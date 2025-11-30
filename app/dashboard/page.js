@@ -3,142 +3,199 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Chart from "chart.js/auto";
-import Mascote from "../images/mascote.png"; // Import da imagem dentro de app/images
+import Mascote from "../images/mascote.png";
 
 export default function DashboardPage() {
-const [user, setUser] = useState(null);
-const [resultados, setResultados] = useState([]);
-const [mediaWPM, setMediaWPM] = useState(null);
+  const [user, setUser] = useState(null);
+  const [resultados, setResultados] = useState([]);
+  const [mediaWPM, setMediaWPM] = useState(null);
 
-const wpmChartRef = useRef(null);
-const accuracyChartRef = useRef(null);
-const wpmChartInstance = useRef(null);
-const accuracyChartInstance = useRef(null);
+  const wpmChartRef = useRef(null);
+  const accuracyChartRef = useRef(null);
+  const wpmChartInstance = useRef(null);
+  const accuracyChartInstance = useRef(null);
 
-useEffect(() => {
-const u = localStorage.getItem("jdc-user");
-if (!u) window.location.href = "/auth";
-else setUser(JSON.parse(u));
-}, []);
+  // Verifica login
+  useEffect(() => {
+    const u = localStorage.getItem("jdc-user");
+    if (!u) window.location.href = "/auth";
+    else setUser(JSON.parse(u));
+  }, []);
 
-useEffect(() => {
-if (!user) return;
+  // Carrega dados do ranking pessoal
+  useEffect(() => {
+    if (!user) return;
 
-async function loadResultados() {
-  const res = await fetch("/api/results/ranking", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      mode: "pessoal",
-      username: user.username,
-      turma: user.turma
-    })
-  });
+    async function loadResultados() {
+      const res = await fetch("/api/results/ranking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "pessoal",
+          username: user.username,
+          turma: user.turma
+        })
+      });
 
-  const data = await res.json();
-  if (data.success) {
-    setResultados(data.data);
-    if (data.data.length > 0) {
-      const soma = data.data.reduce((acc, r) => acc + r.wpm, 0);
-      setMediaWPM(Math.round(soma / data.data.length));
+      const data = await res.json();
+      if (data.success) {
+        setResultados(data.data);
+
+        if (data.data.length > 0) {
+          const soma = data.data.reduce((acc, r) => acc + r.wpm, 0);
+          setMediaWPM(Math.round(soma / data.data.length));
+        }
+      }
     }
-  }
-}
 
-loadResultados();
+    loadResultados();
+  }, [user]);
 
-}, [user]);
+  // Configura os gráficos
+  useEffect(() => {
+    if (resultados.length === 0) return;
 
-useEffect(() => {
-if (resultados.length === 0) return;
+    const labels = resultados
+      .map((r) => new Date(r.created_at).toLocaleDateString("pt-BR"))
+      .reverse();
 
-const labels = resultados.map((r) =>
-  new Date(r.created_at).toLocaleDateString("pt-BR")
-).reverse();
+    const wpmData = resultados.map((r) => r.wpm).reverse();
+    const accuracyData = resultados.map((r) => r.accuracy).reverse();
 
-const wpmData = resultados.map((r) => r.wpm).reverse();
-const accuracyData = resultados.map((r) => r.accuracy).reverse();
+    if (wpmChartInstance.current) wpmChartInstance.current.destroy();
+    if (accuracyChartInstance.current) accuracyChartInstance.current.destroy();
 
-if (wpmChartInstance.current) wpmChartInstance.current.destroy();
-if (accuracyChartInstance.current) accuracyChartInstance.current.destroy();
+    wpmChartInstance.current = new Chart(wpmChartRef.current, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "WPM",
+            data: wpmData,
+            borderWidth: 3,
+            tension: 0.4,
+            borderColor: "#4a90e2",
+            backgroundColor: "rgba(74,144,226,0.2)",
+            fill: true,
+            pointRadius: 5
+          }
+        ]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
 
-wpmChartInstance.current = new Chart(wpmChartRef.current, {
-  type: "line",
-  data: { labels, datasets: [{ label: "WPM", data: wpmData, borderWidth: 3, tension: 0.4, borderColor: "#4a90e2", backgroundColor: "rgba(74,144,226,0.2)", fill: true, pointRadius: 5, pointBackgroundColor: "#4a90e2" }] },
-  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { ticks: { color: "#fff" } } } }
-});
+    accuracyChartInstance.current = new Chart(accuracyChartRef.current, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Acurácia (%)",
+            data: accuracyData,
+            borderWidth: 3,
+            tension: 0.4,
+            borderColor: "#34d399",
+            backgroundColor: "rgba(52,211,153,0.2)",
+            fill: true,
+            pointRadius: 5
+          }
+        ]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, max: 100 }
+        }
+      }
+    });
+  }, [resultados]);
 
-accuracyChartInstance.current = new Chart(accuracyChartRef.current, {
-  type: "line",
-  data: { labels, datasets: [{ label: "Acurácia (%)", data: accuracyData, borderWidth: 3, tension: 0.4, borderColor: "#34d399", backgroundColor: "rgba(52,211,153,0.2)", fill: true, pointRadius: 5, pointBackgroundColor: "#34d399" }] },
-  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 }, x: { ticks: { color: "#fff" } } } }
-});
+  const handleLogout = () => {
+    localStorage.removeItem("jdc-user");
+    window.location.href = "/auth";
+  };
 
-}, [resultados]);
+  if (!user) return <p className="text-white p-6">Carregando...</p>;
 
-const handleLogout = () => {
-localStorage.removeItem("jdc-user");
-window.location.href = "/auth";
-};
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-8">
 
-if (!user) return <p>Carregando...</p>;
+      {/* HEADER */}
+      <header className="flex justify-between items-center mb-10">
+        <div>
+          <h1 className="text-4xl font-bold">Olá, {user.username}!</h1>
+          <p className="text-gray-400 mt-1">
+            Turma: <span className="font-semibold text-blue-300">{user.turma}</span> • Idade: <b>{user.idade}</b>
+          </p>
+        </div>
 
-return (
-<div style={{ padding: 40, fontFamily: "Arial, sans-serif", color: "#fff", minHeight: "100vh", background: "#0A0F1F" }}>
-{/* Header */}
-<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
-<div style={{ display: "flex", alignItems: "center", gap: 15 }}>
-<div style={{ width: 60, height: 60, background: "#111827", borderRadius: "12px" }}></div>
-<div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-<h1 style={{ fontSize: 36, marginBottom: 5 }}>Olá, {user.username}!</h1> <Image src={Mascote} width={50} height={50} alt="Mascote" /> </div>
-<p style={{ color: "#ccc" }}>Turma: <b>{user.turma}</b> | Idade: <b>{user.idade}</b></p> </div> <nav> <a href="/test" style={linkStyle}>Fazer teste</a> <a href="/ranking" style={linkStyle}>Ranking</a> <button onClick={handleLogout} style={logoutButtonStyle}>Sair</button> </nav> </div>
+        <div className="flex items-center gap-4">
+          <Image src={Mascote} alt="Mascote" width={60} height={60} />
 
-  {/* Média de WPM */}
-  <div style={{ ...cardStyle, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-    <Image src={Mascote} width={100} height={100} alt="Mascote" style={{ animation: "bounce 1.2s infinite" }} />
-    <h2 style={{ fontSize: 22, marginBottom: 5 }}>Sua média de WPM</h2>
-    <p style={{ fontSize: 48, fontWeight: "bold", color: "#4a90e2", margin: 0, textAlign: "center" }}>
-      {mediaWPM !== null ? mediaWPM : "—"}
-    </p>
-  </div>
+          <nav className="flex gap-4">
+            <a href="/test" className="link-nav">Fazer Teste</a>
+            <a href="/ranking" className="link-nav">Ranking</a>
+            <button onClick={handleLogout} className="btn-logout">Sair</button>
+          </nav>
+        </div>
+      </header>
 
-  {/* Últimos resultados */}
-  <div style={{ marginTop: 50 }}>
-    <h2 style={{ fontSize: 26, marginBottom: 20 }}>Seus últimos resultados</h2>
-    {resultados.length === 0 ? <p>Nenhum resultado encontrado.</p> :
-      <div style={{ display: "grid", gap: 10 }}>
-        {resultados.map((r) => (
-          <div key={r.id} style={resultItemStyle}>
-            <b>WPM:</b> {r.wpm} — <b>Precisão:</b> {r.accuracy}%
-            <br />
-            <small style={{ color: "#999" }}>{new Date(r.created_at).toLocaleString("pt-BR")}</small>
+      {/* MÉDIA WPM */}
+      <div className="card flex flex-col items-center gap-3 mb-12">
+        <Image
+          src={Mascote}
+          width={110}
+          height={110}
+          alt="Mascote"
+          className="animate-bounce"
+        />
+        <h2 className="text-xl text-gray-200">Sua média de WPM</h2>
+        <p className="text-6xl font-extrabold text-blue-400">
+          {mediaWPM ?? "—"}
+        </p>
+      </div>
+
+      {/* ÚLTIMOS RESULTADOS */}
+      <section className="mb-12">
+        <h2 className="text-3xl font-semibold mb-4">Seus resultados recentes</h2>
+
+        {resultados.length === 0 ? (
+          <p>Nenhum resultado encontrado.</p>
+        ) : (
+          <div className="grid gap-3">
+            {resultados.map((r) => (
+              <div key={r.id} className="card py-3 px-4">
+                <p className="text-lg">
+                  <b>WPM:</b> {r.wpm} — <b>Precisão:</b> {r.accuracy}%
+                </p>
+                <p className="text-gray-400 text-sm">
+                  {new Date(r.created_at).toLocaleString("pt-BR")}
+                </p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>}
-  </div>
+        )}
+      </section>
 
-  {/* Gráficos */}
-  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, marginTop: 40 }}>
-    <div style={cardStyle}>
-      <h3 style={graphTitleStyle}>Evolução do WPM</h3>
-      <canvas ref={wpmChartRef} />
+      {/* GRÁFICOS */}
+      <div className="grid md:grid-cols-2 gap-10">
+        <div className="card">
+          <h3 className="text-xl mb-3">Evolução do WPM</h3>
+          <canvas ref={wpmChartRef} />
+        </div>
+
+        <div className="card">
+          <h3 className="text-xl mb-3">Evolução da Precisão (%)</h3>
+          <canvas ref={accuracyChartRef} />
+        </div>
+      </div>
     </div>
-    <div style={cardStyle}>
-      <h3 style={graphTitleStyle}>Evolução da Precisão (%)</h3>
-      <canvas ref={accuracyChartRef} />
-    </div>
-  </div>
-
-  <style>{`
-    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-  `}</style>
-</div>
-
-);
+  );
 }
 
-const cardStyle = { background: "#1f2937", padding: 20, borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.3)" };
-const resultItemStyle = { background: "#111827", padding: 15, borderRadius: 8, fontSize: 18, color: "#fff" };
-const linkStyle = { color: "#4a90e2", marginLeft: 20, textDecoration: "none", fontWeight: "bold" };
-const logoutButtonStyle = { marginLeft: 20, padding: "8px 15px", borderRadius: 8, border: "none", cursor: "pointer", background: "#ef4444", color: "#fff", fontWeight: "bold" };
-const graphTitleStyle = { fontSize: 18, marginBottom: 10 };
+/* --- ESTILOS GLOBAIS DO COMPONENTE (Tailwind) --- */
+

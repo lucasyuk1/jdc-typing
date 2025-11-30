@@ -262,3 +262,15 @@ td {
   font-weight: bold;
   border-left: 4px solid #1e90ff;
 }
+
+.card {
+  @apply bg-gray-800/70 backdrop-blur-lg p-6 rounded-xl shadow-xl border border-white/10;
+}
+
+.link-nav {
+  @apply text-blue-400 hover:text-blue-300 font-semibold transition;
+}
+
+.btn-logout {
+  @apply bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold transition;
+}

@@ -4,44 +4,48 @@ export async function POST(req) {
   try {
     const { mode, usuario_id, turma } = await req.json();
 
-    // Consulta results + dados dos usuários
+    // SELECT seguro com alias para FK
     let query = supabase
       .from("results")
       .select(
-        "id, usuario_id, wpm, accuracy, created_at, users(username, fullname, turma)"
+        `id, usuario_id, wpm, accuracy, created_at,
+         users:usuario_id (username, fullname, turma)`
       )
       .order("created_at", { ascending: false })
-      .limit(1000);
+      .limit(5000);
 
     const { data, error } = await query;
     if (error) throw error;
 
-    // Mapeamento para formato final
+    // Map seguro
     let rows = data.map((r) => ({
       id: r.id,
       usuario_id: r.usuario_id,
-      fullname: r.users?.fullname || r.users?.username || "",
-      username: r.users?.username || "",
+      fullname: r.users?.fullname || r.users?.username || "Sem nome",
+      username: r.users?.username || "user",
       turma: r.users?.turma || "",
-      wpm: r.wpm,
-      accuracy: r.accuracy ?? 0,
+      wpm: Number(r.wpm) || 0,
+      accuracy: Number(r.accuracy) || 0,
       created_at: r.created_at,
     }));
 
-    // -------------------------------------------------------------------------
-    // 🔹 MODO PESSOAL
-    // -------------------------------------------------------------------------
+    // -----------------------------------------------------
+    // MODO PESSOAL
+    // -----------------------------------------------------
     if (mode === "pessoal" && usuario_id) {
+      let pessoal = rows
+        .filter((r) => String(r.usuario_id) === String(usuario_id))
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
       return new Response(
-        JSON.stringify({
-          success: true,
-          data: rows.filter((r) => String(r.usuario_id) === String(usuario_id)),
-        }),
+        JSON.stringify({ success: true, data: pessoal }),
         { status: 200 }
       );
     }
 
-    // Função de agrupamento (usada para geral e turma)
+    // -----------------------------------------------------
+    // Função de agrupamento reutilizada
+    // -----------------------------------------------------
     function agrupar(lista) {
       const grouped = lista.reduce((acc, r) => {
         if (!acc[r.usuario_id]) {
@@ -76,28 +80,29 @@ export async function POST(req) {
       }));
     }
 
-    // -------------------------------------------------------------------------
-    // 🔹 MODO TURMA (AGORA AGRUPA TAMBÉM!)
-    // -------------------------------------------------------------------------
+    // -----------------------------------------------------
+    // MODO TURMA
+    // -----------------------------------------------------
     if (mode === "turma" && turma) {
       const filtrado = rows.filter((r) => r.turma === turma);
-      const agrupado = agrupar(filtrado);
+      const agrupado = agrupar(filtrado).sort((a, b) => b.wpm - a.wpm);
+
       return new Response(
         JSON.stringify({ success: true, data: agrupado }),
         { status: 200 }
       );
     }
 
-    // -------------------------------------------------------------------------
-    // 🔹 MODO GERAL (AGRUPADO)
-    // -------------------------------------------------------------------------
-    const agrupado = agrupar(rows);
-    agrupado.sort((a, b) => b.wpm - a.wpm);
+    // -----------------------------------------------------
+    // MODO GERAL
+    // -----------------------------------------------------
+    const geral = agrupar(rows).sort((a, b) => b.wpm - a.wpm);
 
     return new Response(
-      JSON.stringify({ success: true, data: agrupado }),
+      JSON.stringify({ success: true, data: geral }),
       { status: 200 }
     );
+
   } catch (err) {
     console.error("Erro no ranking:", err);
     return new Response(

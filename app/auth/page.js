@@ -70,10 +70,10 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-6">
 
-      <div className="backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md animate-fade">
-        
+      <div className="backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md">
+
         <div className="flex flex-col items-center mb-6">
           <Image
             src={Mascote}
@@ -83,7 +83,7 @@ export default function AuthPage() {
             className="drop-shadow-xl mb-2"
           />
           <h1 className="text-2xl font-bold text-blue-300 tracking-wide">
-            JDC Teste de Digitação
+            Kalangus Type
           </h1>
         </div>
 
@@ -115,7 +115,6 @@ export default function AuthPage() {
         <form
           onSubmit={isLogin ? handleLogin : handleRegister}
           className="flex flex-col gap-4"
-          key={isLogin ? "login" : "register"}
         >
           {isLogin ? (
             <>
@@ -150,9 +149,7 @@ export default function AuthPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`input-auth ${
-                  passwordsMatch ? "" : "border-red-500"
-                }`}
+                className={`input-auth ${passwordsMatch ? "" : "border-red-500"}`}
               />
 
               <input
@@ -162,17 +159,13 @@ export default function AuthPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`input-auth ${
-                  passwordsMatch ? "" : "border-red-500"
-                }`}
+                className={`input-auth ${passwordsMatch ? "" : "border-red-500"}`}
               />
 
               <button
                 type="submit"
                 disabled={!passwordsMatch}
-                className={`btn-auth ${
-                  passwordsMatch ? "" : "opacity-50 cursor-not-allowed"
-                }`}
+                className={`btn-auth ${passwordsMatch ? "" : "opacity-50 cursor-not-allowed"}`}
               >
                 Registrar
               </button>
@@ -194,15 +187,3 @@ export default function AuthPage() {
     </div>
   );
 }
-
-/* TAILWIND CUSTOM CLASSES (adicione no globals.css se quiser deixar mais elegante)
--------------------------------------------------------------------------- */
-/* 
-.input-auth {
-  @apply px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 outline-none focus:border-blue-400 transition;
-}
-
-.btn-auth {
-  @apply px-4 py-3 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-lg transition;
-}
-*/

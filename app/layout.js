@@ -1,6 +1,6 @@
 import Footer from "@/components/Footer"; // crie o Footer como eu sugeri antes
-
-export const metadata = { title: "JDC Typing" };
+import "./globals.css";
+export const metadata = { title: "Kalangus" };
 
 export default function RootLayout({ children }) {
   return (
