@@ -118,6 +118,11 @@ export default function DashboardPage() {
     });
   }, [resultados]);
 
+  function handleLogout() {
+    localStorage.removeItem("jdc-user");
+    window.location.href = "/auth";
+  }
+
   if (!user) return <p>Carregando...</p>;
 
   return (
@@ -138,13 +143,14 @@ export default function DashboardPage() {
           </div>
           <p style={{ color: "#ccc" }}>Turma: <b>{user.turma}</b> | Idade: <b>{user.idade}</b></p>
         </div>
-        <nav>
+        <nav style={{ display: "flex", alignItems: "center", gap: 15 }}>
           <a href="/test" style={linkStyle}>Fazer teste</a>
           <a href="/ranking" style={linkStyle}>Ranking</a>
+          <button onClick={handleLogout} style={logoutButtonStyle}>Sair</button>
         </nav>
       </div>
 
-      {/* Média de WPM com mascote animado */}
+      {/* Média de WPM */}
       <div style={{ ...cardStyle, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
         <img
           src="/styles/images/mascote.png"
@@ -214,8 +220,17 @@ const resultItemStyle = {
 
 const linkStyle = {
   color: "#4a90e2",
-  marginLeft: 20,
   textDecoration: "none",
+  fontWeight: "bold"
+};
+
+const logoutButtonStyle = {
+  background: "#F44336",
+  color: "#fff",
+  border: "none",
+  borderRadius: 8,
+  padding: "8px 16px",
+  cursor: "pointer",
   fontWeight: "bold"
 };
 
