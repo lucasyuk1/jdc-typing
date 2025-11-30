@@ -28,7 +28,7 @@ export default function TestePage() {
 
   // Carrega usuário logado
   useEffect(() => {
-    const u = localStorage.getItem("usuario_logado");
+    const u = localStorage.getItem("jdc-user");
     if (!u) return router.push("/auth");
     setUser(JSON.parse(u));
   }, [router]);
