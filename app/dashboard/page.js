@@ -8,7 +8,6 @@ export default function DashboardPage() {
   const [resultados, setResultados] = useState([]);
   const [mediaWPM, setMediaWPM] = useState(null);
 
-  // Referências dos gráficos
   const wpmChartRef = useRef(null);
   const accuracyChartRef = useRef(null);
   const wpmChartInstance = useRef(null);
@@ -23,7 +22,6 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Buscar resultados quando o usuário existir
   useEffect(() => {
     if (!user) return;
 
@@ -52,7 +50,6 @@ export default function DashboardPage() {
     loadResultados();
   }, [user]);
 
-  // Criar gráficos quando resultados mudarem
   useEffect(() => {
     if (resultados.length === 0) return;
 
@@ -63,11 +60,9 @@ export default function DashboardPage() {
     const wpmData = resultados.map((r) => r.wpm).reverse();
     const accuracyData = resultados.map((r) => r.accuracy).reverse();
 
-    // Destroi gráficos antigos antes de recriar
     if (wpmChartInstance.current) wpmChartInstance.current.destroy();
     if (accuracyChartInstance.current) accuracyChartInstance.current.destroy();
 
-    // Gráfico WPM
     wpmChartInstance.current = new Chart(wpmChartRef.current, {
       type: "line",
       data: {
@@ -77,13 +72,24 @@ export default function DashboardPage() {
             label: "WPM",
             data: wpmData,
             borderWidth: 3,
-            tension: 0.3
+            tension: 0.4,
+            borderColor: "#4a90e2",
+            backgroundColor: "rgba(74,144,226,0.2)",
+            fill: true,
+            pointRadius: 5,
+            pointBackgroundColor: "#4a90e2"
           }
         ]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true },
+          x: { ticks: { color: "#fff" } }
+        }
       }
     });
 
-    // Gráfico Acurácia
     accuracyChartInstance.current = new Chart(accuracyChartRef.current, {
       type: "line",
       data: {
@@ -93,9 +99,21 @@ export default function DashboardPage() {
             label: "Acurácia (%)",
             data: accuracyData,
             borderWidth: 3,
-            tension: 0.3
+            tension: 0.4,
+            borderColor: "#34d399",
+            backgroundColor: "rgba(52,211,153,0.2)",
+            fill: true,
+            pointRadius: 5,
+            pointBackgroundColor: "#34d399"
           }
         ]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, max: 100 },
+          x: { ticks: { color: "#fff" } }
+        }
       }
     });
   }, [resultados]);
@@ -103,60 +121,86 @@ export default function DashboardPage() {
   if (!user) return <p>Carregando...</p>;
 
   return (
-    <div style={{ padding: 40, fontFamily: "Arial" }}>
-      <h1 style={{ fontSize: 32 }}>Olá, {user.username}!</h1>
-      <p>Turma: <b>{user.turma}</b></p>
-      <p>Idade: <b>{user.idade}</b></p>
+    <div style={{ padding: 40, fontFamily: "Arial", color: "#fff" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
+        <div>
+          <h1 style={{ fontSize: 36, marginBottom: 5 }}>Olá, {user.username}!</h1>
+          <p style={{ color: "#ccc" }}>Turma: <b>{user.turma}</b> | Idade: <b>{user.idade}</b></p>
+        </div>
+        <nav>
+          <a href="/test" style={linkStyle}>Fazer teste</a>
+          <a href="/ranking" style={linkStyle}>Ranking</a>
+        </nav>
+      </div>
 
-      <nav style={{ marginTop: 20, marginBottom: 30 }}>
-        <a href="/test" style={{ marginRight: 20 }}>Fazer teste de digitação</a>
-        <a href="/ranking">Ver ranking</a>
-      </nav>
-
-      {/* MÉDIA DESTACADA */}
-      <div
-        style={{
-          background: "#4a90e2",
-          padding: 20,
-          color: "white",
-          borderRadius: 10,
-          marginBottom: 30,
-          width: "fit-content",
-          boxShadow: "0 0 8px rgba(0,0,0,0.2)"
-        }}
-      >
-        <h2 style={{ margin: 0, fontSize: 26 }}>Sua média de WPM</h2>
-        <p style={{ margin: 0, fontSize: 40, fontWeight: "bold", textAlign: "center" }}>
+      {/* Média de WPM */}
+      <div style={cardStyle}>
+        <h2 style={{ fontSize: 22, marginBottom: 5 }}>Sua média de WPM</h2>
+        <p style={{ fontSize: 48, fontWeight: "bold", color: "#4a90e2", margin: 0, textAlign: "center" }}>
           {mediaWPM !== null ? mediaWPM : "—"}
         </p>
       </div>
 
-      {/* GRÁFICO DE WPM */}
-      <h2 style={{ fontSize: 26 }}>Evolução do WPM</h2>
-      <canvas ref={wpmChartRef} style={{ maxWidth: "700px", marginBottom: 50 }} />
+      {/* Gráficos */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, marginTop: 40 }}>
+        <div style={cardStyle}>
+          <h3 style={graphTitleStyle}>Evolução do WPM</h3>
+          <canvas ref={wpmChartRef} />
+        </div>
+        <div style={cardStyle}>
+          <h3 style={graphTitleStyle}>Evolução da Acurácia (%)</h3>
+          <canvas ref={accuracyChartRef} />
+        </div>
+      </div>
 
-      {/* GRÁFICO DE ACURÁCIA */}
-      <h2 style={{ fontSize: 26 }}>Evolução da Acurácia (%)</h2>
-      <canvas ref={accuracyChartRef} style={{ maxWidth: "700px", marginBottom: 50 }} />
-
-      {/* ÚLTIMOS RESULTADOS */}
-      <h2 style={{ fontSize: 26 }}>Seus últimos resultados</h2>
-
-      {resultados.length === 0 ? (
-        <p>Nenhum resultado encontrado.</p>
-      ) : (
-        <ul style={{ marginTop: 10, paddingLeft: 20 }}>
-          {resultados.map((r) => (
-            <li key={r.id} style={{ marginBottom: 8, fontSize: 18 }}>
-              <b>WPM:</b> {r.wpm} — <b>Precisão:</b> {r.accuracy}% — <b>Tempo:</b> {r.tempo_segundos}s
-              <br />
-              <small style={{ color: "#666" }}>
-                {new Date(r.created_at).toLocaleString("pt-BR")}
-              </small>
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* Últimos resultados */}
+      <div style={{ marginTop: 50 }}>
+        <h2 style={{ fontSize: 26, marginBottom: 20 }}>Seus últimos resultados</h2>
+        {resultados.length === 0 ? (
+          <p>Nenhum resultado encontrado.</p>
+        ) : (
+          <div style={{ display: "grid", gap: 10 }}>
+            {resultados.map((r) => (
+              <div key={r.id} style={resultItemStyle}>
+                <b>WPM:</b> {r.wpm} — <b>Precisão:</b> {r.accuracy}% — <b>Tempo:</b> {r.tempo_segundos}s
+                <br />
+                <small style={{ color: "#999" }}>
+                  {new Date(r.created_at).toLocaleString("pt-BR")}
+                </small>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+// Estilos reutilizáveis
+const cardStyle = {
+  background: "#1f2937",
+  padding: 20,
+  borderRadius: 12,
+  boxShadow: "0 4px 12px rgba(0,0,0,0.3)"
+};
+
+const resultItemStyle = {
+  background: "#111827",
+  padding: 15,
+  borderRadius: 8,
+  fontSize: 18,
+  color: "#fff"
+};
+
+const linkStyle = {
+  color: "#4a90e2",
+  marginLeft: 20,
+  textDecoration: "none",
+  fontWeight: "bold"
+};
+
+const graphTitleStyle = {
+  fontSize: 18,
+  marginBottom: 10
+};
