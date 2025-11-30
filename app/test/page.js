@@ -117,7 +117,6 @@ return () => clearInterval(i);
 
 }, [started, timeLeft, finished, router]);
 
-// Calcula resultados
 const totalTyped = correctCount + wrongCount;
 const accuracy = totalTyped > 0 ? ((correctCount / totalTyped) * 100).toFixed(1) : 100;
 const elapsed = 180 - timeLeft;
@@ -127,7 +126,6 @@ const progress = ((pos / text.length) * 100).toFixed(2);
 const words = text.split(" ");
 const currentWordIndex = text.slice(0, pos).split(" ").length - 1;
 
-// Animação dos resultados
 function animateResults() {
 let wpmCount = 0;
 let accCount = 0;
@@ -136,7 +134,6 @@ if (wpmCount < wpm) setAnimatedWPM(++wpmCount);
 else clearInterval(wpmInterval);
 }, 20);
 
-
 const accInterval = setInterval(() => {
   if (accCount < accuracy) setAnimatedAccuracy(prev => prev + 1);
   else clearInterval(accInterval);
@@ -144,24 +141,49 @@ const accInterval = setInterval(() => {
 
 }
 
+// Cores dinâmicas
+const wpmColor = wpm < 30 ? "#F44336" : wpm < 60 ? "#FFC107" : "#4CAF50";
+const accuracyColor = accuracy < 70 ? "#F44336" : accuracy < 90 ? "#FF9800" : "#4CAF50";
+const progressColor = correctCount / totalTyped > 0.9 ? "#4CAF50" : correctCount / totalTyped > 0.7 ? "#FFC107" : "#F44336";
+
 return (
 <div style={{ padding: 40, fontFamily: "sans-serif" }}>
 {/* HEADER FIXO */}
-<div style={{ position: "sticky", top: 0, background: "#fff", zIndex: 10, paddingBottom: 20 }}>
+<div style={{
+position: "sticky",
+top: 0,
+background: "#222",
+color: "#fff",
+zIndex: 10,
+padding: "20px 40px",
+boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
+}}>
 <h1 style={{ fontSize: 28, marginBottom: 10 }}>Teste de Digitação - 3 Minutos</h1>
-<div style={{ display: "flex", gap: 20, marginBottom: 20 }}> <p><b>Tempo:</b> {timeLeft}s</p> <p><b>WPM:</b> {wpm}</p> <p><b>Precisão:</b> {accuracy}%</p> <p><b>Digitado:</b> {totalTyped}</p> </div> </div>
+<div style={{ display: "flex", gap: 20, marginBottom: 20 }}> <p><b>Tempo:</b> {timeLeft}s</p> <p><b>WPM:</b> <span style={{ color: wpmColor }}>{wpm}</span></p> <p><b>Precisão:</b> <span style={{ color: accuracyColor }}>{accuracy}%</span></p> <p><b>Digitado:</b> {totalTyped}</p> </div> </div>
 
   {!finished ? (
     <>
       <div style={{ marginBottom: 15 }}>
         <b>Palavra atual:</b>{" "}
-        <span style={{ background: "#ffee99", padding: "6px 10px", borderRadius: 4, fontSize: 22 }}>
+        <span style={{ 
+          background: "#ff9900", 
+          padding: "8px 14px", 
+          borderRadius: 6, 
+          fontSize: 24, 
+          color: "#fff",
+          boxShadow: "0 2px 5px rgba(0,0,0,0.3)"
+        }}>
           {words[currentWordIndex] || ""}
         </span>
       </div>
 
-      <div style={{ width: "100%", height: 8, background: "#ccc", borderRadius: 4, marginBottom: 20 }}>
-        <div style={{ height: "100%", width: `${progress}%`, background: "#4a90e2", transition: "width 0.15s" }} />
+      <div style={{ width: "100%", height: 12, background: "#ccc", borderRadius: 4, marginBottom: 20 }}>
+        <div style={{ 
+          height: "100%", 
+          width: `${progress}%`, 
+          background: progressColor, 
+          transition: "width 0.15s, background 0.3s" 
+        }} />
       </div>
 
       <div
@@ -190,7 +212,7 @@ return (
               key={i}
               ref={el => (charRefs.current[i] = el)}
               style={{
-                background: isCursor ? "#553bffff" : "none",
+                background: isCursor ? "#ffeb3b" : "none",
                 borderBottom: isCursor ? "2px solid black" : "none",
                 animation: isCursor ? "blink 1s step-start 0s infinite" : "none",
                 color
@@ -222,8 +244,8 @@ return (
       animation: "fadeIn 1s ease-in-out"
     }}>
       <p>Tempo encerrado!</p>
-      <p style={{ color: "#4CAF50" }}>WPM: {animatedWPM}</p>
-      <p style={{ color: "#FF5722" }}>Precisão: {animatedAccuracy}%</p>
+      <p style={{ color: wpmColor }}>WPM: {animatedWPM}</p>
+      <p style={{ color: accuracyColor }}>Precisão: {animatedAccuracy}%</p>
       <p>Redirecionando para o Dashboard...</p>
     </div>
   )}
