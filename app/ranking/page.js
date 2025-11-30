@@ -27,11 +27,7 @@ try {
 const res = await fetch("/api/results/ranking", {
 method: "POST",
 headers: { "Content-Type": "application/json" },
-body: JSON.stringify({
-mode,
-username: user.username, // <-- use username, não fullname
-turma: user.turma,
-}),
+body: JSON.stringify({ mode }),
 });
 
   const json = await res.json();
@@ -46,7 +42,7 @@ turma: user.turma,
 
   // Modo pessoal: apenas os registros do próprio usuário
   if (mode === "pessoal") {
-    const userData = data.filter(r => r.usuario_id === user.usuario_id);
+    const userData = data.filter(r => String(r.usuario_id) === String(user.usuario_id));
     userData.sort((a, b) => b.wpm - a.wpm);
     setRanking(
       userData.map(r => ({
@@ -96,7 +92,6 @@ turma: user.turma,
   console.error("Erro ao carregar ranking:", err);
 }
 
-
 }
 
 if (!user) return <p>Carregando...</p>;
@@ -114,38 +109,46 @@ return (
     <button onClick={() => setMode("pessoal")} style={{ ...modeButtonStyle, background: mode === "pessoal" ? "#1E90FF" : "#4a90e2" }}>Seus Resultados</button>
   </div>
 
-  <table style={{ width: "100%", borderCollapse: "collapse" }}>
-    <thead>
-      <tr style={{ background: "#1f2937", textAlign: "center" }}>
-        <th style={thTdStyle}>#</th>
-        <th style={thTdStyle}>Nome</th>
-        <th style={thTdStyle}>Turma</th>
-        <th style={thTdStyle}>{mode === "pessoal" ? "WPM" : "WPM Médio"}</th>
-        <th style={thTdStyle}>{mode === "pessoal" ? "Precisão" : "Precisão Média"}</th>
-        <th style={thTdStyle}>Data</th>
-      </tr>
-    </thead>
-    <tbody>
-      {ranking.map((r, i) => (
-        <tr
-          key={r.usuario_id}
-          style={{
-            textAlign: "center",
-            borderBottom: "1px solid #333",
-            background: r.usuario_id === user.usuario_id ? "linear-gradient(90deg, rgba(30,144,255,0.3), rgba(30,144,255,0.1))" : "transparent",
-            fontWeight: r.usuario_id === user.usuario_id ? "bold" : "normal"
-          }}
-        >
-          <td style={thTdStyle}>{i + 1}</td>
-          <td style={thTdStyle}>{r.fullname}</td>
-          <td style={thTdStyle}>{r.turma}</td>
-          <td style={thTdStyle}>{r.wpm}</td>
-          <td style={thTdStyle}>{r.accuracy ?? "-"}</td>
-          <td style={thTdStyle}>{new Date(r.created_at).toLocaleString("pt-BR")}</td>
+  {ranking.length === 0 ? (
+    <p style={{ textAlign: "center", marginTop: 40, fontSize: 18 }}>
+      {mode === "pessoal"
+        ? "Você ainda não possui resultados."
+        : "Nenhum resultado encontrado para este modo."}
+    </p>
+  ) : (
+    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <thead>
+        <tr style={{ background: "#1f2937", textAlign: "center" }}>
+          <th style={thTdStyle}>#</th>
+          <th style={thTdStyle}>Nome</th>
+          <th style={thTdStyle}>Turma</th>
+          <th style={thTdStyle}>{mode === "pessoal" ? "WPM" : "WPM Médio"}</th>
+          <th style={thTdStyle}>{mode === "pessoal" ? "Precisão" : "Precisão Média"}</th>
+          <th style={thTdStyle}>Data</th>
         </tr>
-      ))}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {ranking.map((r, i) => (
+          <tr
+            key={r.usuario_id + i}
+            style={{
+              textAlign: "center",
+              borderBottom: "1px solid #333",
+              background: r.usuario_id === user.usuario_id ? "linear-gradient(90deg, rgba(30,144,255,0.3), rgba(30,144,255,0.1))" : "transparent",
+              fontWeight: r.usuario_id === user.usuario_id ? "bold" : "normal"
+            }}
+          >
+            <td style={thTdStyle}>{i + 1}</td>
+            <td style={thTdStyle}>{r.fullname}</td>
+            <td style={thTdStyle}>{r.turma}</td>
+            <td style={thTdStyle}>{r.wpm}</td>
+            <td style={thTdStyle}>{r.accuracy ?? "-"}</td>
+            <td style={thTdStyle}>{new Date(r.created_at).toLocaleString("pt-BR")}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )}
 </div>
 
 );
