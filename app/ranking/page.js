@@ -30,28 +30,46 @@ turma: user.turma,
 });
 
 const json = await res.json();
-if (json.success) {
-  let data = json.data;
+if (!json.success) return;
 
-  // Para modo "pessoal", calcula média no frontend
-  if (mode === "pessoal") {
-    const userResults = data.filter(r => r.usuario_id === user.id);
-    if (userResults.length > 0) {
-      const wpmAvg = Math.round(userResults.reduce((acc, r) => acc + r.wpm, 0) / userResults.length);
-      const accAvg = Math.round(userResults.reduce((acc, r) => acc + (r.accuracy ?? 0), 0) / userResults.length);
-      data = [{
-        usuario_id: user.id,
-        username: user.username,
-        turma: user.turma,
-        wpm: wpmAvg,
-        accuracy: accAvg,
-        created_at: userResults[userResults.length - 1].created_at
-      }];
+let data = json.data;
+
+// Agrupar por usuário e calcular médias
+const grouped = {};
+data.forEach(r => {
+  if (!grouped[r.usuario_id]) {
+    grouped[r.usuario_id] = {
+      usuario_id: r.usuario_id,
+      username: r.username,
+      turma: r.turma,
+      totalWPM: r.wpm,
+      totalAcc: r.accuracy ?? 0,
+      count: 1,
+      lastDate: r.created_at
+    };
+  } else {
+    grouped[r.usuario_id].totalWPM += r.wpm;
+    grouped[r.usuario_id].totalAcc += r.accuracy ?? 0;
+    grouped[r.usuario_id].count += 1;
+    if (new Date(r.created_at) > new Date(grouped[r.usuario_id].lastDate)) {
+      grouped[r.usuario_id].lastDate = r.created_at;
     }
   }
+});
 
-  setRanking(data);
-}
+const uniqueRanking = Object.values(grouped).map(u => ({
+  usuario_id: u.usuario_id,
+  username: u.username,
+  turma: u.turma,
+  wpm: Math.round(u.totalWPM / u.count),
+  accuracy: Math.round(u.totalAcc / u.count),
+  created_at: u.lastDate
+}));
+
+// Ordena pelo WPM médio decrescente
+uniqueRanking.sort((a, b) => b.wpm - a.wpm);
+
+setRanking(uniqueRanking);
 
 }
 
