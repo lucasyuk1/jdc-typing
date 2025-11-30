@@ -29,7 +29,7 @@ method: "POST",
 headers: { "Content-Type": "application/json" },
 body: JSON.stringify({
 mode,
-fullname: user.fullname,
+username: user.username, // <-- use username, não fullname
 turma: user.turma,
 }),
 });
@@ -44,13 +44,14 @@ turma: user.turma,
     data = data.filter(r => r.turma === user.turma);
   }
 
-  // Modo pessoal: apenas ordenar pelo WPM
+  // Modo pessoal: apenas os registros do próprio usuário
   if (mode === "pessoal") {
-    data.sort((a, b) => b.wpm - a.wpm);
+    const userData = data.filter(r => r.usuario_id === user.usuario_id);
+    userData.sort((a, b) => b.wpm - a.wpm);
     setRanking(
-      data.map(r => ({
+      userData.map(r => ({
         ...r,
-        fullname: r.fullname && r.fullname.trim() !== "" ? r.fullname : r.username
+        fullname: r.fullname && r.fullname.trim() !== "" ? r.fullname : user.username
       }))
     );
     return;
@@ -79,7 +80,6 @@ turma: user.turma,
     return acc;
   }, {});
 
-  // Calcula média e transforma em array, garantindo que fullname não fique vazio
   const finalRanking = Object.values(grouped).map(u => ({
     usuario_id: u.usuario_id,
     fullname: u.fullname && u.fullname.trim() !== "" ? u.fullname : user.username,
@@ -89,13 +89,13 @@ turma: user.turma,
     created_at: u.lastDate
   }));
 
-  // Ordena por WPM
   finalRanking.sort((a, b) => b.wpm - a.wpm);
   setRanking(finalRanking);
 
 } catch (err) {
   console.error("Erro ao carregar ranking:", err);
 }
+
 
 }
 
@@ -109,9 +109,9 @@ return (
 <button onClick={() => window.location.href = "/dashboard"} style={backButtonStyle}>Voltar</button> </div> </div>
 
   <div style={{ marginBottom: 20 }}>
-    <button onClick={() => setMode("geral")} style={{ ...modeButtonStyle, background: mode === "geral" ? "#1E90FF" : "#4a90e2", boxShadow: mode === "geral" ? "0 6px 12px rgba(30,144,255,0.6)" : "0 4px 8px rgba(0,0,0,0.2)" }}>Geral</button>
-    <button onClick={() => setMode("turma")} style={{ ...modeButtonStyle, background: mode === "turma" ? "#1E90FF" : "#4a90e2", boxShadow: mode === "turma" ? "0 6px 12px rgba(30,144,255,0.6)" : "0 4px 8px rgba(0,0,0,0.2)" }}>Sua Turma ({user.turma})</button>
-    <button onClick={() => setMode("pessoal")} style={{ ...modeButtonStyle, background: mode === "pessoal" ? "#1E90FF" : "#4a90e2", boxShadow: mode === "pessoal" ? "0 6px 12px rgba(30,144,255,0.6)" : "0 4px 8px rgba(0,0,0,0.2)" }}>Seus Resultados</button>
+    <button onClick={() => setMode("geral")} style={{ ...modeButtonStyle, background: mode === "geral" ? "#1E90FF" : "#4a90e2" }}>Geral</button>
+    <button onClick={() => setMode("turma")} style={{ ...modeButtonStyle, background: mode === "turma" ? "#1E90FF" : "#4a90e2" }}>Sua Turma ({user.turma})</button>
+    <button onClick={() => setMode("pessoal")} style={{ ...modeButtonStyle, background: mode === "pessoal" ? "#1E90FF" : "#4a90e2" }}>Seus Resultados</button>
   </div>
 
   <table style={{ width: "100%", borderCollapse: "collapse" }}>
