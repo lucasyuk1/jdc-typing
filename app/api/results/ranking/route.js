@@ -2,30 +2,41 @@ import { supabase } from "@/lib/supabase";
 
 export async function POST(req) {
 try {
-const { mode, fullname, turma } = await req.json();
+const { mode, usuario_id, fullname, turma } = await req.json();
 
+// Consulta results junto com dados do usuário
 let query = supabase
   .from("results")
-  .select("id, user_id, fullname, turma, wpm, accuracy, created_at");
-
-if (mode === "turma") {
-  query = query.eq("turma", turma);
-} else if (mode === "pessoal") {
-  query = query.eq("fullname", fullname);
-}
-
-// Ordena por WPM decrescente
-query = query.order("wpm", { ascending: false }).limit(50);
+  .select("id, user_id, wpm, accuracy, created_at, users(username, fullname, turma)")
+  .order("created_at", { ascending: false })
+  .limit(1000);
 
 const { data, error } = await query;
 if (error) throw error;
 
-// Para o modo geral, agrupamos por usuário e calculamos médias
-if (mode === "geral") {
-  const grouped = data.reduce((acc, r) => {
-    if (!acc[r.user_id]) {
-      acc[r.user_id] = {
-        usuario_id: r.user_id,
+// Mapeia os dados para incluir fullname, username e turma
+let rows = data.map(r => ({
+  id: r.id,
+  usuario_id: r.user_id,
+  username: r.users?.username || "",
+  fullname: r.users?.fullname || r.users?.username || "",
+  turma: r.users?.turma || "",
+  wpm: r.wpm,
+  accuracy: r.accuracy ?? 0,
+  created_at: r.created_at
+}));
+
+// Aplica filtros de acordo com o modo
+if (mode === "pessoal" && usuario_id) {
+  rows = rows.filter(r => String(r.usuario_id) === String(usuario_id));
+} else if (mode === "turma" && turma) {
+  rows = rows.filter(r => r.turma === turma);
+} else if (mode === "geral") {
+  // Agrupa por usuário e calcula média
+  const grouped = rows.reduce((acc, r) => {
+    if (!acc[r.usuario_id]) {
+      acc[r.usuario_id] = {
+        usuario_id: r.usuario_id,
         fullname: r.fullname,
         turma: r.turma,
         totalWPM: r.wpm,
@@ -34,17 +45,17 @@ if (mode === "geral") {
         created_at: r.created_at,
       };
     } else {
-      acc[r.user_id].totalWPM += r.wpm;
-      acc[r.user_id].totalAcc += r.accuracy;
-      acc[r.user_id].count += 1;
-      if (new Date(r.created_at) > new Date(acc[r.user_id].created_at)) {
-        acc[r.user_id].created_at = r.created_at;
+      acc[r.usuario_id].totalWPM += r.wpm;
+      acc[r.usuario_id].totalAcc += r.accuracy;
+      acc[r.usuario_id].count += 1;
+      if (new Date(r.created_at) > new Date(acc[r.usuario_id].created_at)) {
+        acc[r.usuario_id].created_at = r.created_at;
       }
     }
     return acc;
   }, {});
 
-  const finalData = Object.values(grouped).map(u => ({
+  rows = Object.values(grouped).map(u => ({
     usuario_id: u.usuario_id,
     fullname: u.fullname,
     turma: u.turma,
@@ -53,13 +64,14 @@ if (mode === "geral") {
     created_at: u.created_at,
   }));
 
-  return new Response(JSON.stringify({ success: true, data: finalData }), { status: 200 });
+  // Ordena pelo WPM médio
+  rows.sort((a, b) => b.wpm - a.wpm);
 }
 
-return new Response(JSON.stringify({ success: true, data }), { status: 200 });
+return new Response(JSON.stringify({ success: true, data: rows }), { status: 200 });
 
 } catch (err) {
-console.error(err);
-return new Response(JSON.stringify({ success: false, error: String(err) }), { status: 500 });
+console.error("Erro no ranking:", err);
+return new Response(JSON.stringify({ success: false, data: [] }), { status: 500 });
 }
 }
