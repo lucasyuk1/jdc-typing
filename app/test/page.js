@@ -43,7 +43,7 @@ try {
 const user = JSON.parse(localStorage.getItem("usuario_logado"));
 if (!user) return;
 
-  await fetch("/api/result", {
+  await fetch("/api/results", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

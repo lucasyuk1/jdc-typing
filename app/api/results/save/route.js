@@ -6,9 +6,12 @@ export async function POST(req) {
     const { wpm, username, turma } = body;
 
     const { error } = await supabase.from("results").insert({
+       usuario_id,
       username,
       turma,
       wpm,
+      accuracy,
+      tempo_segundos
     });
 
     if (error) return new Response(JSON.stringify({ success: false, error: error.message }), { status: 400 });

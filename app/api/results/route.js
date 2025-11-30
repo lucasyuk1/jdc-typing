@@ -13,7 +13,7 @@ export async function POST(req) {
     } = body;
 
     const { error } = await supabase
-      .from("resultados")
+      .from("results")
       .insert({
         usuario_id,
         username,
