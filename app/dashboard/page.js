@@ -136,7 +136,7 @@ export default function DashboardPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <h1 style={{ fontSize: 36, marginBottom: 5 }}>Olá, {user.username}!</h1>
             <img
-              src="/styles/images/mascote.png"
+              src="styles/images/mascote.png"
               alt="Mascote"
               style={{ width: 50, height: 50 }}
             />

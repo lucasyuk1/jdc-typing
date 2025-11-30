@@ -79,7 +79,7 @@ export default function RankingPage() {
       {/* Header com mascote */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <img src="/styles/images/mascote.png" alt="Mascote" style={{ width: 80, height: 80 }} />
+          <img src="styles/images/mascote.png" alt="Mascote" style={{ width: 80, height: 80 }} />
           <h1 style={{ fontSize: 36 }}>Ranking - Olá, {user.username}!</h1>
         </div>
         <div>
