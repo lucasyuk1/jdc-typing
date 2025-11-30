@@ -1,12 +1,20 @@
-
-/* ===== RESET BÁSICO ===== */
+/* ============================
+   RESET GLOBAL
+============================ */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* ===== BASE ===== */
+/* Remove estilo default de botão no mobile */
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================
+   BASE
+============================ */
 body {
   background: #071025;
   color: #f4f7ff;
@@ -15,19 +23,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Links */
 a {
   color: #8acbff;
   margin-right: 8px;
   text-decoration: none;
-  transition: 0.2s;
+  transition: 0.2s ease;
 }
 
 a:hover {
   color: #c6e6ff;
 }
 
-/* ===== INPUTS ===== */
+/* ============================
+   INPUTS GERAIS
+============================ */
 .input,
 input,
 textarea,
@@ -40,7 +49,7 @@ select {
   background: #0b1220;
   color: #fff;
   font-size: 15px;
-  transition: border 0.25s, background 0.25s;
+  transition: border 0.25s, background 0.25s, transform 0.2s;
 }
 
 .input:focus,
@@ -50,14 +59,16 @@ select:focus {
   border-color: #5aa4ff;
   background: #0f192e;
   outline: none;
+  transform: scale(1.01);
 }
 
-/* Placeholder */
 ::placeholder {
   color: #94a3b8;
 }
 
-/* ===== BOTÕES ===== */
+/* ============================
+   BOTÕES
+============================ */
 button {
   background: #9747ff;
   color: #fff;
@@ -66,11 +77,16 @@ button {
   border: none;
   cursor: pointer;
   font-weight: 600;
-  transition: 0.2s ease;
+  transition: background 0.2s, transform 0.15s;
 }
 
 button:hover {
   background: #7a37cc;
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: scale(0.97);
 }
 
 button:disabled {
@@ -78,25 +94,30 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* ===== TABELAS ===== */
+/* ============================
+   TABELAS
+============================ */
 table {
   border-collapse: collapse;
   width: 100%;
-  margin-top: 12px;
-}
-
-th, td {
-  padding: 12px;
-  border-bottom: 1px solid #1f2937;
-  text-align: left;
+  margin-top: 16px;
 }
 
 th {
   background: #0d172e;
+  padding: 12px;
   font-weight: 600;
+  border-bottom: 1px solid #1f2937;
 }
 
-/* ===== FORM AUTH (Tailwind Friendly) ===== */
+td {
+  padding: 12px;
+  border-bottom: 1px solid #1f2937;
+}
+
+/* ============================
+   FORM AUTH (Tailwind Friendly)
+============================ */
 .input-auth {
   @apply px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 outline-none focus:border-blue-400 transition;
 }
@@ -105,69 +126,72 @@ th {
   @apply px-4 py-3 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-lg transition;
 }
 
-/* ===== CARDS E CONTAINERS ===== */
+/* ============================
+   CARDS E CONTAINERS
+============================ */
 .card {
   background: #0d1424;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  padding: 22px;
+  border-radius: 14px;
+  box-shadow: 0 4px 22px rgba(0,0,0,0.2);
   border: 1px solid #1b2640;
 }
 
-/* Cartão destacado (uso para alertas ou mensagens do teste) */
 .card-highlight {
   background: linear-gradient(135deg, #162447, #1b2a4a);
-  padding: 24px;
+  padding: 26px;
   border-radius: 16px;
   border: 1px solid #334155;
-  box-shadow: 0 0 25px rgba(97, 161, 255, 0.15);
+  box-shadow: 0 0 25px rgba(97, 161, 255, 0.18);
 }
 
-/* ===== TIPOGRAFIA AUXILIAR ===== */
+/* ============================
+   TIPOGRAFIA AUXILIAR
+============================ */
 .text-center { text-align: center; }
 .text-sm { font-size: 0.875rem; }
 .text-lg { font-size: 1.125rem; font-weight: 600; }
 
-/* ===== MENSAGEM DE ERRO DO TYPING TEST ===== */
+/* ============================
+   ERROS E FEEDBACK DO TYPING TEST
+============================ */
 .typing-error {
   color: #ff6b6b;
   font-weight: bold;
 }
 
-/* Letras erradas: cor + negrito */
 .char-wrong {
   color: #ff4d4d;
   font-weight: 700;
 }
 
-/* Letras corretas */
 .char-correct {
   color: #7fffa1;
 }
 
-/* Próxima letra */
 .char-current {
   background: #374151;
   padding: 2px 4px;
   border-radius: 4px;
 }
 
-/* ===== Mensagem "não dá para voltar" ===== */
+/* Filosofia: “não dá para voltar” */
 .no-back-message {
   font-size: 0.85rem;
   margin-top: 4px;
   color: #ff9f6b;
   font-style: italic;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
-/* Container */
+/* ============================
+   RANKING: CONTAINER E HEADER
+============================ */
 .ranking-container {
   padding: 40px;
   min-height: 100vh;
 }
 
-/* Header */
 .ranking-header {
   display: flex;
   justify-content: space-between;
@@ -178,6 +202,7 @@ th {
 .ranking-title {
   font-size: 34px;
   font-weight: bold;
+  letter-spacing: 1px;
 }
 
 .ranking-header-side {
@@ -186,52 +211,54 @@ th {
   gap: 15px;
 }
 
-/* Mode buttons */
+/* ============================
+   BUTTONS DO RANKING
+============================ */
 .ranking-modes {
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .mode-btn {
   padding: 10px 18px;
-  border-radius: 8px;
+  border-radius: 10px;
   margin-right: 10px;
-  background: #4a90e2;
+  background: #3a78d8;
   color: #fff;
   font-weight: bold;
   border: none;
   cursor: pointer;
-  transition: 0.2s;
+  transition: 0.2s ease;
+}
+
+.mode-btn:hover {
+  background: #1b5fb9;
 }
 
 .mode-btn.active {
   background: #1e90ff;
+  box-shadow: 0px 0px 12px rgba(30,144,255,0.4);
 }
 
-/* Table */
-.ranking-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
+/* ============================
+   TABELA DO RANKING
+============================ */
 .ranking-table th {
-  background: #1f2937;
-  padding: 12px;
-}
-
-.ranking-table td {
-  padding: 10px;
-  border-bottom: 1px solid #333;
+  background: #0e1a32;
   text-align: center;
 }
 
-/* Destaque para o próprio usuário */
+.ranking-table td {
+  text-align: center;
+  padding: 12px;
+}
+
+/* destaque para usuário */
 .highlight-row {
   background: linear-gradient(
     90deg,
-    rgba(30,144,255,0.25),
-    rgba(30,144,255,0.1)
+    rgba(0, 132, 255, 0.22),
+    rgba(0, 132, 255, 0.10)
   );
   font-weight: bold;
+  border-left: 4px solid #1e90ff;
 }
-
-
