@@ -7,7 +7,7 @@ const { mode, usuario_id, fullname, turma } = await req.json();
 // Consulta results junto com dados do usuário
 let query = supabase
   .from("results")
-  .select("id, user_id, wpm, accuracy, created_at, users(username, fullname, turma)")
+  .select("id, usuario_id, wpm, accuracy, created_at, users(username, fullname, turma)")
   .order("created_at", { ascending: false })
   .limit(1000);
 
@@ -17,7 +17,7 @@ if (error) throw error;
 // Mapeia os dados para incluir fullname, username e turma
 let rows = data.map(r => ({
   id: r.id,
-  usuario_id: r.user_id,
+  usuario_id: r.usuario_id,
   username: r.users?.username || "",
   fullname: r.users?.fullname || r.users?.username || "",
   turma: r.users?.turma || "",
