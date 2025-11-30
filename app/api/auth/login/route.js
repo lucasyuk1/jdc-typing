@@ -4,9 +4,10 @@ import bcrypt from "bcryptjs";
 export async function POST(req) {
 try {
 let { username, password } = await req.json();
-  
-if (!username || !password)
+
+if (!username || !password) {
   return new Response(JSON.stringify({ success: false, error: "Preencha todos os campos" }), { status: 400 });
+}
 
 // Limpa espaços e padroniza para lowercase
 username = username.trim().toLowerCase();
@@ -15,34 +16,39 @@ username = username.trim().toLowerCase();
 let { data: user, error } = await supabase
   .from("users")
   .select("*")
-  .ilike('username', username)
+  .ilike("username", username)
   .single();
 
 if (!user) {
   const resEmail = await supabase
     .from("users")
     .select("*")
-    .ilike('email', username)
+    .ilike("email", username)
     .single();
 
   user = resEmail.data;
   error = resEmail.error;
 }
 
-if (error || !user)
+if (error || !user) {
   return new Response(JSON.stringify({ success: false, error: "Usuário não encontrado" }), { status: 404 });
-  
-// Remove info sensível
-delete user.password_hash;
+}
+
 // Confere senha
 const isValid = await bcrypt.compare(password, user.password_hash);
-if (!isValid)
+if (!isValid) {
   return new Response(JSON.stringify({ success: false, error: "Senha incorreta" }), { status: 401 });
+}
+
+// Checagem do ID antes de criar cookie
+if (!user?.id) {
+  return new Response(JSON.stringify({ success: false, error: "Usuário inválido" }), { status: 500 });
+}
 
 // Remove info sensível
 delete user.password_hash;
 
-// Cria cookie (exemplo simples)
+// Cria cookie seguro
 const cookie = `user_session=${user.id}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=3600`;
 
 // Retorna resposta com cookie
@@ -50,11 +56,9 @@ return new Response(JSON.stringify({ success: true, user }), {
   status: 200,
   headers: {
     "Set-Cookie": cookie,
-    "Content-Type": "application/json"
-  }
+    "Content-Type": "application/json",
+  },
 });
-
-return new Response(JSON.stringify({ success: true, user }), { status: 200 });
 
 } catch (err) {
 return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500 });
