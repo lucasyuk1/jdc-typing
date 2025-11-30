@@ -5,16 +5,16 @@ export async function POST(req) {
     const body = await req.json();
 
     const {
-      usuario_id,
+      usuario_id,   // deve ser UUID
       username,
       turma,
       wpm,
       accuracy,
       tempo_segundos
-    } = body; // <-- DESSE jeito está certo
+    } = body;
 
     const { error } = await supabase
-      .from("resultados")
+      .from("results")   // nome da tabela
       .insert({
         usuario_id,
         username,
@@ -26,17 +26,10 @@ export async function POST(req) {
       });
 
     if (error)
-      return new Response(
-        JSON.stringify({ success: false, error: error.message }),
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ success: false, error: error.message }), { status: 400 });
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200
-    });
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (err) {
-    return new Response(JSON.stringify({ success: false, error: String(err) }), {
-      status: 500
-    });
+    return new Response(JSON.stringify({ success: false, error: String(err) }), { status: 500 });
   }
 }
