@@ -7,7 +7,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
+    const user = localStorage.getItem("jdc-user");
     if (user) {
       router.replace("/dashboard");
     } else {
