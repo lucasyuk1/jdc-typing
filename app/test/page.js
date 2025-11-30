@@ -47,12 +47,13 @@ if (!user) return;
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      usuario_id: user.id,
-      username: user.username,
-      turma: user.turma,
-      wpm,
-      accuracy,
-      tempo_segundos: 180
+      usuario_id,
+        username,
+        turma,
+        wpm,
+        accuracy,
+        tempo_segundos,
+        created_at: new Date().toISOString()
     })
   });
 } catch (err) {
@@ -163,20 +164,6 @@ boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
 
   {!finished ? (
     <>
-      <div style={{ marginBottom: 15 }}>
-        <b>Palavra atual:</b>{" "}
-        <span style={{ 
-          background: "#ff9900", 
-          padding: "8px 14px", 
-          borderRadius: 6, 
-          fontSize: 24, 
-          color: "#fff",
-          boxShadow: "0 2px 5px rgba(0,0,0,0.3)"
-        }}>
-          {words[currentWordIndex] || ""}
-        </span>
-      </div>
-
       <div style={{ width: "100%", height: 12, background: "#ccc", borderRadius: 4, marginBottom: 20 }}>
         <div style={{ 
           height: "100%", 

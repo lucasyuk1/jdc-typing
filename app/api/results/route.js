@@ -4,12 +4,13 @@ export async function POST(req) {
   try {
     const body = await req.json();
     const {
-      usuario_id,
-      username,
-      turma,
-      wpm,
-      accuracy,
-      tempo_segundos
+        usuario_id,
+        username,
+        turma,
+        wpm,
+        accuracy,
+        tempo_segundos,
+        created_at: new Date().toISOString()
     } = body;
 
     const { error } = await supabase
@@ -21,7 +22,7 @@ export async function POST(req) {
         wpm,
         accuracy,
         tempo_segundos,
-        created_at: new Date().toISOString()
+        created_at: 
       });
 
     if (error)
