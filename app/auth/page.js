@@ -79,6 +79,7 @@ return (
   ) : (
     <form onSubmit={handleRegister} style={{ marginTop: 20 }}>
       <input name="username" placeholder="Usuário" required />
+      <input name="fullname" placeholder="Nome Completo" required />
       <input name="email" type="email" placeholder="Email" required />
       <input name="idade" placeholder="Idade" required />
       <input name="turma" placeholder="Turma" required />
