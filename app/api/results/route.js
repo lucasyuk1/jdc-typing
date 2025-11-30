@@ -10,7 +10,7 @@ export async function POST(req) {
         wpm,
         accuracy,
         tempo_segundos,
-        created_at: new Date().toISOString()
+        created_at: 
     } = body;
 
     const { error } = await supabase
