@@ -93,7 +93,7 @@ return (
         <th style={thTdStyle}>Turma</th>
         <th style={thTdStyle}>{mode === "pessoal" ? "WPM" : "WPM Médio"}</th>
         <th style={thTdStyle}>{mode === "pessoal" ? "Precisão" : "Precisão Média"}</th>
-        <th style={thTdStyle}>Último Teste</th>
+        <th style={thTdStyle}>Data</th>
       </tr>
     </thead>
     <tbody>
