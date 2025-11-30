@@ -30,7 +30,6 @@ body: JSON.stringify({ mode }),
 const json = await res.json();
 if (!json.success) return;
 
-```
   let data = json.data;
 
   if (mode === "pessoal") {
@@ -87,7 +86,6 @@ if (!json.success) return;
 } catch (err) {
   console.error("Erro ao carregar ranking:", err);
 }
-```
 
 }
 
@@ -100,7 +98,6 @@ return (
 <div style={{ display: "flex", alignItems: "center", gap: 15 }}> <Image src={Mascote} width={50} height={50} alt="Mascote" />
 <button onClick={() => window.location.href = "/dashboard"} style={backButtonStyle}>Voltar</button> </div> </div>
 
-```
   <div style={{ marginBottom: 20 }}>
     <button onClick={() => setMode("geral")} style={{ ...modeButtonStyle, background: mode === "geral" ? "#1E90FF" : "#4a90e2" }}>Geral</button>
     <button onClick={() => setMode("turma")} style={{ ...modeButtonStyle, background: mode === "turma" ? "#1E90FF" : "#4a90e2" }}>Sua Turma ({user.turma})</button>
@@ -148,7 +145,6 @@ return (
     </table>
   )}
 </div>
-```
 
 );
 }
