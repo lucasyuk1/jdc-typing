@@ -9,12 +9,14 @@ const [user, setUser] = useState(null);
 const [mode, setMode] = useState("geral");
 const [ranking, setRanking] = useState([]);
 
+// Carrega usuário do localStorage
 useEffect(() => {
 const u = localStorage.getItem("jdc-user");
 if (!u) return (window.location.href = "/auth");
 setUser(JSON.parse(u));
 }, []);
 
+// Recarrega ranking sempre que o modo ou usuário mudam
 useEffect(() => {
 if (!user) return;
 loadRanking();
@@ -29,65 +31,47 @@ body: JSON.stringify({ mode }),
 });
 
   const json = await res.json();
-  if (!json.success || !Array.isArray(json.data)) {
-    console.error("API não retornou dados válidos:", json);
-    setRanking([]);
-    return;
-  }
+  if (!json.success) return setRanking([]);
 
   let data = json.data;
-  console.log("Dados recebidos da API:", data);
 
+  // Filtro por turma para modo "turma"
+  if (mode === "turma") {
+    data = data.filter(r => r.turma === user.turma);
+  }
+
+  // Modo pessoal: apenas os registros do usuário
   if (mode === "pessoal") {
-    const userData = data
-      .filter(r => String(r.usuario_id) === String(user.usuario_id))
-      .sort((a, b) => b.wpm - a.wpm)
-      .map(r => ({
-        ...r,
-        fullname: r.fullname?.trim() || user.username,
-      }));
+    const userData = data.filter(r => String(r.usuario_id) === String(user.usuario_id));
+    userData.sort((a, b) => b.wpm - a.wpm);
     setRanking(userData);
     return;
   }
 
-  if (mode === "turma") data = data.filter(r => r.turma === user.turma);
-
-  const grouped = {};
-  for (const r of data) {
-    if (!r.usuario_id) continue;
-    const key = r.usuario_id;
-    if (!grouped[key]) {
-      grouped[key] = {
-        usuario_id: r.usuario_id,
-        fullname: r.fullname?.trim() || r.username || "Desconhecido",
-        turma: r.turma || "-",
-        totalWPM: r.wpm || 0,
-        totalAcc: r.accuracy ?? 0,
-        count: 1,
-        lastDate: r.created_at,
-      };
+  // Modo geral ou turma: agrupa por usuário e calcula média
+  const grouped = data.reduce((acc, r) => {
+    if (!acc[r.usuario_id]) {
+      acc[r.usuario_id] = { ...r, totalWPM: r.wpm, totalAcc: r.accuracy, count: 1 };
     } else {
-      grouped[key].totalWPM += r.wpm || 0;
-      grouped[key].totalAcc += r.accuracy ?? 0;
-      grouped[key].count += 1;
-      if (new Date(r.created_at) > new Date(grouped[key].lastDate)) {
-        grouped[key].lastDate = r.created_at;
+      acc[r.usuario_id].totalWPM += r.wpm;
+      acc[r.usuario_id].totalAcc += r.accuracy;
+      acc[r.usuario_id].count += 1;
+      if (new Date(r.created_at) > new Date(acc[r.usuario_id].created_at)) {
+        acc[r.usuario_id].created_at = r.created_at;
       }
     }
-  }
+    return acc;
+  }, {});
 
-  const finalRanking = Object.values(grouped)
-    .map(u => ({
-      usuario_id: u.usuario_id,
-      fullname: u.fullname,
-      turma: u.turma,
-      wpm: Math.round(u.totalWPM / u.count),
-      accuracy: Math.round(u.totalAcc / u.count),
-      created_at: u.lastDate,
-    }))
-    .sort((a, b) => b.wpm - a.wpm);
+  const finalRanking = Object.values(grouped).map(u => ({
+    ...u,
+    wpm: Math.round(u.totalWPM / u.count),
+    accuracy: Math.round(u.totalAcc / u.count)
+  }));
 
+  finalRanking.sort((a, b) => b.wpm - a.wpm);
   setRanking(finalRanking);
+
 } catch (err) {
   console.error("Erro ao carregar ranking:", err);
   setRanking([]);
@@ -96,25 +80,6 @@ body: JSON.stringify({ mode }),
 }
 
 if (!user) return <p>Carregando...</p>;
-
-function getRowStyle(r, index) {
-if (r.usuario_id === user.usuario_id) {
-return {
-background: "linear-gradient(90deg, rgba(30,144,255,0.3), rgba(30,144,255,0.1))",
-fontWeight: "bold",
-textAlign: "center",
-borderBottom: "1px solid #333",
-};
-}
-// Top 3
-const colors = ["#FFD70033", "#C0C0C033", "#CD7F3233"];
-return {
-background: index < 3 ? colors[index] : "transparent",
-textAlign: "center",
-borderBottom: "1px solid #333",
-fontWeight: "normal",
-};
-}
 
 return (
 <div style={{ padding: 40, fontFamily: "Arial, sans-serif", color: "#fff", minHeight: "100vh", background: "#0A0F1F" }}>
@@ -147,15 +112,18 @@ return (
       </thead>
       <tbody>
         {ranking.map((r, i) => (
-          <tr key={r.usuario_id + i} style={getRowStyle(r, i)}>
+          <tr key={r.usuario_id + i} style={{
+            textAlign: "center",
+            borderBottom: "1px solid #333",
+            background: r.usuario_id === user.usuario_id ? "linear-gradient(90deg, rgba(30,144,255,0.3), rgba(30,144,255,0.1))" : "transparent",
+            fontWeight: r.usuario_id === user.usuario_id ? "bold" : "normal"
+          }}>
             <td style={thTdStyle}>{i + 1}</td>
             <td style={thTdStyle}>{r.fullname}</td>
             <td style={thTdStyle}>{r.turma}</td>
             <td style={thTdStyle}>{r.wpm}</td>
             <td style={thTdStyle}>{r.accuracy ?? "-"}</td>
-            <td style={thTdStyle} title={`Último resultado registrado em: ${new Date(r.created_at).toLocaleString("pt-BR")}`}>
-              {new Date(r.created_at).toLocaleDateString("pt-BR")}
-            </td>
+            <td style={thTdStyle}>{new Date(r.created_at).toLocaleString("pt-BR")}</td>
           </tr>
         ))}
       </tbody>
