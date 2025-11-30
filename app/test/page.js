@@ -73,11 +73,11 @@ export default function TestePage() {
   useEffect(() => {
     if (charRefs.current[pos]) {
       charRefs.current[pos].scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-        inline: "center",
-      });
-    }
+      behavior: "smooth",
+       block: "center"
+  });
+
+  }
   }, [pos]);
 
   // ================
