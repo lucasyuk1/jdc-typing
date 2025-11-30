@@ -31,12 +31,7 @@ if (!user) {
 
 if (error || !user)
   return new Response(JSON.stringify({ success: false, error: "Usuário não encontrado" }), { status: 404 });
-
-// Confere senha
-const isValid = await bcrypt.compare(password, user.password_hash);
-if (!isValid)
-  return new Response(JSON.stringify({ success: false, error: "Senha incorreta" }), { status: 401 });
-
+  
 // Remove info sensível
 delete user.password_hash;
 // Confere senha
