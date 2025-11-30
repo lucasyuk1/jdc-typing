@@ -1,8 +1,237 @@
 
-/* minimal styles */
-.input { width:100%; padding:8px; margin:6px 0; border-radius:6px; border:1px solid #333; background:#0b1220; color:#fff; }
-button { background:#9747FF; color:#fff; padding:8px 12px; border-radius:6px; border:none; }
-body { background:#071025; color:#fff; font-family: Inter, system-ui, sans-serif; }
-a { color:#9ad7ff; margin-right:8px; }
-table { border-collapse: collapse; width:100%; }
-th, td { padding:8px; border-bottom:1px solid #1f2937; text-align:left; }
+/* ===== RESET BÁSICO ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== BASE ===== */
+body {
+  background: #071025;
+  color: #f4f7ff;
+  font-family: Inter, system-ui, sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Links */
+a {
+  color: #8acbff;
+  margin-right: 8px;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+a:hover {
+  color: #c6e6ff;
+}
+
+/* ===== INPUTS ===== */
+.input,
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 6px 0;
+  border-radius: 8px;
+  border: 1px solid #1a2338;
+  background: #0b1220;
+  color: #fff;
+  font-size: 15px;
+  transition: border 0.25s, background 0.25s;
+}
+
+.input:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #5aa4ff;
+  background: #0f192e;
+  outline: none;
+}
+
+/* Placeholder */
+::placeholder {
+  color: #94a3b8;
+}
+
+/* ===== BOTÕES ===== */
+button {
+  background: #9747ff;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+button:hover {
+  background: #7a37cc;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== TABELAS ===== */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 12px;
+}
+
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid #1f2937;
+  text-align: left;
+}
+
+th {
+  background: #0d172e;
+  font-weight: 600;
+}
+
+/* ===== FORM AUTH (Tailwind Friendly) ===== */
+.input-auth {
+  @apply px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 outline-none focus:border-blue-400 transition;
+}
+
+.btn-auth {
+  @apply px-4 py-3 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-lg transition;
+}
+
+/* ===== CARDS E CONTAINERS ===== */
+.card {
+  background: #0d1424;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  border: 1px solid #1b2640;
+}
+
+/* Cartão destacado (uso para alertas ou mensagens do teste) */
+.card-highlight {
+  background: linear-gradient(135deg, #162447, #1b2a4a);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid #334155;
+  box-shadow: 0 0 25px rgba(97, 161, 255, 0.15);
+}
+
+/* ===== TIPOGRAFIA AUXILIAR ===== */
+.text-center { text-align: center; }
+.text-sm { font-size: 0.875rem; }
+.text-lg { font-size: 1.125rem; font-weight: 600; }
+
+/* ===== MENSAGEM DE ERRO DO TYPING TEST ===== */
+.typing-error {
+  color: #ff6b6b;
+  font-weight: bold;
+}
+
+/* Letras erradas: cor + negrito */
+.char-wrong {
+  color: #ff4d4d;
+  font-weight: 700;
+}
+
+/* Letras corretas */
+.char-correct {
+  color: #7fffa1;
+}
+
+/* Próxima letra */
+.char-current {
+  background: #374151;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* ===== Mensagem "não dá para voltar" ===== */
+.no-back-message {
+  font-size: 0.85rem;
+  margin-top: 4px;
+  color: #ff9f6b;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* Container */
+.ranking-container {
+  padding: 40px;
+  min-height: 100vh;
+}
+
+/* Header */
+.ranking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.ranking-title {
+  font-size: 34px;
+  font-weight: bold;
+}
+
+.ranking-header-side {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Mode buttons */
+.ranking-modes {
+  margin-bottom: 20px;
+}
+
+.mode-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  margin-right: 10px;
+  background: #4a90e2;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.mode-btn.active {
+  background: #1e90ff;
+}
+
+/* Table */
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ranking-table th {
+  background: #1f2937;
+  padding: 12px;
+}
+
+.ranking-table td {
+  padding: 10px;
+  border-bottom: 1px solid #333;
+  text-align: center;
+}
+
+/* Destaque para o próprio usuário */
+.highlight-row {
+  background: linear-gradient(
+    90deg,
+    rgba(30,144,255,0.25),
+    rgba(30,144,255,0.1)
+  );
+  font-weight: bold;
+}
+
+

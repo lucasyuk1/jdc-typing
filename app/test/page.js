@@ -31,7 +31,7 @@ export default function TestePage() {
   const [redirectCounter, setRedirectCounter] = useState(5);
 
   // =======================
-  // Carregar usuário
+  // Carregar usuário + média
   // =======================
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -44,7 +44,13 @@ export default function TestePage() {
 
     fetch(`/api/userMedia?user_id=${parsed.id}`)
       .then(r => r.json())
-      .then(data => setMedia(data.media || null))
+      .then(data => {
+        if (data.media === null || data.media === undefined) {
+          setMedia(null);
+        } else {
+          setMedia(Number(data.media));
+        }
+      })
       .catch(() => setMedia(null));
 
     setTimeout(() => {
@@ -52,18 +58,18 @@ export default function TestePage() {
     }, 100);
   }, [router]);
 
-  // =======================
-  // Gera texto
-  // =======================
+  // ================
+  // Gera texto inicial
+  // ================
   useEffect(() => {
     const t = generateRandomText(200);
     setText(t);
     setStates(new Array(t.length).fill("pending"));
   }, []);
 
-  // =======================
-  // Cursor scroll
-  // =======================
+  // ================
+  // Scroll do cursor
+  // ================
   useEffect(() => {
     if (charRefs.current[pos]) {
       charRefs.current[pos].scrollIntoView({
@@ -74,9 +80,9 @@ export default function TestePage() {
     }
   }, [pos]);
 
-  // =======================
-  // Extensão do texto
-  // =======================
+  // ================
+  // Estender texto quando perto do fim
+  // ================
   function maybeExtendText() {
     if (pos < text.length - 200) return;
 
@@ -85,16 +91,20 @@ export default function TestePage() {
     setStates(prev => [...prev, ...new Array(extra.length + 1).fill("pending")]);
   }
 
-  // =======================
-  // Lógica de digitação
-  // =======================
+  // ================
+  // Ao digitar
+  // ================
   function handleKey(e) {
     const key = e.key;
 
-    // impede backspace e manda frase filosófica
+    // se pressionou Backspace → mostra mensagem filosófica e não permite apagar
     if (key === "Backspace") {
       setErrorMessage("Não tente apagar o passado. Cada tecla errada é um passo para a frente.");
-      return e.preventDefault();
+      setTimeout(() => {
+        setErrorMessage("");
+      }, 5000);
+      e.preventDefault();
+      return;
     }
 
     if (!started) setStarted(true);
@@ -110,8 +120,11 @@ export default function TestePage() {
       return updated;
     });
 
-    if (expected === key) setCorrectCount(c => c + 1);
-    else setWrongCount(w => w + 1);
+    if (expected === key) {
+      setCorrectCount(c => c + 1);
+    } else {
+      setWrongCount(w => w + 1);
+    }
 
     setPos(pos + 1);
     maybeExtendText();
@@ -126,9 +139,9 @@ export default function TestePage() {
   const elapsed = 180 - timeLeft;
   const wpm = elapsed > 0 ? Math.round((correctCount / 5) / (elapsed / 60)) : 0;
 
-  // =======================
-  // Animação do resultado
-  // =======================
+  // ================
+  // Animação dos valores ao final
+  // ================
   function animateResults() {
     let w = 0;
     let a = 0;
@@ -146,9 +159,9 @@ export default function TestePage() {
     }, 15);
   }
 
-  // =======================
-  // Salvar resultado
-  // =======================
+  // ================
+  // Salvar resultado no backend
+  // ================
   async function salvarResultado() {
     if (!user) return;
 
@@ -173,9 +186,9 @@ export default function TestePage() {
     }
   }
 
-  // =======================
-  // Timer
-  // =======================
+  // ================
+  // Timer principal
+  // ================
   useEffect(() => {
     if (!started || finished) return;
 
@@ -188,15 +201,16 @@ export default function TestePage() {
     return () => clearInterval(i);
   }, [started, timeLeft, finished]);
 
-  // =======================
-  // Finalizar
-  // =======================
+  // ================
+  // Finalizar teste
+  // ================
   function finalizarTeste() {
     setFinished(true);
     salvarResultado();
     animateResults();
-    gerarMensagemComparativa();
-
+    // gerarMensagemComparativa será chamado depois que `media` estiver disponível
+    // e usaremos efeito abaixo
+    // iniciar contador de redirecionamento
     const c = setInterval(() => {
       setRedirectCounter(t => {
         if (t <= 1) {
@@ -208,25 +222,26 @@ export default function TestePage() {
     }, 1000);
   }
 
-  // =======================
-  // Mensagem comparativa
-  // =======================
-  function gerarMensagemComparativa() {
-    if (!media) {
-      setComparisonText("Primeiro teste — ainda sem média!");
-      return;
+  // ================
+  // Quando média for atualizada e teste estiver finalizado, calcula comparação
+  // ================
+  useEffect(() => {
+    if (finished) {
+      if (media === null) {
+        setComparisonText("Primeiro teste — ainda sem média!");
+      } else {
+        if (wpm > media + 3) {
+          setComparisonText("Excelente! Você ficou ACIMA da sua média!");
+        } else if (wpm < media - 3) {
+          setComparisonText("Você ficou ABAIXO da sua média. Continue praticando!");
+        } else {
+          setComparisonText("Você ficou NA MÉDIA. Consistência é importante!");
+        }
+      }
     }
+  }, [media, finished, wpm]);
 
-    if (wpm > media + 3) {
-      setComparisonText("Excelente! Você ficou ACIMA da sua média!");
-    } else if (wpm < media - 3) {
-      setComparisonText("Você ficou ABAIXO da média. Continue treinando!");
-    } else {
-      setComparisonText("Você ficou NA MÉDIA. Consistência é tudo!");
-    }
-  }
-
-  const wpmColor = wpm < 30 ? "#F44336" : wpm < 60 ? "#FFC107" : "#4CAF50";
+  const wpmColor = wpm < 10 ? "#F44336" : wpm < 20 ? "#FFC107": wpm < 30 ? "#2f8adfff" : "#2e5f30ff";
   const accuracyColor = accuracy < 70 ? "#F44336" : accuracy < 90 ? "#FF9800" : "#4CAF50";
 
   if (!user) return <p>Carregando...</p>;
@@ -247,7 +262,7 @@ export default function TestePage() {
           }}
         >
           <h1 style={{ fontSize: 28, marginBottom: 10 }}>Teste de Digitação - 3 Minutos</h1>
-          <div style={{ display: "flex", gap: 20 }}>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
             <p><b>Tempo:</b> {timeLeft}s</p>
             <p><b>WPM:</b> <span style={{ color: wpmColor }}>{wpm}</span></p>
             <p><b>Precisão:</b> <span style={{ color: accuracyColor }}>{accuracy}%</span></p>
@@ -259,7 +274,7 @@ export default function TestePage() {
       {/* ÁREA DO TEXTO */}
       {!finished ? (
         <>
-          {/* barra progresso */}
+          {/* barra de progresso */}
           <div style={{
             width: "100%",
             height: 12,
@@ -275,7 +290,7 @@ export default function TestePage() {
             }} />
           </div>
 
-          {/* mensagem filosófica do backspace */}
+          {/* mensagem filosófica se backspace for pressionado */}
           {errorMessage && (
             <p style={{
               color: "#c0392b",
@@ -285,7 +300,7 @@ export default function TestePage() {
             }}>{errorMessage}</p>
           )}
 
-          {/* texto para digitar */}
+          {/* texto que usuário deve digitar */}
           <div
             onClick={() => inputRef.current.focus()}
             style={{
@@ -305,7 +320,7 @@ export default function TestePage() {
               let color = "#555";
               let fontWeight = "normal";
 
-              if (states[i] === "correct") color = "green";
+              if (states[i] === "correct") color = "lightgreen";
               if (states[i] === "wrong") {
                 color = "red";
                 fontWeight = "bold";
@@ -338,9 +353,9 @@ export default function TestePage() {
           />
         </>
       ) : (
-        // ======================================
-        // CARD FINAL BONITO UI/UX
-        // ======================================
+        // =========================
+        // CARD FINAL ESTILOSO + RESULTADO
+        // =========================
         <div
           style={{
             marginTop: 40,

@@ -6,172 +6,203 @@ import Image from "next/image";
 import Mascote from "../images/mascote.png";
 
 export default function AuthPage() {
-const [isLogin, setIsLogin] = useState(true);
-const [message, setMessage] = useState("");
-const [password, setPassword] = useState("");
-const [confirmPassword, setConfirmPassword] = useState("");
-const router = useRouter();
+  const [isLogin, setIsLogin] = useState(true);
+  const [message, setMessage] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const router = useRouter();
 
-const passwordsMatch = password === confirmPassword;
+  const passwordsMatch = password === confirmPassword;
 
-async function handleRegister(e) {
-e.preventDefault();
-setMessage("");
+  async function handleRegister(e) {
+    e.preventDefault();
+    setMessage("");
 
-if (!passwordsMatch) {
-  setMessage("❌ As senhas não coincidem!");
-  return;
-}
+    if (!passwordsMatch) {
+      setMessage("❌ As senhas não coincidem!");
+      return;
+    }
 
-const form = new FormData(e.target);
-const body = Object.fromEntries(form.entries());
+    const form = new FormData(e.target);
+    const body = Object.fromEntries(form.entries());
 
-setMessage("Enviando...");
+    setMessage("Enviando...");
 
-try {
-  const res = await fetch("/api/auth/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-  const data = await res.json();
-  if (!data.success) return setMessage("❌ " + data.error);
+      const data = await res.json();
+      if (!data.success) return setMessage("❌ " + data.error);
 
-  setMessage("✔ Usuário criado! Agora faça login.");
-  setIsLogin(true);
-} catch (err) {
-  setMessage("❌ Erro ao registrar: " + err.message);
-}
+      setMessage("✔ Usuário criado! Agora faça login.");
+      setIsLogin(true);
+    } catch (err) {
+      setMessage("❌ Erro ao registrar: " + err.message);
+    }
+  }
 
-}
+  async function handleLogin(e) {
+    e.preventDefault();
+    setMessage("");
 
-async function handleLogin(e) {
-e.preventDefault();
-setMessage("");
+    const form = new FormData(e.target);
+    const body = Object.fromEntries(form.entries());
 
-const form = new FormData(e.target);
-const body = Object.fromEntries(form.entries());
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-try {
-  const res = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+      const data = await res.json();
+      if (!data.success) return setMessage("❌ " + data.error);
 
-  const data = await res.json();
-  if (!data.success) return setMessage("❌ " + data.error);
+      localStorage.setItem("jdc-user", JSON.stringify(data.user));
+      router.replace("/dashboard");
+    } catch (err) {
+      setMessage("❌ Erro ao logar: " + err.message);
+    }
+  }
 
-  localStorage.setItem("jdc-user", JSON.stringify(data.user));
-  router.replace("/dashboard");
-} catch (err) {
-  setMessage("❌ Erro ao logar: " + err.message);
-}
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4">
 
-}
+      <div className="backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md animate-fade">
+        
+        <div className="flex flex-col items-center mb-6">
+          <Image
+            src={Mascote}
+            alt="Mascote"
+            width={90}
+            height={90}
+            className="drop-shadow-xl mb-2"
+          />
+          <h1 className="text-2xl font-bold text-blue-300 tracking-wide">
+            JDC Teste de Digitação
+          </h1>
+        </div>
 
-return ( <div style={containerStyle}>
-<div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "center", marginBottom: "15px" }}> <Image src={Mascote} alt="Mascote" width={64} height={64} /> <h1>JDC Teste de Digitação</h1> </div>
+        {/* Toggle Login / Registro */}
+        <div className="flex gap-3 justify-center mb-6">
+          <button
+            onClick={() => setIsLogin(true)}
+            className={`px-5 py-2 rounded-lg font-semibold transition-all ${
+              isLogin
+                ? "bg-blue-500 text-white shadow-lg"
+                : "border border-blue-400 text-blue-300 hover:bg-blue-500/20"
+            }`}
+          >
+            Login
+          </button>
 
-  <div style={avatarContainerStyle}>
-    <div style={avatarStyle}></div>
-  </div>
+          <button
+            onClick={() => setIsLogin(false)}
+            className={`px-5 py-2 rounded-lg font-semibold transition-all ${
+              !isLogin
+                ? "bg-blue-500 text-white shadow-lg"
+                : "border border-blue-400 text-blue-300 hover:bg-blue-500/20"
+            }`}
+          >
+            Registrar
+          </button>
+        </div>
 
-  <h1 style={titleStyle}>{isLogin ? "Entrar" : "Criar Conta"}</h1>
-
-  <div style={toggleStyle}>
-    <button
-      onClick={() => setIsLogin(true)}
-      disabled={isLogin}
-      style={isLogin ? activeButtonStyle : inactiveButtonStyle}
-    >
-      Login
-    </button>
-    <button
-      onClick={() => setIsLogin(false)}
-      disabled={!isLogin}
-      style={!isLogin ? activeButtonStyle : inactiveButtonStyle}
-    >
-      Registrar
-    </button>
-  </div>
-
-  <form
-    onSubmit={isLogin ? handleLogin : handleRegister}
-    style={formStyle}
-    key={isLogin ? "login" : "register"}
-  >
-    {isLogin ? (
-      <>
-        <input name="username" placeholder="Usuário ou Email" required style={inputStyle} />
-        <input name="password" type="password" placeholder="Senha" required style={inputStyle} />
-        <button type="submit" style={submitStyle}>Entrar</button>
-      </>
-    ) : (
-      <>
-        <input name="username" placeholder="Usuário" required style={inputStyle} />
-        <input name="fullname" placeholder="Nome Completo" required style={inputStyle} />
-        <input name="email" type="email" placeholder="Email" required style={inputStyle} />
-        <input name="idade" placeholder="Idade" required style={inputStyle} />
-        <input name="turma" placeholder="Turma" required style={inputStyle} />
-        <input
-          name="password"
-          type="password"
-          placeholder="Senha"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ ...inputStyle, borderColor: passwordsMatch ? "#ccc" : "red" }}
-        />
-        <input
-          name="confirmPassword"
-          type="password"
-          placeholder="Confirme a Senha"
-          required
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          style={{ ...inputStyle, borderColor: passwordsMatch ? "#ccc" : "red" }}
-        />
-        <button
-          type="submit"
-          style={{ ...submitStyle, cursor: passwordsMatch ? "pointer" : "not-allowed", opacity: passwordsMatch ? 1 : 0.6 }}
-          disabled={!passwordsMatch}
+        <form
+          onSubmit={isLogin ? handleLogin : handleRegister}
+          className="flex flex-col gap-4"
+          key={isLogin ? "login" : "register"}
         >
-          Registrar
-        </button>
-      </>
-    )}
-  </form>
+          {isLogin ? (
+            <>
+              <input
+                name="username"
+                placeholder="Usuário ou Email"
+                required
+                className="input-auth"
+              />
 
-  {message && <p style={{ ...messageStyle, color: passwordsMatch ? "#fff" : "red" }}>{message}</p>}
-</div>
+              <input
+                name="password"
+                type="password"
+                placeholder="Senha"
+                required
+                className="input-auth"
+              />
+              <button className="btn-auth">Entrar</button>
+            </>
+          ) : (
+            <>
+              <input name="username" placeholder="Usuário" required className="input-auth" />
+              <input name="fullname" placeholder="Nome Completo" required className="input-auth" />
+              <input name="email" type="email" placeholder="Email" required className="input-auth" />
+              <input name="idade" placeholder="Idade" required className="input-auth" />
+              <input name="turma" placeholder="Turma" required className="input-auth" />
 
-);
+              <input
+                name="password"
+                type="password"
+                placeholder="Senha"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`input-auth ${
+                  passwordsMatch ? "" : "border-red-500"
+                }`}
+              />
+
+              <input
+                name="confirmPassword"
+                type="password"
+                placeholder="Confirme a Senha"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={`input-auth ${
+                  passwordsMatch ? "" : "border-red-500"
+                }`}
+              />
+
+              <button
+                type="submit"
+                disabled={!passwordsMatch}
+                className={`btn-auth ${
+                  passwordsMatch ? "" : "opacity-50 cursor-not-allowed"
+                }`}
+              >
+                Registrar
+              </button>
+            </>
+          )}
+        </form>
+
+        {/* Mensagem */}
+        {message && (
+          <p
+            className={`text-center mt-4 text-sm ${
+              message.includes("❌") ? "text-red-400" : "text-green-300"
+            }`}
+          >
+            {message}
+          </p>
+        )}
+      </div>
+    </div>
+  );
 }
 
-// Estilos ajustados para contêiner compacto
-const containerStyle = {
-display: "flex",
-flexDirection: "column",
-alignItems: "center",
-maxWidth: "380px",
-margin: "50px auto",
-textAlign: "center",
-padding: "20px 25px",
-background: "#1f2937",
-borderRadius: "12px",
-color: "#fff",
-boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
-fontFamily: "Arial, sans-serif"
-};
-const avatarContainerStyle = { display: "flex", justifyContent: "center", marginBottom: "15px" };
-const avatarStyle = { width: "70px", height: "70px", background: "#4a90e2", borderRadius: "12px", border: "2px solid #fff" };
-const titleStyle = { marginBottom: "20px", fontSize: "26px" };
-const toggleStyle = { display: "flex", justifyContent: "center", marginBottom: "10px", gap: "10px" };
-const activeButtonStyle = { padding: "8px 18px", border: "none", borderRadius: "8px", background: "#4a90e2", color: "#fff", cursor: "default", fontWeight: "bold" };
-const inactiveButtonStyle = { padding: "8px 18px", border: "1px solid #4a90e2", borderRadius: "8px", background: "transparent", color: "#4a90e2", cursor: "pointer", fontWeight: "bold", transition: "0.3s" };
-const formStyle = { display: "flex", flexDirection: "column", gap: "12px", width: "100%" };
-const inputStyle = { padding: "10px 12px", borderRadius: "8px", border: "1px solid #ccc", fontSize: "15px", outline: "none" };
-const submitStyle = { padding: "10px 12px", borderRadius: "8px", border: "none", background: "#4a90e2", color: "#fff", fontSize: "15px", fontWeight: "bold", transition: "0.3s" };
-const messageStyle = { marginTop: "15px", fontSize: "15px" };
+/* TAILWIND CUSTOM CLASSES (adicione no globals.css se quiser deixar mais elegante)
+-------------------------------------------------------------------------- */
+/* 
+.input-auth {
+  @apply px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 outline-none focus:border-blue-400 transition;
+}
+
+.btn-auth {
+  @apply px-4 py-3 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-lg transition;
+}
+*/
