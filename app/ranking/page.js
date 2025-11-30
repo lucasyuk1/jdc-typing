@@ -27,59 +27,20 @@ try {
 const res = await fetch("/api/results/ranking", {
 method: "POST",
 headers: { "Content-Type": "application/json" },
-body: JSON.stringify({ mode }),
+body: JSON.stringify({
+mode,
+fullname: user?.fullname,
+turma: user?.turma
+}),
 });
 
   const json = await res.json();
-  if (!json.success) return setRanking([]);
-
-  let data = json.data;
-
-  // Filtro por turma para modo "turma"
-  if (mode === "turma") {
-    data = data.filter(r => r.turma === user.turma);
-  }
-
-  // Modo pessoal: apenas os registros do usuário
-  if (mode === "pessoal") {
-    const userData = data.filter(r => String(r.usuario_id) === String(user.usuario_id));
-    userData.sort((a, b) => b.wpm - a.wpm);
-    setRanking(userData);
+  if (!json.success) {
+    setRanking([]);
     return;
   }
 
-  // Modo geral ou turma: agrupa por usuário e calcula média
-  const grouped = data.reduce((acc, r) => {
-    if (!acc[r.usuario_id]) {
-      acc[r.usuario_id] = { 
-        usuario_id: r.usuario_id,
-        fullname: r.fullname,
-        username: r.username,
-        turma: r.turma,
-        totalWPM: r.wpm,
-        totalAcc: r.accuracy,
-        count: 1,
-        created_at: r.created_at
-      };
-    } else {
-      acc[r.usuario_id].totalWPM += r.wpm;
-      acc[r.usuario_id].totalAcc += r.accuracy;
-      acc[r.usuario_id].count += 1;
-      if (new Date(r.created_at) > new Date(acc[r.usuario_id].created_at)) {
-        acc[r.usuario_id].created_at = r.created_at;
-      }
-    }
-    return acc;
-  }, {});
-
-  const finalRanking = Object.values(grouped).map(u => ({
-    ...u,
-    wpm: Math.round(u.totalWPM / u.count),
-    accuracy: Math.round(u.totalAcc / u.count)
-  }));
-
-  finalRanking.sort((a, b) => b.wpm - a.wpm);
-  setRanking(finalRanking);
+  setRanking(json.data);
 
 } catch (err) {
   console.error("Erro ao carregar ranking:", err);
