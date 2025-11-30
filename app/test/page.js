@@ -123,6 +123,8 @@ const accInterval = setInterval(() => {
 async function salvarResultado() {
 if (!user) return;
 
+const nowBR = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
 try {
   const res = await fetch("/api/results", {
     method: "POST",
@@ -134,6 +136,7 @@ try {
       wpm,
       accuracy,
       tempo_segundos: 180,
+      created_at: nowBR // adiciona o timestamp no fuso horário correto
     }),
   });
 

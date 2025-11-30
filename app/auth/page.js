@@ -151,7 +151,7 @@ fontSize: "28px"
 const toggleStyle = {
 display: "flex",
 justifyContent: "center",
-marginBottom: "25px",
+marginBottom: "10px",
 gap: "10px"
 };
 

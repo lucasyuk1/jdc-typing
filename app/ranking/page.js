@@ -60,7 +60,6 @@ export default function RankingPage() {
             <th>Turma</th>
             <th>WPM</th>
             <th>Accuracy</th>
-            <th>Tempo (s)</th>
             <th>Data</th>
           </tr>
         </thead>
@@ -73,7 +72,6 @@ export default function RankingPage() {
               <td>{r.turma}</td>
               <td>{r.wpm}</td>
               <td>{r.accuracy ?? "-"}</td>
-              <td>{r.tempo_segundos ?? 180}</td>
               <td>{new Date(r.created_at).toLocaleString("pt-BR")}</td>
             </tr>
           ))}
