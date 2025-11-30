@@ -51,7 +51,16 @@ body: JSON.stringify({ mode }),
   // Modo geral ou turma: agrupa por usuário e calcula média
   const grouped = data.reduce((acc, r) => {
     if (!acc[r.usuario_id]) {
-      acc[r.usuario_id] = { ...r, totalWPM: r.wpm, totalAcc: r.accuracy, count: 1 };
+      acc[r.usuario_id] = { 
+        usuario_id: r.usuario_id,
+        fullname: r.fullname,
+        username: r.username,
+        turma: r.turma,
+        totalWPM: r.wpm,
+        totalAcc: r.accuracy,
+        count: 1,
+        created_at: r.created_at
+      };
     } else {
       acc[r.usuario_id].totalWPM += r.wpm;
       acc[r.usuario_id].totalAcc += r.accuracy;

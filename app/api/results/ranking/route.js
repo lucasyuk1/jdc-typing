@@ -2,14 +2,14 @@ import { supabase } from "@/lib/supabase";
 
 export async function POST(req) {
   try {
-    const { mode, username, turma } = await req.json();
+    const { mode, fullname, turma } = await req.json();
 
     let query = supabase.from("results").select("*");
 
     if (mode === "turma") {
       query = query.eq("turma", turma);
     } else if (mode === "pessoal") {
-      query = query.eq("username", username);
+      query = query.eq("fullname", fullname);
     }
 
     query = query.order("wpm", { ascending: false }).limit(50);
