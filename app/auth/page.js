@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Mascote from "../images/mascote.png"; // Import da imagem
 
 export default function AuthPage() {
 const [isLogin, setIsLogin] = useState(true);
@@ -59,11 +61,11 @@ try {
 }
 
 return ( <div style={containerStyle}>
-<div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-  <img src="/images/mascote.png" alt="Mascote" style={{ width: 64, height: 64 }} />
-  <h1>JDC Teste de Digitação</h1>
-</div>
-{/* Foto de perfil */} <div style={avatarContainerStyle}> <div style={avatarStyle}></div> </div>
+<div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "center", marginBottom: "20px" }}> <Image src={Mascote} alt="Mascote" width={64} height={64} /> <h1>JDC Teste de Digitação</h1> </div>
+
+  <div style={avatarContainerStyle}>
+    <div style={avatarStyle}></div>
+  </div>
 
   <h1 style={titleStyle}>{isLogin ? "Entrar" : "Criar Conta"}</h1>
 
@@ -87,11 +89,7 @@ return ( <div style={containerStyle}>
   <div style={{ position: "relative", minHeight: "380px" }}>
     <form
       onSubmit={isLogin ? handleLogin : handleRegister}
-      style={{
-        ...formStyle,
-        opacity: 1,
-        transition: "opacity 0.5s ease",
-      }}
+      style={{ ...formStyle, opacity: 1, transition: "opacity 0.5s ease" }}
       key={isLogin ? "login" : "register"}
     >
       {isLogin ? (
@@ -120,7 +118,7 @@ return ( <div style={containerStyle}>
 );
 }
 
-// Estilos
+// Estilos (mantidos iguais)
 const containerStyle = {
 maxWidth: "400px",
 margin: "60px auto",

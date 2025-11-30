@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Mascote from "../images/mascote.png";
 
 export default function RankingPage() {
 const [user, setUser] = useState(null);
@@ -23,8 +24,13 @@ async function loadRanking() {
 const res = await fetch("/api/results/ranking", {
 method: "POST",
 headers: { "Content-Type": "application/json" },
-body: JSON.stringify({ mode, username: user.username, turma: user.turma }),
+body: JSON.stringify({
+mode,
+username: user.username,
+turma: user.turma,
+}),
 });
+
 const json = await res.json();
 if (!json.success) return;
 
@@ -52,7 +58,9 @@ data.forEach(r => {
     grouped[r.usuario_id].totalWPM += r.wpm;
     grouped[r.usuario_id].totalAcc += r.accuracy ?? 0;
     grouped[r.usuario_id].count += 1;
-    if (new Date(r.created_at) > new Date(grouped[r.usuario_id].lastDate)) grouped[r.usuario_id].lastDate = r.created_at;
+    if (new Date(r.created_at) > new Date(grouped[r.usuario_id].lastDate)) {
+      grouped[r.usuario_id].lastDate = r.created_at;
+    }
   }
 });
 
@@ -76,18 +84,18 @@ return (
 <div style={{ padding: 40, fontFamily: "Arial, sans-serif", color: "#fff", minHeight: "100vh", background: "#0A0F1F" }}>
 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
 <h1 style={{ fontSize: 36 }}>Ranking</h1>
-<div style={{ display: "flex", alignItems: "center", gap: 15 }}> <Image src="/images/mascote.png" width={50} height={50} alt="Mascote" />
-<button onClick={() => window.location.href = "/dashboard"} style={buttonStyle}>Voltar</button> </div> </div>
+<div style={{ display: "flex", alignItems: "center", gap: 15 }}> <Image src={Mascote} width={50} height={50} alt="Mascote" />
+<button onClick={() => window.location.href = "/dashboard"} style={backButtonStyle}>Voltar</button> </div> </div>
 
   <div style={{ marginBottom: 20 }}>
-    <button onClick={() => setMode("geral")} style={buttonStyle}>Geral</button>
-    <button onClick={() => setMode("turma")} style={buttonStyle}>Sua Turma ({user.turma})</button>
-    <button onClick={() => setMode("pessoal")} style={buttonStyle}>Seus Resultados</button>
+    <button onClick={() => setMode("geral")} style={modeButtonStyle}>Geral</button>
+    <button onClick={() => setMode("turma")} style={modeButtonStyle}>Sua Turma ({user.turma})</button>
+    <button onClick={() => setMode("pessoal")} style={modeButtonStyle}>Seus Resultados</button>
   </div>
 
   <table style={{ width: "100%", borderCollapse: "collapse" }}>
     <thead>
-      <tr style={{ background: "#1f2937" }}>
+      <tr style={{ background: "#1f2937", textAlign: "center" }}>
         <th style={thTdStyle}>#</th>
         <th style={thTdStyle}>Usuário</th>
         <th style={thTdStyle}>Turma</th>
@@ -115,4 +123,5 @@ return (
 }
 
 const thTdStyle = { padding: "10px", fontSize: 16, textAlign: "center" };
-const buttonStyle = { padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer", background: "#4a90e2", color: "#fff", fontWeight: "bold" };
+const backButtonStyle = { marginLeft: 10, padding: "8px 15px", borderRadius: 8, border: "none", cursor: "pointer", background: "#4a90e2", color: "#fff", fontWeight: "bold" };
+const modeButtonStyle = { marginRight: 10, padding: "8px 15px", borderRadius: 8, border: "none", cursor: "pointer", background: "#4a90e2", color: "#fff", fontWeight: "bold" };
