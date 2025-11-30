@@ -13,6 +13,7 @@ export default function TestePage() {
   const [started, setStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(180);
   const [finished, setFinished] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const inputRef = useRef(null);
   const charRefs = useRef([]);
@@ -29,14 +30,15 @@ export default function TestePage() {
 
   const [redirectCounter, setRedirectCounter] = useState(5);
 
-  // ==========================
-  // CARREGA USER E MÉDIA
-  // ==========================
+  // =======================
+  // Carregar usuário
+  // =======================
   useEffect(() => {
     window.scrollTo(0, 0);
 
     const u = localStorage.getItem("jdc-user");
     if (!u) return router.push("/auth");
+
     const parsed = JSON.parse(u);
     setUser(parsed);
 
@@ -46,22 +48,22 @@ export default function TestePage() {
       .catch(() => setMedia(null));
 
     setTimeout(() => {
-      if (inputRef.current) inputRef.current.focus();
+      inputRef.current?.focus();
     }, 100);
   }, [router]);
 
-  // ==========================
-  // GERA TEXTO INICIAL
-  // ==========================
+  // =======================
+  // Gera texto
+  // =======================
   useEffect(() => {
     const t = generateRandomText(200);
     setText(t);
     setStates(new Array(t.length).fill("pending"));
   }, []);
 
-  // ==========================
-  // SCROLL DO CURSOR
-  // ==========================
+  // =======================
+  // Cursor scroll
+  // =======================
   useEffect(() => {
     if (charRefs.current[pos]) {
       charRefs.current[pos].scrollIntoView({
@@ -72,9 +74,9 @@ export default function TestePage() {
     }
   }, [pos]);
 
-  // ==========================
-  // EXTENDER TEXTO
-  // ==========================
+  // =======================
+  // Extensão do texto
+  // =======================
   function maybeExtendText() {
     if (pos < text.length - 200) return;
 
@@ -83,14 +85,21 @@ export default function TestePage() {
     setStates(prev => [...prev, ...new Array(extra.length + 1).fill("pending")]);
   }
 
-  // ==========================
-  // DIGITAÇÃO
-  // ==========================
+  // =======================
+  // Lógica de digitação
+  // =======================
   function handleKey(e) {
+    const key = e.key;
+
+    // impede backspace e manda frase filosófica
+    if (key === "Backspace") {
+      setErrorMessage("Não tente apagar o passado. Cada tecla errada é um passo para a frente.");
+      return e.preventDefault();
+    }
+
     if (!started) setStarted(true);
     e.preventDefault();
 
-    const key = e.key;
     if (key.length !== 1) return;
 
     const expected = text[pos];
@@ -117,9 +126,9 @@ export default function TestePage() {
   const elapsed = 180 - timeLeft;
   const wpm = elapsed > 0 ? Math.round((correctCount / 5) / (elapsed / 60)) : 0;
 
-  // ==========================
-  // ANIMAÇÃO DOS RESULTADOS
-  // ==========================
+  // =======================
+  // Animação do resultado
+  // =======================
   function animateResults() {
     let w = 0;
     let a = 0;
@@ -137,9 +146,9 @@ export default function TestePage() {
     }, 15);
   }
 
-  // ==========================
-  // SALVAR RESULTADO
-  // ==========================
+  // =======================
+  // Salvar resultado
+  // =======================
   async function salvarResultado() {
     if (!user) return;
 
@@ -164,9 +173,9 @@ export default function TestePage() {
     }
   }
 
-  // ==========================
-  // TIMER PRINCIPAL
-  // ==========================
+  // =======================
+  // Timer
+  // =======================
   useEffect(() => {
     if (!started || finished) return;
 
@@ -179,16 +188,15 @@ export default function TestePage() {
     return () => clearInterval(i);
   }, [started, timeLeft, finished]);
 
-  // ==========================
-  // FINALIZAR TESTE
-  // ==========================
+  // =======================
+  // Finalizar
+  // =======================
   function finalizarTeste() {
     setFinished(true);
     salvarResultado();
     animateResults();
     gerarMensagemComparativa();
 
-    // contador 5s
     const c = setInterval(() => {
       setRedirectCounter(t => {
         if (t <= 1) {
@@ -200,27 +208,24 @@ export default function TestePage() {
     }, 1000);
   }
 
-  // ==========================
-  // MENSAGEM ACIMA/ABAIXO DA MÉDIA
-  // ==========================
+  // =======================
+  // Mensagem comparativa
+  // =======================
   function gerarMensagemComparativa() {
     if (!media) {
-      setComparisonText("Primeiro teste — sem média registrada ainda!");
+      setComparisonText("Primeiro teste — ainda sem média!");
       return;
     }
 
     if (wpm > media + 3) {
       setComparisonText("Excelente! Você ficou ACIMA da sua média!");
     } else if (wpm < media - 3) {
-      setComparisonText("Você ficou ABAIXO da média desta vez. Continue praticando!");
+      setComparisonText("Você ficou ABAIXO da média. Continue treinando!");
     } else {
-      setComparisonText("Você ficou NA MÉDIA. Consistência é importante!");
+      setComparisonText("Você ficou NA MÉDIA. Consistência é tudo!");
     }
   }
 
-  // ==========================
-  // CORES VISUAIS
-  // ==========================
   const wpmColor = wpm < 30 ? "#F44336" : wpm < 60 ? "#FFC107" : "#4CAF50";
   const accuracyColor = accuracy < 70 ? "#F44336" : accuracy < 90 ? "#FF9800" : "#4CAF50";
 
@@ -251,9 +256,10 @@ export default function TestePage() {
         </div>
       )}
 
-      {/* TELA DO TESTE */}
+      {/* ÁREA DO TEXTO */}
       {!finished ? (
         <>
+          {/* barra progresso */}
           <div style={{
             width: "100%",
             height: 12,
@@ -269,6 +275,17 @@ export default function TestePage() {
             }} />
           </div>
 
+          {/* mensagem filosófica do backspace */}
+          {errorMessage && (
+            <p style={{
+              color: "#c0392b",
+              marginBottom: 15,
+              fontStyle: "italic",
+              fontWeight: "bold"
+            }}>{errorMessage}</p>
+          )}
+
+          {/* texto para digitar */}
           <div
             onClick={() => inputRef.current.focus()}
             style={{
@@ -280,13 +297,20 @@ export default function TestePage() {
               whiteSpace: "pre-wrap",
               lineHeight: "1.8",
               overflowY: "auto",
-              fontSize: 20
+              fontSize: 20,
+              borderRadius: 12
             }}
           >
             {text.split("").map((ch, i) => {
               let color = "#555";
+              let fontWeight = "normal";
+
               if (states[i] === "correct") color = "green";
-              if (states[i] === "wrong") color = "red";
+              if (states[i] === "wrong") {
+                color = "red";
+                fontWeight = "bold";
+              }
+
               const isCursor = i === pos;
 
               return (
@@ -297,7 +321,8 @@ export default function TestePage() {
                     background: isCursor ? "#ffeb3b" : "none",
                     borderBottom: isCursor ? "2px solid black" : "none",
                     animation: isCursor ? "blink 1s step-start infinite" : "none",
-                    color
+                    color,
+                    fontWeight
                   }}
                 >
                   {ch}
@@ -313,16 +338,16 @@ export default function TestePage() {
           />
         </>
       ) : (
-        // ==========================
-        // TELA FINAL BONITA
-        // ==========================
+        // ======================================
+        // CARD FINAL BONITO UI/UX
+        // ======================================
         <div
           style={{
             marginTop: 40,
-            background: "#fff",
+            background: "linear-gradient(135deg, #ffffff, #f1f1f1)",
             padding: 40,
-            borderRadius: 20,
-            boxShadow: "0px 4px 20px rgba(0,0,0,0.2)",
+            borderRadius: 24,
+            boxShadow: "0px 6px 30px rgba(0,0,0,0.15)",
             width: "90%",
             maxWidth: 600,
             marginInline: "auto",
@@ -330,36 +355,46 @@ export default function TestePage() {
             animation: "bounceIn .8s"
           }}
         >
-          <h2 style={{ fontSize: 32, marginBottom: 10 }}>Tempo Encerrado!</h2>
+          <h2 style={{ fontSize: 34, marginBottom: 15 }}>Tempo Encerrado!</h2>
 
-          <p style={{ fontSize: 26, color: wpmColor, margin: 8 }}>
+          <p style={{ fontSize: 28, color: wpmColor, margin: 8 }}>
             WPM: <b>{animatedWPM}</b>
           </p>
 
-          <p style={{ fontSize: 26, color: accuracyColor, margin: 8 }}>
+          <p style={{ fontSize: 28, color: accuracyColor, margin: 8 }}>
             Precisão: <b>{animatedAccuracy}%</b>
           </p>
 
-          <p style={{ marginTop: 20, fontSize: 20, fontWeight: "bold" }}>
+          <p style={{
+            marginTop: 25,
+            fontSize: 20,
+            fontWeight: "bold",
+            color: "#333"
+          }}>
             {comparisonText}
           </p>
 
-          <p style={{ marginTop: 30, fontSize: 18 }}>
+          <p style={{
+            marginTop: 30,
+            fontSize: 18,
+            color: "#666"
+          }}>
             Redirecionando em <b>{redirectCounter}</b> segundos...
           </p>
 
           <button
             onClick={() => router.push("/teste")}
             style={{
-              marginTop: 25,
-              padding: "15px 30px",
+              marginTop: 30,
+              padding: "15px 38px",
               fontSize: 20,
-              borderRadius: 12,
+              borderRadius: 15,
               background: "#007bff",
               color: "white",
               border: "none",
               cursor: "pointer",
-              animation: "bounceButton 1.5s infinite"
+              boxShadow: "0px 4px 14px rgba(0,0,0,0.2)",
+              transition: "0.2s",
             }}
           >
             Refazer Teste
@@ -373,13 +408,8 @@ export default function TestePage() {
 
         @keyframes bounceIn {
           0% { transform: scale(.6); opacity: 0; }
-          60% { transform: scale(1.1); opacity: 1; }
+          60% { transform: scale(1.05); opacity: 1; }
           100% { transform: scale(1); }
-        }
-
-        @keyframes bounceButton {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
         }
       `}</style>
     </div>
