@@ -9,14 +9,12 @@ const [user, setUser] = useState(null);
 const [mode, setMode] = useState("geral");
 const [ranking, setRanking] = useState([]);
 
-// Carrega usuário do localStorage
 useEffect(() => {
 const u = localStorage.getItem("jdc-user");
 if (!u) return (window.location.href = "/auth");
 setUser(JSON.parse(u));
 }, []);
 
-// Recarrega ranking sempre que o modo ou usuário mudam
 useEffect(() => {
 if (!user) return;
 loadRanking();
@@ -29,19 +27,14 @@ method: "POST",
 headers: { "Content-Type": "application/json" },
 body: JSON.stringify({ mode }),
 });
+const json = await res.json();
+if (!json.success) return;
 
-  const json = await res.json();
-  if (!json.success) return;
-
+```
   let data = json.data;
 
-  // Filtra por turma se estiver no modo "turma"
-  if (mode === "turma") {
-    data = data.filter(r => r.turma === user.turma);
-  }
-
-  // Modo pessoal: apenas os registros do próprio usuário
   if (mode === "pessoal") {
+    // Modo pessoal: registros únicos do usuário
     const userData = data.filter(r => String(r.usuario_id) === String(user.usuario_id));
     userData.sort((a, b) => b.wpm - a.wpm);
     setRanking(
@@ -50,47 +43,51 @@ body: JSON.stringify({ mode }),
         fullname: r.fullname && r.fullname.trim() !== "" ? r.fullname : user.username
       }))
     );
-    return;
-  }
-
-  // Modo geral ou turma: agrupar por usuário e calcular médias
-  const grouped = data.reduce((acc, r) => {
-    if (!acc[r.usuario_id]) {
-      acc[r.usuario_id] = {
-        usuario_id: r.usuario_id,
-        fullname: r.fullname && r.fullname.trim() !== "" ? r.fullname : r.username,
-        turma: r.turma,
-        totalWPM: r.wpm,
-        totalAcc: r.accuracy ?? 0,
-        count: 1,
-        lastDate: r.created_at
-      };
-    } else {
-      acc[r.usuario_id].totalWPM += r.wpm;
-      acc[r.usuario_id].totalAcc += r.accuracy ?? 0;
-      acc[r.usuario_id].count += 1;
-      if (new Date(r.created_at) > new Date(acc[r.usuario_id].lastDate)) {
-        acc[r.usuario_id].lastDate = r.created_at;
-      }
+  } else {
+    // Modo geral ou turma: agrupar por usuário e calcular médias
+    if (mode === "turma") {
+      data = data.filter(r => r.turma === user.turma);
     }
-    return acc;
-  }, {});
 
-  const finalRanking = Object.values(grouped).map(u => ({
-    usuario_id: u.usuario_id,
-    fullname: u.fullname && u.fullname.trim() !== "" ? u.fullname : user.username,
-    turma: u.turma,
-    wpm: Math.round(u.totalWPM / u.count),
-    accuracy: Math.round(u.totalAcc / u.count),
-    created_at: u.lastDate
-  }));
+    const grouped = data.reduce((acc, r) => {
+      if (!acc[r.usuario_id]) {
+        acc[r.usuario_id] = {
+          usuario_id: r.usuario_id,
+          fullname: r.fullname && r.fullname.trim() !== "" ? r.fullname : r.username,
+          turma: r.turma,
+          totalWPM: r.wpm,
+          totalAcc: r.accuracy ?? 0,
+          count: 1,
+          lastDate: r.created_at
+        };
+      } else {
+        acc[r.usuario_id].totalWPM += r.wpm;
+        acc[r.usuario_id].totalAcc += r.accuracy ?? 0;
+        acc[r.usuario_id].count += 1;
+        if (new Date(r.created_at) > new Date(acc[r.usuario_id].lastDate)) {
+          acc[r.usuario_id].lastDate = r.created_at;
+        }
+      }
+      return acc;
+    }, {});
 
-  finalRanking.sort((a, b) => b.wpm - a.wpm);
-  setRanking(finalRanking);
+    const finalRanking = Object.values(grouped).map(u => ({
+      usuario_id: u.usuario_id,
+      fullname: u.fullname && u.fullname.trim() !== "" ? u.fullname : user.username,
+      turma: u.turma,
+      wpm: Math.round(u.totalWPM / u.count),
+      accuracy: Math.round(u.totalAcc / u.count),
+      created_at: u.lastDate
+    }));
+
+    finalRanking.sort((a, b) => b.wpm - a.wpm);
+    setRanking(finalRanking);
+  }
 
 } catch (err) {
   console.error("Erro ao carregar ranking:", err);
 }
+```
 
 }
 
@@ -103,6 +100,7 @@ return (
 <div style={{ display: "flex", alignItems: "center", gap: 15 }}> <Image src={Mascote} width={50} height={50} alt="Mascote" />
 <button onClick={() => window.location.href = "/dashboard"} style={backButtonStyle}>Voltar</button> </div> </div>
 
+```
   <div style={{ marginBottom: 20 }}>
     <button onClick={() => setMode("geral")} style={{ ...modeButtonStyle, background: mode === "geral" ? "#1E90FF" : "#4a90e2" }}>Geral</button>
     <button onClick={() => setMode("turma")} style={{ ...modeButtonStyle, background: mode === "turma" ? "#1E90FF" : "#4a90e2" }}>Sua Turma ({user.turma})</button>
@@ -150,6 +148,7 @@ return (
     </table>
   )}
 </div>
+```
 
 );
 }
