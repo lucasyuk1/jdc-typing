@@ -30,29 +30,37 @@ const [comparisonText, setComparisonText] = useState("");
 
 const [redirectCounter, setRedirectCounter] = useState(5);
 
-// ============ Fetch média ============
-async function fetchMedia(userId) {
-try {
-const res = await fetch(`/api/userMedia?user_id=${userId}`);
-const data = await res.json();
-if (typeof data.media === "number") setMedia(data.media);
-} catch (err) {
-console.error("Erro ao buscar média:", err);
-setMedia(null);
-}
-}
-
-// ============ Load user & media ============
+// ============ Load user & média ============
 useEffect(() => {
 window.scrollTo(0, 0);
 const u = localStorage.getItem("jdc-user");
 if (!u) return router.push("/auth");
 const parsed = JSON.parse(u);
 setUser(parsed);
-fetchMedia(parsed.id);
 
+async function loadMedia() {
+  try {
+    const res = await fetch("/api/results/ranking", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "pessoal", usuario_id: parsed.id }),
+    });
+    const data = await res.json();
+    if (data.success && data.data.length > 0) {
+      const sorted = data.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const soma = sorted.reduce((acc, r) => acc + r.wpm, 0);
+      setMedia(Math.round(soma / sorted.length));
+    } else {
+      setMedia(null);
+    }
+  } catch (err) {
+    console.error("Erro ao buscar média:", err);
+    setMedia(null);
+  }
+}
+
+loadMedia();
 setTimeout(() => inputRef.current?.focus(), 100);
-
 
 }, [router]);
 
