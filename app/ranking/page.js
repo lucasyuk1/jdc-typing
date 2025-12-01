@@ -118,7 +118,7 @@ return ( <div className="ranking-container p-8 text-white min-h-screen bg-gray-9
               <td className="px-3 py-2">{r.fullname ?? "Sem nome"}</td>
               <td className="px-3 py-2">{r.turma}</td>
               <td className="px-3 py-2">{r.wpm}</td>
-              <td className="px-3 py-2">{r.accuracy ?? "-"}</td>
+              <td className="px-3 py-2">{r.accuracy !== null && r.accuracy !== undefined ? `${r.accuracy}%` : "-"}</td>
               <td className="px-3 py-2">{new Date(r.created_at).toLocaleString("pt-BR")}</td>
             </tr>
           ))}
