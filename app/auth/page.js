@@ -94,7 +94,7 @@ try {
 return ( <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-6 relative overflow-hidden">
 
   {/* Mascote grande flutuante sobrepondo a caixa */}
-  <div className="absolute -top-32 -right-32 w-72 h-72 z-50 animate-float pointer-events-none">
+  <div className="absolute -top-25 -right-25 w-72 h-72 z-50 pointer-events-none">
     <Image
       src={Mascote}
       alt="TypingBoo Mascote"
