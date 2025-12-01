@@ -3,15 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { createClient } from "@supabase/supabase-js";
 import { motion, AnimatePresence } from "framer-motion";
 import Mascote from "../images/mascote.png";
-
-// Configuração do Supabase
-const supabase = createClient(
-process.env.NEXT_PUBLIC_SUPABASE_URL,
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 export default function AuthPage() {
 const [isLogin, setIsLogin] = useState(true);
@@ -24,15 +17,16 @@ const router = useRouter();
 
 const passwordsMatch = password === confirmPassword;
 
-// Carrega turmas do Supabase
+// Carrega turmas via API
 useEffect(() => {
 if (!isLogin) {
-supabase
-.from("turma")
-.select("*")
-.then(({ data, error }) => {
-if (!error && data) setTurmas(data);
-});
+fetch("/api/turmas")
+.then((res) => res.json())
+.then((data) => {
+if (data.success) setTurmas(data.turmas);
+else console.error("Erro ao carregar turmas:", data.error);
+})
+.catch((err) => console.error("Erro na requisição de turmas:", err));
 }
 }, [isLogin]);
 
@@ -275,6 +269,5 @@ Kalangus Type </h1> </div>
     }
   `}</style>
 </div>
-
 );
 }
