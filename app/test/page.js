@@ -31,12 +31,9 @@ export default function TestePage() {
 
   const [redirectCounter, setRedirectCounter] = useState(5);
 
-  // =======================
-  // Carregar usuário + média
-  // =======================
+  // ============ Load user & media ============
   useEffect(() => {
     window.scrollTo(0, 0);
-
     const u = localStorage.getItem("jdc-user");
     if (!u) return router.push("/auth");
 
@@ -46,11 +43,7 @@ export default function TestePage() {
     fetch(`/api/userMedia?user_id=${parsed.id}`)
       .then(r => r.json())
       .then(data => {
-        if (data.media === null || data.media === undefined) {
-          setMedia(null);
-        } else {
-          setMedia(Number(data.media));
-        }
+        setMedia(typeof data.media === "number" ? data.media : null);
         setMediaLoaded(true);
       })
       .catch(() => {
@@ -58,49 +51,34 @@ export default function TestePage() {
         setMediaLoaded(true);
       });
 
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
+    setTimeout(() => inputRef.current?.focus(), 100);
   }, [router]);
 
-  // ================
-  // Gera texto inicial
-  // ================
+  // ============ Generate initial text ============
   useEffect(() => {
     const t = generateRandomText(200);
     setText(t);
     setStates(new Array(t.length).fill("pending"));
   }, []);
 
-  // ================
-  // Cursor scroll
-  // ================
+  // ============ Scroll cursor ============
   useEffect(() => {
     if (charRefs.current[pos]) {
-      charRefs.current[pos].scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      charRefs.current[pos].scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [pos]);
 
-  // ================
-  // Extende texto
-  // ================
+  // ============ Extend text ============
   function maybeExtendText() {
     if (pos < text.length - 200) return;
-
     const extra = generateRandomText(300);
     setText(prev => prev + " " + extra);
     setStates(prev => [...prev, ...new Array(extra.length + 1).fill("pending")]);
   }
 
-  // ================
-  // Digitação
-  // ================
+  // ============ Typing handler ============
   function handleKey(e) {
     const key = e.key;
-
     if (key === "Backspace") {
       setErrorMessage("Não tente apagar o passado. Cada tecla errada é um passo para a frente.");
       setTimeout(() => setErrorMessage(""), 5000);
@@ -110,61 +88,34 @@ export default function TestePage() {
 
     if (!started) setStarted(true);
     e.preventDefault();
-
     if (key.length !== 1) return;
 
     const expected = text[pos];
-
     setStates(old => {
       const updated = [...old];
       updated[pos] = expected === key ? "correct" : "wrong";
       return updated;
     });
 
-    if (expected === key) setCorrectCount(c => c + 1);
-    else setWrongCount(w => w + 1);
-
+    expected === key ? setCorrectCount(c => c + 1) : setWrongCount(w => w + 1);
     setPos(pos + 1);
     maybeExtendText();
   }
 
   const totalTyped = correctCount + wrongCount;
-
-  const accuracy = totalTyped > 0
-    ? Number(((correctCount / totalTyped) * 100).toFixed(1))
-    : 100;
-
+  const accuracy = totalTyped > 0 ? Number(((correctCount / totalTyped) * 100).toFixed(1)) : 100;
   const elapsed = 180 - timeLeft;
   const wpm = elapsed > 0 ? Math.round((correctCount / 5) / (elapsed / 60)) : 0;
 
-  // ================
-  // Animação final
-  // ================
   function animateResults() {
-    let w = 0;
-    let a = 0;
-
-    const wi = setInterval(() => {
-      w++;
-      setAnimatedWPM(w);
-      if (w >= wpm) clearInterval(wi);
-    }, 20);
-
-    const ai = setInterval(() => {
-      a++;
-      setAnimatedAccuracy(a);
-      if (a >= accuracy) clearInterval(ai);
-    }, 15);
+    let w = 0, a = 0;
+    const wi = setInterval(() => { w++; setAnimatedWPM(w); if (w >= wpm) clearInterval(wi); }, 20);
+    const ai = setInterval(() => { a++; setAnimatedAccuracy(a); if (a >= accuracy) clearInterval(ai); }, 15);
   }
 
-  // ================
-  // Salvar resultado
-  // ================
   async function salvarResultado() {
     if (!user) return;
-
     const nowBR = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-
     try {
       await fetch("/api/results", {
         method: "POST",
@@ -179,29 +130,18 @@ export default function TestePage() {
           created_at: nowBR
         }),
       });
-    } catch (err) {
-      console.error("Erro ao salvar resultado:", err);
-    }
+    } catch (err) { console.error("Erro ao salvar resultado:", err); }
   }
 
-  // ================
-  // Timer
-  // ================
+  // ============ Timer ============
   useEffect(() => {
     if (!started || finished) return;
-
-    if (timeLeft <= 0) {
-      finalizarTeste();
-      return;
-    }
-
+    if (timeLeft <= 0) { finalizarTeste(); return; }
     const i = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(i);
   }, [started, timeLeft, finished]);
 
-  // ================
-  // Finalização
-  // ================
+  // ============ Finish test ============
   function finalizarTeste() {
     setFinished(true);
     salvarResultado();
@@ -209,148 +149,64 @@ export default function TestePage() {
 
     const c = setInterval(() => {
       setRedirectCounter(t => {
-        if (t <= 1) {
-          clearInterval(c);
-          router.push("/dashboard");
-        }
+        if (t <= 1) { clearInterval(c); router.push("/dashboard"); }
         return t - 1;
       });
     }, 1000);
   }
 
-  // ================
-  // Comparação com média
-  // ================
+  // ============ Compare with media ============
   useEffect(() => {
-    if (!finished) return;
-    if (!mediaLoaded) return;
-
-    if (media === null) {
-      setComparisonText("Primeiro teste — ainda sem média!");
-      return;
-    }
-
-    if (wpm > media + 3) {
-      setComparisonText("Excelente! Você ficou ACIMA da sua média!");
-    } else if (wpm < media - 3) {
-      setComparisonText("Você ficou ABAIXO da sua média. Continue praticando!");
-    } else {
-      setComparisonText("Você ficou NA MÉDIA. Consistência importa!");
-    }
+    if (!finished || !mediaLoaded) return;
+    if (media === null) setComparisonText("Primeiro teste — ainda sem média!");
+    else if (wpm > media + 3) setComparisonText("Excelente! Você ficou ACIMA da sua média!");
+    else if (wpm < media - 3) setComparisonText("Você ficou ABAIXO da sua média. Continue praticando!");
+    else setComparisonText("Você ficou NA MÉDIA. Consistência importa!");
   }, [media, mediaLoaded, finished, wpm]);
 
-  const wpmColor = wpm < 10 ? "#F44336" : wpm < 20 ? "#FFC107" : wpm < 30 ? "#2f8adf" : "#2e5f30";
-  const accuracyColor = accuracy < 70 ? "#F44336" : accuracy < 90 ? "#FF9800" : "#4CAF50";
+  const wpmColor = wpm < 10 ? "text-red-600" : wpm < 20 ? "text-yellow-500" : wpm < 30 ? "text-blue-600" : "text-green-800";
+  const accuracyColor = accuracy < 70 ? "text-red-600" : accuracy < 90 ? "text-yellow-500" : "text-green-600";
 
   if (!user) return <p>Carregando...</p>;
 
-  //=================================
-  // LAYOUT CENTRALIZADO — AQUI É A MUDANÇA PRINCIPAL
-  //=================================
   return (
-    <div style={{
-      minHeight: "100vh",
-      width: "100%",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "flex-start",
-      paddingTop: 30
-    }}>
-      <div style={{ width: "100%", maxWidth: 900 }}>
+    <div className="min-h-screen flex justify-center items-start pt-10 bg-gray-100">
+      <div className="w-full max-w-3xl px-4">
 
-        {/* HEADER */}
         {!finished && (
-          <div
-            style={{
-              position: "sticky",
-              top: 0,
-              background: "#222",
-              color: "#fff",
-              zIndex: 10,
-              padding: "20px 40px",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
-            }}
-          >
-            <h1 style={{ fontSize: 28, marginBottom: 10 }}>Teste de Digitação - 3 Minutos</h1>
-
-            <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+          <div className="sticky top-0 bg-gray-800 text-white z-10 p-6 rounded-lg shadow-md mb-6">
+            <h1 className="text-2xl font-bold mb-3">Teste de Digitação - 3 Minutos</h1>
+            <div className="flex flex-wrap gap-5">
               <p><b>Tempo:</b> {timeLeft}s</p>
-              <p><b>WPM:</b> <span style={{ color: wpmColor }}>{wpm}</span></p>
-              <p><b>Precisão:</b> <span style={{ color: accuracyColor }}>{accuracy}%</span></p>
+              <p><b>WPM:</b> <span className={wpmColor}>{wpm}</span></p>
+              <p><b>Precisão:</b> <span className={accuracyColor}>{accuracy}%</span></p>
               <p><b>Digitado:</b> {totalTyped}</p>
             </div>
           </div>
         )}
 
-        {/* TEXTO */}
         {!finished ? (
           <>
-
-            {/* barra de progresso */}
-            <div style={{
-              width: "100%",
-              height: 12,
-              background: "#ccc",
-              borderRadius: 4,
-              marginBottom: 20
-            }}>
-              <div style={{
-                height: "100%",
-                width: `${((pos / text.length) * 100).toFixed(2)}%`,
-                background: "#4CAF50",
-                transition: "width .15s"
-              }} />
+            {/* Barra de progresso */}
+            <div className="w-full h-3 bg-gray-300 rounded mb-4">
+              <div className="h-full bg-green-500 transition-all" style={{ width: `${(pos / text.length) * 100}%` }} />
             </div>
 
-            {errorMessage && (
-              <p style={{
-                color: "#c0392b",
-                marginBottom: 15,
-                fontStyle: "italic",
-                fontWeight: "bold",
-                textAlign: "center"
-              }}>{errorMessage}</p>
-            )}
+            {errorMessage && <p className="text-center text-red-600 italic font-bold mb-4">{errorMessage}</p>}
 
+            {/* Texto */}
             <div
               onClick={() => inputRef.current.focus()}
-              style={{
-                padding: 20,
-                border: "1px solid #999",
-                minHeight: 260,
-                fontFamily: "monospace",
-                cursor: "text",
-                whiteSpace: "pre-wrap",
-                lineHeight: "1.8",
-                overflowY: "auto",
-                fontSize: 20,
-                borderRadius: 12,
-                background: "#fff"
-              }}
+              className="p-5 border border-gray-400 bg-white rounded-lg min-h-[260px] font-mono text-lg leading-relaxed cursor-text overflow-y-auto"
             >
               {text.split("").map((ch, i) => {
-                let color = "#555";
-                let fontWeight = "normal";
-
-                if (states[i] === "correct") color = "lightgreen";
-                if (states[i] === "wrong") {
-                  color = "red";
-                  fontWeight = "bold";
-                }
-
                 const isCursor = i === pos;
-
+                const colorClass = states[i] === "correct" ? "text-green-400" : states[i] === "wrong" ? "text-red-600 font-bold" : "text-gray-600";
                 return (
                   <span
                     key={i}
                     ref={el => (charRefs.current[i] = el)}
-                    style={{
-                      background: isCursor ? "#ffeb3b" : "none",
-                      borderBottom: isCursor ? "2px solid black" : "none",
-                      animation: isCursor ? "blink 1s step-start infinite" : "none",
-                      color,
-                      fontWeight
-                    }}
+                    className={`${colorClass} ${isCursor ? "bg-yellow-300 border-b-2 border-black animate-blink" : ""}`}
                   >
                     {ch}
                   </span>
@@ -358,52 +214,23 @@ export default function TestePage() {
               })}
             </div>
 
-            <input
-              ref={inputRef}
-              onKeyDown={handleKey}
-              style={{ opacity: 0, position: "absolute", pointerEvents: "none" }}
-            />
+            <input ref={inputRef} onKeyDown={handleKey} className="opacity-0 absolute pointer-events-none" />
           </>
         ) : (
-          <div
-            style={{
-              marginTop: 40,
-              background: "linear-gradient(135deg, #ffffff, #f1f1f1)",
-              padding: 40,
-              borderRadius: 24,
-              boxShadow: "0px 6px 30px rgba(0,0,0,0.15)",
-              width: "90%",
-              maxWidth: 600,
-              marginInline: "auto",
-              textAlign: "center"
-            }}
-          >
-            <h2 style={{ fontSize: 34, marginBottom: 15 }}>Tempo Encerrado!</h2>
-
-            <p style={{ fontSize: 28, color: wpmColor, margin: 8 }}>
-              WPM: <b>{animatedWPM}</b>
-            </p>
-
-            <p style={{ fontSize: 28, color: accuracyColor, margin: 8 }}>
-              Precisão: <b>{animatedAccuracy}%</b>
-            </p>
-
-            <p style={{
-              marginTop: 25,
-              fontSize: 20,
-              fontWeight: "bold",
-              color: "#333"
-            }}>
-              {comparisonText}
-            </p>
-
-            <p style={{ marginTop: 20, fontSize: 18, opacity: 0.7 }}>
-              Redirecionando em {redirectCounter}...
-            </p>
+          <div className="mt-10 bg-gradient-to-br from-white to-gray-200 p-10 rounded-3xl shadow-xl w-full max-w-md mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-4">Tempo Encerrado!</h2>
+            <p className={`text-2xl mb-2 ${wpmColor}`}>WPM: <b>{animatedWPM}</b></p>
+            <p className={`text-2xl mb-2 ${accuracyColor}`}>Precisão: <b>{animatedAccuracy}%</b></p>
+            <p className="mt-6 text-lg font-bold text-gray-800">{comparisonText}</p>
+            <p className="mt-4 text-gray-500 text-lg">Redirecionando em {redirectCounter}...</p>
           </div>
         )}
-
       </div>
+
+      <style jsx>{`
+        @keyframes blink { 50% { border-color: transparent; } }
+        .animate-blink { animation: blink 1s step-start infinite; }
+      `}</style>
     </div>
   );
 }
