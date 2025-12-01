@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
 import Mascote from "../images/mascote.png";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AuthPage() {
 const [isLogin, setIsLogin] = useState(true);
@@ -26,7 +26,7 @@ fetch("/api/turmas")
 if (data.success) setTurmas(data.turmas);
 else console.error("Erro ao carregar turmas:", data.error);
 })
-.catch((err) => console.error("Erro na requisição de turmas:", err));
+.catch((err) => console.error("Erro fetch turmas:", err));
 }
 }, [isLogin]);
 
@@ -184,13 +184,43 @@ Kalangus Type </h1> </div>
           transition={{ duration: 0.3 }}
           className="flex flex-col gap-4"
         >
-          <input name="username" placeholder="Usuário" required disabled={loading} className="input-auth" />
-          <input name="fullname" placeholder="Nome Completo" required disabled={loading} className="input-auth" />
-          <input name="email" type="email" placeholder="Email" required disabled={loading} className="input-auth" />
-          <input name="idade" placeholder="Idade" required disabled={loading} className="input-auth" />
+          <input
+            name="username"
+            placeholder="Usuário"
+            required
+            disabled={loading}
+            className="input-auth"
+          />
+          <input
+            name="fullname"
+            placeholder="Nome Completo"
+            required
+            disabled={loading}
+            className="input-auth"
+          />
+          <input
+            name="email"
+            type="email"
+            placeholder="Email"
+            required
+            disabled={loading}
+            className="input-auth"
+          />
+          <input
+            name="idade"
+            placeholder="Idade"
+            required
+            disabled={loading}
+            className="input-auth"
+          />
 
-          <select name="turma" required disabled={loading} className="input-auth">
-            <option value="" disabled selected>
+          <select
+            name="turma"
+            required
+            disabled={loading}
+            className="input-auth"
+          >
+            <option value="" disabled>
               Selecione a Turma
             </option>
             {turmas.map((t) => (
@@ -208,7 +238,9 @@ Kalangus Type </h1> </div>
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={loading}
-            className={`input-auth ${passwordsMatch ? "" : "border-red-500"}`}
+            className={`input-auth ${
+              passwordsMatch ? "" : "border-red-500"
+            }`}
           />
 
           <input
@@ -219,13 +251,17 @@ Kalangus Type </h1> </div>
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             disabled={loading}
-            className={`input-auth ${passwordsMatch ? "" : "border-red-500"}`}
+            className={`input-auth ${
+              passwordsMatch ? "" : "border-red-500"
+            }`}
           />
 
           <button
             type="submit"
             disabled={!passwordsMatch || loading}
-            className={`btn-auth ${passwordsMatch ? "" : "opacity-50 cursor-not-allowed"} flex justify-center items-center gap-2`}
+            className={`btn-auth ${
+              passwordsMatch ? "" : "opacity-50 cursor-not-allowed"
+            } flex justify-center items-center gap-2`}
           >
             {loading ? (
               <>
@@ -269,5 +305,6 @@ Kalangus Type </h1> </div>
     }
   `}</style>
 </div>
+
 );
 }
