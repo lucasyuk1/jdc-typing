@@ -3,9 +3,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Mascote from "../images/mascote.png";
-import GoldMedal from "../images/gold-medal.png";
-import SilverMedal from "../images/silver-medal.png";
-import BronzeMedal from "../images/bronze-medal.png";
 import { useRouter } from "next/navigation";
 
 export default function RankingPage() {
@@ -60,10 +57,10 @@ if (!user) return <p className="text-center mt-10">Carregando...</p>;
 
 const getRowClass = (r) => r.usuario_id === user.id ? "bg-blue-800" : "";
 
-const getMedal = (index) => {
-if (index === 0) return <Image src={GoldMedal} alt="Ouro" width={25} height={25} />;
-if (index === 1) return <Image src={SilverMedal} alt="Prata" width={25} height={25} />;
-if (index === 2) return <Image src={BronzeMedal} alt="Bronze" width={25} height={25} />;
+const getRankingDisplay = (index) => {
+if (index === 0) return "🥇";
+if (index === 1) return "🥈";
+if (index === 2) return "🥉";
 return index + 1;
 };
 
@@ -117,7 +114,7 @@ return ( <div className="ranking-container p-8 text-white min-h-screen bg-gray-9
               key={r.id ?? `${r.usuario_id}-${i}`}
               className={getRowClass(r)}
             >
-              <td className="px-3 py-2">{getMedal(i)}</td>
+              <td className="px-3 py-2">{getRankingDisplay(i)}</td>
               <td className="px-3 py-2">{r.fullname ?? "Sem nome"}</td>
               <td className="px-3 py-2">{r.turma}</td>
               <td className="px-3 py-2">{r.wpm}</td>
