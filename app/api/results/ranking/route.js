@@ -1,4 +1,3 @@
-/* API: /api/results/ranking */
 import { supabase } from "@/lib/supabase";
 
 export async function POST(req) {
@@ -6,6 +5,7 @@ try {
 const body = await req.json();
 const mode = body.mode || "geral"; // modos: pessoal, turma, geral
 
+// Busca todos os resultados junto com o usuário
 const { data, error } = await supabase
   .from("results")
   .select("*, users(username, turma, fullname)")
@@ -18,7 +18,7 @@ if (error) {
 
 let rows = data.map(r => ({
   id: r.id,
-  usuario_id: r.user_id,
+  usuario_id: r.usuario_id ?? r.user_id,
   username: r.users?.username || "",
   fullname: r.users?.fullname || r.users?.username || "",
   turma: r.users?.turma || "",
@@ -27,22 +27,25 @@ let rows = data.map(r => ({
   created_at: r.created_at
 }));
 
-// Ranking pessoal: mostrar todos os testes do usuário, ordenado pelo maior WPM
+// ----------- MODO PESSOAL -----------
 if (mode === "pessoal" && body.usuario_id) {
+  // Todos os testes do usuário, ordenado pelo maior WPM
   rows = rows.filter(r => String(r.usuario_id) === String(body.usuario_id));
   rows.sort((a, b) => b.wpm - a.wpm);
+  console.log(`Ranking pessoal: ${rows.length} resultados encontrados`);
   return new Response(JSON.stringify({ success: true, data: rows }), { status: 200 });
 }
 
-// Ranking por turma ou geral: agregação por usuário
+// ----------- MODO TURMA -----------
 if (mode === "turma" && body.turma) {
   rows = rows.filter(r => r.turma === body.turma);
 }
 
-rows = aggregateByUser(rows);
+// ----------- MODO GERAL OU TURMA AGREGADA -----------
+const aggregated = aggregateByUser(rows);
+console.log(`${mode} ranking: ${aggregated.length} usuários agregados`);
 
-return new Response(JSON.stringify({ success: true, data: rows }), { status: 200 });
-
+return new Response(JSON.stringify({ success: true, data: aggregated }), { status: 200 });
 
 } catch (err) {
 console.error("Error:", err);
@@ -50,6 +53,7 @@ return new Response(JSON.stringify({ success: false, data: [] }), { status: 500 
 }
 }
 
+// Função para agregar resultados por usuário (média WPM e precisão)
 function aggregateByUser(rows) {
 const grouped = rows.reduce((acc, r) => {
 if (!acc[r.usuario_id]) {
