@@ -17,21 +17,29 @@ const router = useRouter();
 
 const passwordsMatch = password === confirmPassword;
 
-// Carrega turmas sempre que a aba de registro for mostrada
+// Carrega turmas assim que a página é carregada
 useEffect(() => {
-if (!isLogin) {
-const loadTurmas = async () => {
+async function loadTurmas() {
 try {
 const res = await fetch("/api/turmas");
 const data = await res.json();
-if (data.success && data.turmas) setTurmas(data.turmas);
+if (data.success && data.turmas) {
+setTurmas(data.turmas);
+console.log("Turmas carregadas:", data.turmas);
+} else {
+setTurmas([]);
+console.warn("Nenhuma turma encontrada");
+}
 } catch (err) {
 console.error("Erro ao carregar turmas:", err);
+setTurmas([]);
 }
-};
+}
+
 loadTurmas();
-}
-}, [isLogin]);
+
+
+}, []);
 
 async function handleRegister(e) {
 e.preventDefault();
@@ -97,16 +105,22 @@ try {
 }
 
 return ( <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-6"> <div className="flex flex-col sm:flex-row items-center sm:items-start gap-10">
-{/* Mascote */} <div className="w-64 h-64 sm:w-72 sm:h-72 flex-shrink-0"> <Image
-         src={Mascote}
-         alt="TypingBoo Mascote"
-         width={288}
-         height={288}
-         className="drop-shadow-2xl"
-       /> </div>
+
+    {/* Mascote */}
+    <div className="w-64 h-64 sm:w-72 sm:h-72 flex-shrink-0">
+      <Image
+        src={Mascote}
+        alt="TypingBoo Mascote"
+        width={288}
+        height={288}
+        className="drop-shadow-2xl"
+      />
+    </div>
 
     {/* Caixa de login / registro */}
     <div className="backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md relative z-10">
+      
+      {/* Título */}
       <div className="flex flex-col items-center mb-6">
         <h1 className="text-3xl font-bold text-purple-400 tracking-wide">TypingBoo</h1>
       </div>
@@ -143,12 +157,12 @@ return ( <div className="min-h-screen flex items-center justify-center bg-gradie
           <input name="fullname" placeholder="Nome Completo" required disabled={loading} className="input-auth" />
           <input name="email" type="email" placeholder="Email" required disabled={loading} className="input-auth" />
           <input name="idade" placeholder="Idade" required disabled={loading} className="input-auth" />
-
-          {/* Select de turmas */}
+          
+          {/* Select de Turmas */}
           <select
             name="turma"
             required
-            disabled={loading}
+            disabled={loading || turmas.length === 0}
             className="input-auth"
             value={turmaSelecionada}
             onChange={(e) => setTurmaSelecionada(e.target.value)}
@@ -159,32 +173,10 @@ return ( <div className="min-h-screen flex items-center justify-center bg-gradie
             ))}
           </select>
 
-          <input
-            name="password"
-            type="password"
-            placeholder="Senha"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-            className={`input-auth ${passwordsMatch ? "" : "border-red-500"}`}
-          />
-          <input
-            name="confirmPassword"
-            type="password"
-            placeholder="Confirme a Senha"
-            required
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            disabled={loading}
-            className={`input-auth ${passwordsMatch ? "" : "border-red-500"}`}
-          />
-
-          <button
-            type="submit"
-            disabled={!passwordsMatch || loading}
-            className={`btn-auth ${passwordsMatch ? "" : "opacity-50 cursor-not-allowed"} flex justify-center items-center gap-2`}
-          >
+          <input name="password" type="password" placeholder="Senha" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading} className={`input-auth ${passwordsMatch ? "" : "border-red-500"}`} />
+          <input name="confirmPassword" type="password" placeholder="Confirme a Senha" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={loading} className={`input-auth ${passwordsMatch ? "" : "border-red-500"}`} />
+          
+          <button type="submit" disabled={!passwordsMatch || loading} className={`btn-auth ${passwordsMatch ? "" : "opacity-50 cursor-not-allowed"} flex justify-center items-center gap-2`}>
             {loading ? "Carregando..." : "Registrar"}
           </button>
         </form>
