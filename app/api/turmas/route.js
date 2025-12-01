@@ -3,9 +3,10 @@ import { supabase } from "@/lib/supabase";
 export async function GET() {
   try {
     const { data, error } = await supabase
-      .from("turmas")      // tabela correta
-      .select("id, turma_name") // selecionar apenas o que precisa
-      .order("turma_name", { ascending: true }); // ordena tipo 6A, 6B, 7A...
+      .from("turmas")
+      .select("id, turma_name")
+      .order("turma_name", { ascending: true })
+      .range(0, 1000); // garante que todas sejam retornadas
 
     if (error) {
       return new Response(JSON.stringify({ success: false, error: error.message }), { status: 400 });
