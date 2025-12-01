@@ -36,7 +36,6 @@ useEffect(() => {
 window.scrollTo(0, 0);
 const u = localStorage.getItem("jdc-user");
 if (!u) return router.push("/auth");
-
 const parsed = JSON.parse(u);
 setUser(parsed);
 
@@ -167,56 +166,43 @@ else if (wpm < media - 3) setComparisonText("Você ficou ABAIXO da sua média. C
 else setComparisonText("Você ficou NA MÉDIA. Consistência importa!");
 }, [media, mediaLoaded, finished, wpm]);
 
-const wpmColor = wpm < 10 ? "text-red-600" : wpm < 20 ? "text-yellow-500" : wpm < 30 ? "text-blue-600" : "text-green-800";
-const accuracyColor = accuracy < 70 ? "text-red-600" : accuracy < 90 ? "text-yellow-500" : "text-green-600";
+const wpmColor = wpm < 10 ? "text-red-600" : wpm < 20 ? "text-yellow-500" : wpm < 30 ? "text-blue-600" : "text-green-400";
+const accuracyColor = accuracy < 70 ? "text-red-600" : accuracy < 90 ? "text-yellow-500" : "text-green-400";
 
-if (!user) return <p>Carregando...</p>;
+if (!user) return <p className="text-center mt-10">Carregando...</p>;
 
-return ( <div className="min-h-screen flex flex-col bg-gray-400">
+return ( <div className="flex flex-col items-center justify-start min-h-screen w-full bg-gray-900 px-4 py-6">
+{/* Top Bar */}
+{!finished && ( <div className="sticky top-0 z-20 w-full max-w-5xl bg-gray-800 rounded-b-lg shadow-md p-6 text-center"> <h1 className="text-2xl font-bold mb-3">Teste de Digitação - 3 Minutos</h1> <div className="flex flex-wrap justify-center gap-6 text-lg font-semibold"> <p><b>Tempo:</b> {timeLeft}s</p> <p><b>WPM:</b> <span className={wpmColor}>{wpm}</span></p> <p><b>Precisão:</b> <span className={accuracyColor}>{accuracy}%</span></p> <p><b>Digitado:</b> {totalTyped}</p> </div> </div>
+)}
 
-  {/* Top bar fixa */}
+  {/* Progress Bar */}
   {!finished && (
-    <div className="sticky top-0 bg-gray-800 text-white z-10 p-6 rounded-b-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-3 text-center">Teste de Digitação - 3 Minutos</h1>
-      <div className="flex justify-center flex-wrap gap-5 text-lg font-semibold">
-        <p><b>Tempo:</b> {timeLeft}s</p>
-        <p><b>WPM:</b> <span className={wpmColor}>{wpm}</span></p>
-        <p><b>Precisão:</b> <span className={accuracyColor}>{accuracy}%</span></p>
-        <p><b>Digitado:</b> {totalTyped}</p>
-      </div>
-    </div>
-  )}
-
-  {/* Barra de progresso */}
-  {!finished && (
-    <div className="w-full h-3 bg-gray-300">
+    <div className="w-full max-w-5xl h-3 bg-gray-700 rounded my-3">
       <div className="h-full bg-green-500 transition-all" style={{ width: `${(pos / text.length) * 100}%` }} />
     </div>
   )}
 
-  {/* Área de digitação fullscreen */}
+  {/* Typing Area */}
   {!finished ? (
     <div
       onClick={() => inputRef.current.focus()}
-      className="flex-1 w-full p-6 bg-gray-900 font-mono text-lg text-gray-300 leading-relaxed cursor-text overflow-y-auto"
-      style={{ minHeight: "calc(100vh - 120px)" }}
+      className="flex-1 w-full max-w-5xl p-6 overflow-y-auto bg-gray-800 rounded-lg font-mono text-gray-300 text-lg leading-relaxed cursor-text min-h-[60vh]"
     >
       {text.split("").map((ch, i) => {
         const isCursor = i === pos;
-        const colorClass = states[i] === "correct" ? "text-green-400" : states[i] === "wrong" ? "text-red-400 font-bold" : "text-gray-500";
+        const colorClass = states[i] === "correct" ? "char-correct" : states[i] === "wrong" ? "char-wrong" : "";
+        const cursorClass = isCursor ? "char-current animate-blink" : "";
         return (
-          <span
-            key={i}
-            ref={el => (charRefs.current[i] = el)}
-            className={`${colorClass} ${isCursor ? "bg-yellow-300 border-b-2 border-black animate-blink" : ""}`}
-          >
+          <span key={i} ref={el => (charRefs.current[i] = el)} className={`${colorClass} ${cursorClass}`}>
             {ch}
           </span>
         );
       })}
+      {errorMessage && <p className="no-back-message">{errorMessage}</p>}
     </div>
   ) : (
-    <div className="flex-1 flex flex-col justify-center items-center bg-gray-900 text-white p-10">
+    <div className="flex-1 flex flex-col justify-center items-center text-center mt-8 max-w-3xl">
       <h2 className="text-3xl font-bold mb-4">Tempo Encerrado!</h2>
       <p className={`text-2xl mb-2 ${wpmColor}`}>WPM: <b>{animatedWPM}</b></p>
       <p className={`text-2xl mb-2 ${accuracyColor}`}>Precisão: <b>{animatedAccuracy}%</b></p>
@@ -232,5 +218,6 @@ return ( <div className="min-h-screen flex flex-col bg-gray-400">
     .animate-blink { animation: blink 1s step-start infinite; }
   `}</style>
 </div>
+
 );
 }
