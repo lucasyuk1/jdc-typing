@@ -3,16 +3,16 @@
 import { supabase } from "@/lib/supabaseClient"; // ajuste caso use outro client
 
 export default async function handler(req, res) {
-  const { user_id } = req.query;
+  const { usuario_id } = req.query;
 
-  if (!user_id) return res.status(400).json({ error: "user_id é obrigatório" });
+  if (!usuario_id) return res.status(400).json({ error: "usuario_id é obrigatório" });
 
   try {
     // Busca todos os resultados do usuário
     const { data, error } = await supabase
       .from("results")
       .select("wpm")
-      .eq("usuario_id", user_id);
+      .eq("usuario_id", usuario_id);
 
     if (error) throw error;
 
