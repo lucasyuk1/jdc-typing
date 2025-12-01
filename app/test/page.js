@@ -26,10 +26,21 @@ const [animatedAccuracy, setAnimatedAccuracy] = useState(0);
 
 const [user, setUser] = useState(null);
 const [media, setMedia] = useState(null);
-const [mediaLoaded, setMediaLoaded] = useState(false);
 const [comparisonText, setComparisonText] = useState("");
 
 const [redirectCounter, setRedirectCounter] = useState(5);
+
+// ============ Fetch média ============
+async function fetchMedia(userId) {
+try {
+const res = await fetch(`/api/userMedia?user_id=${userId}`);
+const data = await res.json();
+if (typeof data.media === "number") setMedia(data.media);
+} catch (err) {
+console.error("Erro ao buscar média:", err);
+setMedia(null);
+}
+}
 
 // ============ Load user & media ============
 useEffect(() => {
@@ -38,19 +49,10 @@ const u = localStorage.getItem("jdc-user");
 if (!u) return router.push("/auth");
 const parsed = JSON.parse(u);
 setUser(parsed);
-
-fetch(`/api/userMedia?user_id=${parsed.id}`)
-  .then(r => r.json())
-  .then(data => {
-    setMedia(typeof data.media === "number" ? data.media : null);
-    setMediaLoaded(true);
-  })
-  .catch(() => {
-    setMedia(null);
-    setMediaLoaded(true);
-  });
+fetchMedia(parsed.id);
 
 setTimeout(() => inputRef.current?.focus(), 100);
+
 
 }, [router]);
 
@@ -159,12 +161,12 @@ const c = setInterval(() => {
 
 // ============ Compare with media ============
 useEffect(() => {
-if (!finished || !mediaLoaded) return;
+if (!finished) return;
 if (media === null) setComparisonText("Primeiro teste — ainda sem média!");
 else if (wpm > media + 3) setComparisonText("Excelente! Você ficou ACIMA da sua média!");
 else if (wpm < media - 3) setComparisonText("Você ficou ABAIXO da sua média. Continue praticando!");
 else setComparisonText("Você ficou NA MÉDIA. Consistência importa!");
-}, [media, mediaLoaded, finished, wpm]);
+}, [media, finished, wpm]);
 
 const wpmColor = wpm < 10 ? "text-red-600" : wpm < 20 ? "text-yellow-500" : wpm < 30 ? "text-blue-600" : "text-green-400";
 const accuracyColor = accuracy < 70 ? "text-red-600" : accuracy < 90 ? "text-yellow-500" : "text-green-400";
