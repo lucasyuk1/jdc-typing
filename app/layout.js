@@ -1,7 +1,13 @@
 import Footer from "@/components/Footer"; // crie o Footer como eu sugeri antes
 import "./globals.css";
-export const metadata = { title: "Kalangus" };
-
+export const metadata = {
+  title: "TypingBoo",
+  description: "Teste de digitação rápido e divertido",
+  icons: {
+    icon: "/favicon.ico", // favicon padrão
+    shortcut: "/favicon-32x32.png", // opcional
+  },
+};
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
