@@ -35,8 +35,13 @@ async function loadResultados() {
 
   const data = await res.json();
   if (data.success && data.data.length > 0) {
-    // Ordena pelo maior WPM
-    const sorted = data.data.sort((a, b) => b.wpm - a.wpm);
+    let sorted;
+
+    if (mode === "pessoal") {
+      // Ordena por data mais recente primeiro
+      sorted = data.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+
     setResultados(sorted);
 
     const soma = sorted.reduce((acc, r) => acc + r.wpm, 0);
