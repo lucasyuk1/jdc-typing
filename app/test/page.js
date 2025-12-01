@@ -185,7 +185,7 @@ export default function TestePage() {
             <p className="text-lg">Tempo restante: <b>{`${minutos.toString().padStart(2,"0")}:${segundos.toString().padStart(2,"0")}`}</b></p>
             <p className={`text-lg ${wpmColor}`}>WPM: <b>{wpm}</b></p>
             {media !== null && <p className="text-lg text-blue-400">Média: <b>{media}</b></p>}
-            <p className={`text-lg ${accuracy < 70 ? "text-red-600" : "text-green-400"}`}>Precisão: <b>{accuracy}%</b></p>
+            <p className={`text-lg ${accuracy < 90 ? "text-red-600" : "text-green-400"}`}>Precisão: <b>{accuracy}%</b></p>
             <p className="text-lg mt-1">Letras digitadas: <b>{totalTyped}</b> (<span className="text-green-400">{correctCount}</span> corretas, <span className="text-red-500">{wrongCount}</span> erradas)</p>
           </div>
         </div>
