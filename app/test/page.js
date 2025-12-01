@@ -30,6 +30,13 @@ const [comparisonText, setComparisonText] = useState("");
 
 const [redirectCounter, setRedirectCounter] = useState(5);
 
+// Formata tempo em minutos:segundos
+function formatTime(seconds) {
+const mins = Math.floor(seconds / 60);
+const secs = seconds % 60;
+return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
 // ============ Load user & média ============
 useEffect(() => {
 window.scrollTo(0, 0);
@@ -183,13 +190,18 @@ if (!user) return <p className="text-center mt-10">Carregando...</p>;
 
 return ( <div className="flex flex-col items-center justify-start min-h-screen w-full bg-gray-900 px-4 py-6">
 {/* Top Bar */}
-{!finished && ( <div className="sticky top-0 z-20 w-full max-w-5xl bg-gray-800 rounded-b-lg shadow-md p-6 text-center"> <h1 className="text-2xl font-bold mb-3">Teste de Digitação - 3 Minutos</h1> <div className="flex flex-wrap justify-center gap-6 text-lg font-semibold"> <p><b>Tempo:</b> {timeLeft}s</p> <p> <b>WPM:</b> <span className={wpmColor}>
+{!finished && ( <div className="sticky top-0 z-20 w-full max-w-5xl bg-gray-800 rounded-b-lg shadow-md p-6 text-center"> <h1 className="text-2xl font-bold mb-3">Teste de Digitação - {formatTime(180)}</h1> <div className="flex flex-wrap justify-center gap-6 text-lg font-semibold"> <p><b>Tempo:</b> {formatTime(timeLeft)}</p> <p> <b>WPM:</b> <span className={wpmColor}>
 {wpm}{" "}
 {media !== null && (
 wpm > media + 3 ? <span className="text-green-400">▲</span> :
 wpm < media - 3 ? <span className="text-red-600">▼</span> : <span className="text-yellow-400">—</span>
 )} </span> </p> <p><b>Média:</b> {media !== null ? media : "—"}</p> <p><b>Precisão:</b> <span className={accuracyColor}>{accuracy}%</span></p> <p><b>Digitado:</b> {totalTyped}</p> </div> </div>
 )}
+
+  {/* Espaço reservado para mensagens do backspace */}
+  <div className="w-full max-w-5xl p-2 text-center min-h-[2rem]">
+    {errorMessage && <span className="text-red-500 font-semibold">{errorMessage}</span>}
+  </div>
 
   {/* Typing Area */}
   {!finished ? (
@@ -207,7 +219,6 @@ wpm < media - 3 ? <span className="text-red-600">▼</span> : <span className="t
           </span>
         );
       })}
-      {errorMessage && <p className="no-back-message">{errorMessage}</p>}
     </div>
   ) : (
     <div className="flex-1 flex flex-col justify-center items-center text-center mt-8 max-w-3xl">
