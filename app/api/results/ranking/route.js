@@ -35,7 +35,7 @@ export async function POST(req) {
     if (mode === "pessoal" && usuario_id) {
       let pessoal = rows
         .filter((r) => String(r.usuario_id) === String(usuario_id))
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        .sort((a, b) => b.wpm - a.wpm);
 
       return new Response(
         JSON.stringify({ success: true, data: pessoal }),
