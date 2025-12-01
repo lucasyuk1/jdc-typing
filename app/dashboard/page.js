@@ -40,6 +40,9 @@ async function loadResultados() {
     if (mode === "pessoal") {
       // Ordena por data mais recente primeiro
       sorted = data.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    } else {
+      // Ordena pelo maior WPM
+      sorted = data.data.sort((a, b) => b.wpm - a.wpm);
     }
 
     setResultados(sorted);
