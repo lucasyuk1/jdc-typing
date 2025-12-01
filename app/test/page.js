@@ -28,7 +28,6 @@ const [media, setMedia] = useState(null);
 const [comparisonText, setComparisonText] = useState("");
 const [redirectCounter, setRedirectCounter] = useState(10);
 
-// Mascote atual
 const [MascoteAtual, setMascoteAtual] = useState(MascoteFeliz);
 const [MascoteFade, setMascoteFade] = useState(true);
 
@@ -155,7 +154,6 @@ else if (diff < 0) setComparisonText(`↓ Você ficou abaixo da média em ${Math
 else setComparisonText("Você ficou exatamente na média!");
 }
 
-// Atualiza mascote suavemente
 let novoMascote = MascoteFeliz;
 if (media !== null) {
   const diff = wpm - media;
@@ -169,38 +167,31 @@ setTimeout(() => { setMascoteAtual(novoMascote); setMascoteFade(true); }, 300);
 }, [media, finished, wpm]);
 
 const wpmColor = wpm < 10 ? "text-red-600" : wpm < 20 ? "text-yellow-500" : wpm < 30 ? "text-blue-600" : "text-green-400";
-const minutes = Math.floor(timeLeft / 60);
-const seconds = timeLeft % 60;
 
 if (!user) return <p className="text-center mt-10">Carregando...</p>;
 
 return ( <div className="flex flex-col items-center justify-start min-h-screen w-full bg-gray-900 px-4 py-6">
-{/* Top Bar */}
-{!finished && ( <div className="sticky top-0 z-20 w-full max-w-5xl bg-gray-800 rounded-b-lg shadow-md p-6 text-center"> <h1 className="text-2xl font-bold mb-3">Teste de Digitação - 3 Minutos</h1> </div>
-)}
+{/* Top Info + Mascote */} <div className="sticky top-0 z-20 w-full max-w-5xl bg-gray-800 rounded-b-lg shadow-md p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4"> <div className="flex flex-col md:flex-row items-center gap-6">
+<div className={`flex-shrink-0 w-32 h-32 md:w-40 md:h-40 transition-all duration-700 ease-in-out transform ${MascoteFade ? "opacity-100 rotate-0" : "opacity-0 -rotate-6"}`}> <Image src={MascoteAtual} alt="Mascote" width={160} height={160} className="drop-shadow-2xl transition-all duration-700 ease-in-out" /> </div> <div className="text-center md:text-left"> <h1 className="text-2xl font-bold mb-2">Teste de Digitação - 3 Minutos</h1>
+<p className={`text-lg ${wpmColor}`}>WPM: <b>{animatedWPM}</b></p> <p>Média: <b>{media !== null ? media : "—"}</b></p>
+<p className={`text-lg ${accuracy < 70 ? "text-red-600" : "text-green-400"}`}>Precisão: <b>{animatedAccuracy}%</b></p> </div> </div> </div>
 
   {/* Mensagem de Backspace */}
   <div className="w-full max-w-5xl p-2 text-center min-h-[2rem]">
     {errorMessage && <span className="text-red-500 font-semibold">{errorMessage}</span>}
   </div>
 
-  {/* Área de digitação + mascote */}
-  {!finished ? (
-    <div className="flex flex-col md:flex-row items-start justify-center gap-6 w-full max-w-5xl">
-      <div className={`flex-shrink-0 w-40 h-40 md:w-48 md:h-48 transition-all duration-700 ease-in-out transform ${MascoteFade ? "opacity-100 rotate-0" : "opacity-0 -rotate-6"}`}>
-        <Image src={MascoteAtual} alt="Mascote" width={192} height={192} className="drop-shadow-2xl transition-all duration-700 ease-in-out" />
-      </div>
+  {/* Área de digitação */}
+  <div onClick={() => inputRef.current.focus()} className="flex-1 p-6 overflow-y-auto bg-gray-800 rounded-lg font-mono text-gray-300 text-lg leading-relaxed cursor-text min-h-[60vh] max-w-5xl w-full">
+    {text.split("").map((ch,i)=>{
+      const isCursor = i===pos;
+      const colorClass = states[i]==="correct"?"char-correct":states[i]==="wrong"?"char-wrong":"";
+      const cursorClass = isCursor?"char-current animate-blink":"";
+      return <span key={i} ref={el => charRefs.current[i]=el} className={`${colorClass} ${cursorClass}`}>{ch}</span>
+    })}
+  </div>
 
-      <div onClick={() => inputRef.current.focus()} className="flex-1 p-6 overflow-y-auto bg-gray-800 rounded-lg font-mono text-gray-300 text-lg leading-relaxed cursor-text min-h-[60vh]">
-        {text.split("").map((ch,i)=>{
-          const isCursor = i===pos;
-          const colorClass = states[i]==="correct"?"char-correct":states[i]==="wrong"?"char-wrong":"";
-          const cursorClass = isCursor?"char-current animate-blink":"";
-          return <span key={i} ref={el => charRefs.current[i]=el} className={`${colorClass} ${cursorClass}`}>{ch}</span>
-        })}
-      </div>
-    </div>
-  ) : (
+  {finished && (
     <div className="flex-1 flex flex-col justify-center items-center text-center mt-8 max-w-3xl">
       <h2 className="text-3xl font-bold mb-4">Tempo Encerrado!</h2>
       <p className={`text-2xl mb-2 ${wpmColor}`}>WPM: <b>{animatedWPM}</b></p>
