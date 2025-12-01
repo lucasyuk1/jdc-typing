@@ -124,9 +124,16 @@ const wi = setInterval(() => { w++; setAnimatedWPM(w); if (w >= wpm) clearInterv
 const ai = setInterval(() => { a++; setAnimatedAccuracy(a); if (a >= accuracy) clearInterval(ai); }, 15);
 }
 
+// ============ Timezone Brasilia ISO ============
+function getBrasiliaISO() {
+const brasiliaTime = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+const date = new Date(brasiliaTime);
+return date.toISOString();
+}
+
 async function salvarResultado() {
 if (!user) return;
-const nowISO = new Date().toISOString();
+const nowISO = getBrasiliaISO();
 try {
 await fetch("/api/results", {
 method: "POST",
@@ -173,8 +180,8 @@ if (!finished) return;
 if (media === null) setComparisonText("Primeiro teste — ainda sem média!");
 else {
 const diff = wpm - media;
-if (diff > 0) setComparisonText(`Excelente! Acima da média em ${diff} ponto${diff > 1 ? "s" : ""}.`);
-else if (diff < 0) setComparisonText(`Você ficou abaixo da média em ${Math.abs(diff)} ponto${Math.abs(diff) > 1 ? "s" : ""}.`);
+if (diff > 0) setComparisonText(`↑ Excelente! Acima da média em ${diff} ponto${diff > 1 ? "s" : ""}.`);
+else if (diff < 0) setComparisonText(`↓ Você ficou abaixo da média em ${Math.abs(diff)} ponto${Math.abs(diff) > 1 ? "s" : ""}.`);
 else setComparisonText("Você ficou exatamente na média!");
 }
 }, [media, finished, wpm]);
@@ -190,7 +197,12 @@ if (!user) return <p className="text-center mt-10">Carregando...</p>;
 return ( <div className="flex flex-col items-center justify-start min-h-screen w-full bg-gray-900 px-4 py-6">
 {/* Top Bar */}
 {!finished && ( <div className="sticky top-0 z-20 w-full max-w-5xl bg-gray-800 rounded-b-lg shadow-md p-6 text-center"> <h1 className="text-2xl font-bold mb-3">Teste de Digitação - 3 Minutos</h1> <div className="flex flex-wrap justify-center gap-4 text-center"> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Tempo</p> <p className="text-xl font-bold">{minutes}:{seconds.toString().padStart(2,'0')}</p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">WPM</p>
-<p className={`text-xl font-bold ${wpmColor}`}>{wpm}</p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Média</p> <p className="text-xl font-bold">{media !== null ? media : "—"}</p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Precisão</p>
+<p className={`text-xl font-bold ${wpmColor}`}>
+{wpm}{" "}
+{media !== null && (
+wpm > media ? <span className="text-green-400">▲</span> :
+wpm < media ? <span className="text-red-600">▼</span> : <span className="text-yellow-400">—</span>
+)} </p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Média</p> <p className="text-xl font-bold">{media !== null ? media : "—"}</p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Precisão</p>
 <p className={`text-xl font-bold ${accuracyColor}`}>{accuracy}%</p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Digitado</p> <p className="text-xl font-bold">{totalTyped}</p> </div> </div> </div>
 )}
 
