@@ -37,16 +37,12 @@ export default function DashboardPage() {
         })
       });
 
-      const data = await res.json();
-      if (data.success) {
-        setResultados(data.data);
-
-        if (data.data.length > 0) {
-          const soma = data.data.reduce((acc, r) => acc + r.wpm, 0);
-          setMediaWPM(Math.round(soma / data.data.length));
-        }
-      }
+    const data = await res.json();
+    if (data.success) {
+      setResultados(data.data);
+      setMediaWPM(data.avgWPM);
     }
+
 
     loadResultados();
   }, [user]);
