@@ -8,7 +8,7 @@ export async function POST(req) {
     const { data, error } = await supabase
       .from("results")
       .select("*, users(username, turma, fullname)")
-      .order("created_at", { ascending: false })
+      .order("wpm", { ascending: false })
       .limit(1000);
 
     if (error) {

@@ -170,7 +170,7 @@ export default function TestePage() {
   if (!user) return <p>Carregando...</p>;
 
   return (
-    <div className="min-h-screen flex justify-center items-start pt-10 bg-gray-200">
+    <div className="min-h-screen flex justify-center items-start pt-10 bg-gray-400">
       <div className="w-full max-w-3xl px-4">
 
         {!finished && (
