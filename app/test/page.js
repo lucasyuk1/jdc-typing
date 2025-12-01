@@ -170,7 +170,7 @@ export default function TestePage() {
   if (!user) return <p>Carregando...</p>;
 
   return (
-    <div className="min-h-screen flex justify-center items-start pt-10 bg-gray-100">
+    <div className="min-h-screen flex justify-center items-start pt-10 bg-gray-200">
       <div className="w-full max-w-3xl px-4">
 
         {!finished && (
@@ -197,7 +197,7 @@ export default function TestePage() {
             {/* Texto */}
             <div
               onClick={() => inputRef.current.focus()}
-              className="p-5 border border-gray-400 bg-white rounded-lg min-h-[260px] font-mono text-lg leading-relaxed cursor-text overflow-y-auto"
+              className="p-5 border border-gray-400 bg-gray rounded-lg min-h-[260px] font-mono text-lg leading-relaxed cursor-text overflow-y-auto"
             >
               {text.split("").map((ch, i) => {
                 const isCursor = i === pos;
