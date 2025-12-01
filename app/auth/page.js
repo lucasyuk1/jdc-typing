@@ -68,7 +68,6 @@ e.preventDefault();
 setMessage("");
 setLoading(true);
 
-```
 const form = new FormData(e.target);
 const body = Object.fromEntries(form.entries());
 
@@ -92,19 +91,22 @@ try {
 
 }
 
-return ( <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-6"> <div className="relative backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md overflow-hidden">
+return ( <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-6 relative overflow-hidden">
 
-    {/* Mascote flutuante grande */}
-    <div className="absolute -top-20 -right-10 w-48 h-48 z-50 animate-float pointer-events-none">
-      <Image
-        src={Mascote}
-        alt="TypingBoo Mascote"
-        width={192}
-        height={192}
-        className="drop-shadow-2xl"
-      />
-    </div>
+  {/* Mascote grande flutuante sobrepondo a caixa */}
+  <div className="absolute -top-32 -right-32 w-72 h-72 z-50 animate-float pointer-events-none">
+    <Image
+      src={Mascote}
+      alt="TypingBoo Mascote"
+      width={288}
+      height={288}
+      className="drop-shadow-2xl"
+    />
+  </div>
 
+  {/* Caixa de login / registro */}
+  <div className="backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md relative z-10">
+    
     {/* Título */}
     <div className="flex flex-col items-center mb-6 relative z-10">
       <h1 className="text-3xl font-bold text-purple-400 tracking-wide">TypingBoo</h1>
