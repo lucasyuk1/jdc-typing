@@ -28,14 +28,7 @@ const [user, setUser] = useState(null);
 const [media, setMedia] = useState(null);
 const [comparisonText, setComparisonText] = useState("");
 
-const [redirectCounter, setRedirectCounter] = useState(5);
-
-// Formata tempo em minutos:segundos
-function formatTime(seconds) {
-const mins = Math.floor(seconds / 60);
-const secs = seconds % 60;
-return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
+const [redirectCounter, setRedirectCounter] = useState(10);
 
 // ============ Load user & média ============
 useEffect(() => {
@@ -117,7 +110,6 @@ setStates(old => {
 expected === key ? setCorrectCount(c => c + 1) : setWrongCount(w => w + 1);
 setPos(pos + 1);
 maybeExtendText();
-
 }
 
 const totalTyped = correctCount + wrongCount;
@@ -178,24 +170,27 @@ const c = setInterval(() => {
 useEffect(() => {
 if (!finished) return;
 if (media === null) setComparisonText("Primeiro teste — ainda sem média!");
-else if (wpm > media + 3) setComparisonText("Excelente! Você ficou ACIMA da sua média!");
-else if (wpm < media - 3) setComparisonText("Você ficou ABAIXO da sua média. Continue praticando!");
-else setComparisonText("Você ficou NA MÉDIA. Consistência importa!");
+else {
+const diff = wpm - media;
+if (diff > 0) setComparisonText(`Excelente! Acima da média em ${diff} ponto${diff > 1 ? "s" : ""}.`);
+else if (diff < 0) setComparisonText(`Você ficou abaixo da média em ${Math.abs(diff)} ponto${Math.abs(diff) > 1 ? "s" : ""}.`);
+else setComparisonText("Você ficou exatamente na média!");
+}
 }, [media, finished, wpm]);
 
 const wpmColor = wpm < 10 ? "text-red-600" : wpm < 20 ? "text-yellow-500" : wpm < 30 ? "text-blue-600" : "text-green-400";
 const accuracyColor = accuracy < 70 ? "text-red-600" : accuracy < 90 ? "text-yellow-500" : "text-green-400";
 
+const minutes = Math.floor(timeLeft / 60);
+const seconds = timeLeft % 60;
+
 if (!user) return <p className="text-center mt-10">Carregando...</p>;
 
 return ( <div className="flex flex-col items-center justify-start min-h-screen w-full bg-gray-900 px-4 py-6">
 {/* Top Bar */}
-{!finished && ( <div className="sticky top-0 z-20 w-full max-w-5xl bg-gray-800 rounded-b-lg shadow-md p-6 text-center"> <h1 className="text-2xl font-bold mb-3">Teste de Digitação - {formatTime(180)}</h1> <div className="flex flex-wrap justify-center gap-6 text-lg font-semibold"> <p><b>Tempo:</b> {formatTime(timeLeft)}</p> <p> <b>WPM:</b> <span className={wpmColor}>
-{wpm}{" "}
-{media !== null && (
-wpm > media + 3 ? <span className="text-green-400">▲</span> :
-wpm < media - 3 ? <span className="text-red-600">▼</span> : <span className="text-yellow-400">—</span>
-)} </span> </p> <p><b>Média:</b> {media !== null ? media : "—"}</p> <p><b>Precisão:</b> <span className={accuracyColor}>{accuracy}%</span></p> <p><b>Digitado:</b> {totalTyped}</p> </div> </div>
+{!finished && ( <div className="sticky top-0 z-20 w-full max-w-5xl bg-gray-800 rounded-b-lg shadow-md p-6 text-center"> <h1 className="text-2xl font-bold mb-3">Teste de Digitação - 3 Minutos</h1> <div className="flex flex-wrap justify-center gap-4 text-center"> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Tempo</p> <p className="text-xl font-bold">{minutes}:{seconds.toString().padStart(2,'0')}</p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">WPM</p>
+<p className={`text-xl font-bold ${wpmColor}`}>{wpm}</p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Média</p> <p className="text-xl font-bold">{media !== null ? media : "—"}</p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Precisão</p>
+<p className={`text-xl font-bold ${accuracyColor}`}>{accuracy}%</p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Digitado</p> <p className="text-xl font-bold">{totalTyped}</p> </div> </div> </div>
 )}
 
   {/* Espaço reservado para mensagens do backspace */}
@@ -224,16 +219,12 @@ wpm < media - 3 ? <span className="text-red-600">▼</span> : <span className="t
     <div className="flex-1 flex flex-col justify-center items-center text-center mt-8 max-w-3xl">
       <h2 className="text-3xl font-bold mb-4">Tempo Encerrado!</h2>
       <p className={`text-2xl mb-2 ${wpmColor}`}>
-        WPM: <b>{animatedWPM}</b>{" "}
-        {media !== null && (
-          animatedWPM > media + 3 ? <span className="text-green-400">▲</span> :
-          animatedWPM < media - 3 ? <span className="text-red-600">▼</span> :
-          <span className="text-yellow-400">—</span>
-        )}
+        WPM: <b>{animatedWPM}</b>
       </p>
       <p><b>Média:</b> {media !== null ? media : "—"}</p>
       <p className={`text-2xl mb-2 ${accuracyColor}`}>Precisão: <b>{animatedAccuracy}%</b></p>
       <p className="mt-6 text-lg font-bold">{comparisonText}</p>
+      <p className="mt-2 text-gray-300">Alongue os dedos enquanto espera...</p>
       <p className="mt-4 text-gray-400 text-lg">Redirecionando em {redirectCounter}...</p>
     </div>
   )}
