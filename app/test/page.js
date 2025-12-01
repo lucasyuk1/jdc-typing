@@ -27,7 +27,6 @@ const [animatedAccuracy, setAnimatedAccuracy] = useState(0);
 const [user, setUser] = useState(null);
 const [media, setMedia] = useState(null);
 const [comparisonText, setComparisonText] = useState("");
-
 const [redirectCounter, setRedirectCounter] = useState(10);
 
 // ============ Load user & média ============
@@ -53,10 +52,7 @@ async function loadMedia() {
     } else {
       setMedia(null);
     }
-  } catch (err) {
-    console.error("Erro ao buscar média:", err);
-    setMedia(null);
-  }
+  } catch (err) { console.error(err); setMedia(null); }
 }
 
 loadMedia();
@@ -95,7 +91,6 @@ setTimeout(() => setErrorMessage(""), 5000);
 e.preventDefault();
 return;
 }
-
 if (!started) setStarted(true);
 e.preventDefault();
 if (key.length !== 1) return;
@@ -124,16 +119,13 @@ const wi = setInterval(() => { w++; setAnimatedWPM(w); if (w >= wpm) clearInterv
 const ai = setInterval(() => { a++; setAnimatedAccuracy(a); if (a >= accuracy) clearInterval(ai); }, 15);
 }
 
-// ============ Timezone Brasilia ISO ============
 function getBrasiliaISO() {
 const brasiliaTime = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-const date = new Date(brasiliaTime);
-return date.toISOString();
+return new Date(brasiliaTime).toISOString();
 }
 
 async function salvarResultado() {
 if (!user) return;
-const nowISO = getBrasiliaISO();
 try {
 await fetch("/api/results", {
 method: "POST",
@@ -145,10 +137,10 @@ turma: user.turma,
 wpm,
 accuracy,
 tempo_segundos: 180,
-created_at: nowISO
+created_at: getBrasiliaISO(),
 }),
 });
-} catch (err) { console.error("Erro ao salvar resultado:", err); }
+} catch (err) { console.error(err); }
 }
 
 // ============ Timer ============
@@ -188,25 +180,39 @@ else setComparisonText("Você ficou exatamente na média!");
 
 const wpmColor = wpm < 10 ? "text-red-600" : wpm < 20 ? "text-yellow-500" : wpm < 30 ? "text-blue-600" : "text-green-400";
 const accuracyColor = accuracy < 70 ? "text-red-600" : accuracy < 90 ? "text-yellow-500" : "text-green-400";
-
 const minutes = Math.floor(timeLeft / 60);
 const seconds = timeLeft % 60;
 
 if (!user) return <p className="text-center mt-10">Carregando...</p>;
 
 return ( <div className="flex flex-col items-center justify-start min-h-screen w-full bg-gray-900 px-4 py-6">
-{/* Top Bar */}
-{!finished && ( <div className="sticky top-0 z-20 w-full max-w-5xl bg-gray-800 rounded-b-lg shadow-md p-6 text-center"> <h1 className="text-2xl font-bold mb-3">Teste de Digitação - 3 Minutos</h1> <div className="flex flex-wrap justify-center gap-4 text-center"> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Tempo</p> <p className="text-xl font-bold">{minutes}:{seconds.toString().padStart(2,'0')}</p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">WPM</p>
-<p className={`text-xl font-bold ${wpmColor}`}>
-{wpm}{" "}
-{media !== null && (
-wpm > media ? <span className="text-green-400">▲</span> :
-wpm < media ? <span className="text-red-600">▼</span> : <span className="text-yellow-400">—</span>
-)} </p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Média</p> <p className="text-xl font-bold">{media !== null ? media : "—"}</p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Precisão</p>
-<p className={`text-xl font-bold ${accuracyColor}`}>{accuracy}%</p> </div> <div className="bg-gray-700 p-4 rounded-lg w-32 shadow-md"> <p className="text-sm font-semibold">Digitado</p> <p className="text-xl font-bold">{totalTyped}</p> </div> </div> </div>
-)}
 
-  {/* Espaço reservado para mensagens do backspace */}
+  {/* Top Bar */}
+  {!finished && (
+    <div className="sticky top-0 z-20 w-full max-w-5xl bg-gray-800 rounded-b-lg shadow-md p-6 text-center">
+      <h1 className="text-2xl font-bold mb-3">Teste de Digitação - 3 Minutos</h1>
+      <div className="flex flex-wrap justify-center gap-4 text-center">
+        {["Tempo","WPM","Média","Precisão","Digitado"].map((label,i) => {
+          let value;
+          switch(label){
+            case "Tempo": value = `${minutes}:${seconds.toString().padStart(2,'0')}`; break;
+            case "WPM": value = (<><span className={wpmColor}>{wpm}</span>{media !== null && (wpm>media?<span className="text-green-400">▲</span>:wpm<media?<span className="text-red-600">▼</span>:<span className="text-yellow-400">—</span>)}</>); break;
+            case "Média": value = media !== null ? media : "—"; break;
+            case "Precisão": value = (<span className={accuracyColor}>{accuracy}%</span>); break;
+            case "Digitado": value = totalTyped; break;
+          }
+          return (
+            <div key={i} className="bg-gray-700 p-4 rounded-lg w-32 shadow-md">
+              <p className="text-sm font-semibold">{label}</p>
+              <p className="text-xl font-bold">{value}</p>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )}
+
+  {/* Mensagem de Backspace */}
   <div className="w-full max-w-5xl p-2 text-center min-h-[2rem]">
     {errorMessage && <span className="text-red-500 font-semibold">{errorMessage}</span>}
   </div>
@@ -217,23 +223,17 @@ wpm < media ? <span className="text-red-600">▼</span> : <span className="text-
       onClick={() => inputRef.current.focus()}
       className="flex-1 w-full max-w-5xl p-6 overflow-y-auto bg-gray-800 rounded-lg font-mono text-gray-300 text-lg leading-relaxed cursor-text min-h-[60vh]"
     >
-      {text.split("").map((ch, i) => {
-        const isCursor = i === pos;
-        const colorClass = states[i] === "correct" ? "char-correct" : states[i] === "wrong" ? "char-wrong" : "";
-        const cursorClass = isCursor ? "char-current animate-blink" : "";
-        return (
-          <span key={i} ref={el => (charRefs.current[i] = el)} className={`${colorClass} ${cursorClass}`}>
-            {ch}
-          </span>
-        );
+      {text.split("").map((ch,i)=>{
+        const isCursor = i===pos;
+        const colorClass = states[i]==="correct"?"char-correct":states[i]==="wrong"?"char-wrong":"";
+        const cursorClass = isCursor?"char-current animate-blink":"";
+        return <span key={i} ref={el => charRefs.current[i]=el} className={`${colorClass} ${cursorClass}`}>{ch}</span>
       })}
     </div>
   ) : (
     <div className="flex-1 flex flex-col justify-center items-center text-center mt-8 max-w-3xl">
       <h2 className="text-3xl font-bold mb-4">Tempo Encerrado!</h2>
-      <p className={`text-2xl mb-2 ${wpmColor}`}>
-        WPM: <b>{animatedWPM}</b>
-      </p>
+      <p className={`text-2xl mb-2 ${wpmColor}`}>WPM: <b>{animatedWPM}</b></p>
       <p><b>Média:</b> {media !== null ? media : "—"}</p>
       <p className={`text-2xl mb-2 ${accuracyColor}`}>Precisão: <b>{animatedAccuracy}%</b></p>
       <p className="mt-6 text-lg font-bold">{comparisonText}</p>
@@ -247,7 +247,11 @@ wpm < media ? <span className="text-red-600">▼</span> : <span className="text-
   <style jsx>{`
     @keyframes blink { 50% { border-color: transparent; } }
     .animate-blink { animation: blink 1s step-start infinite; }
+    .char-current { border-left: 2px solid #4a90e2; }
+    .char-correct { color: #34d399; }
+    .char-wrong { color: #f87171; }
   `}</style>
+
 </div>
 
 );
