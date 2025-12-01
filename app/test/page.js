@@ -21,8 +21,6 @@ const inputRef = useRef(null);
 const charRefs = useRef([]);
 const [correctCount, setCorrectCount] = useState(0);
 const [wrongCount, setWrongCount] = useState(0);
-const [animatedWPM, setAnimatedWPM] = useState(0);
-const [animatedAccuracy, setAnimatedAccuracy] = useState(0);
 const [user, setUser] = useState(null);
 const [media, setMedia] = useState(null);
 const [comparisonText, setComparisonText] = useState("");
@@ -30,6 +28,7 @@ const [redirectCounter, setRedirectCounter] = useState(10);
 
 const [MascoteAtual, setMascoteAtual] = useState(MascoteFeliz);
 const [MascoteFade, setMascoteFade] = useState(true);
+const [MascoteAnim, setMascoteAnim] = useState("");
 
 useEffect(() => {
 const u = localStorage.getItem("jdc-user");
@@ -98,11 +97,20 @@ const accuracy = totalTyped > 0 ? Number(((correctCount / totalTyped) * 100).toF
 const elapsed = 180 - timeLeft;
 const wpm = elapsed > 0 ? Math.round((correctCount / 5) / (elapsed / 60)) : 0;
 
-function animateResults() {
-let w = 0, a = 0;
-const wi = setInterval(() => { w++; setAnimatedWPM(w); if (w >= wpm) clearInterval(wi); }, 20);
-const ai = setInterval(() => { a++; setAnimatedAccuracy(a); if (a >= accuracy) clearInterval(ai); }, 15);
-}
+// Atualiza o mascote em tempo real com animação
+useEffect(() => {
+if (media === null || finished) return;
+let novoMascote = MascoteFeliz;
+let anim = "";
+const diff = wpm - media;
+if (diff < - 5) { novoMascote = MascoteRaiva; anim = "shake"; }
+else if (diff < 0) { novoMascote = MascoteTriste; anim = "tilt"; }
+else { novoMascote = MascoteFeliz; anim = "bounce"; }
+
+setMascoteFade(false);
+setTimeout(() => { setMascoteAtual(novoMascote); setMascoteFade(true); setMascoteAnim(anim); }, 200);
+
+}, [wpm, media, finished]);
 
 function getBrasiliaISO() {
 const brasiliaTime = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -138,43 +146,22 @@ return () => clearInterval(i);
 function finalizarTeste() {
 setFinished(true);
 salvarResultado();
-animateResults();
 const c = setInterval(() => {
 setRedirectCounter(t => { if (t <= 1) { clearInterval(c); router.push("/dashboard"); } return t - 1; });
 }, 1000);
 }
 
-useEffect(() => {
-if (!finished) return;
-if (media === null) setComparisonText("Primeiro teste — ainda sem média!");
-else {
-const diff = wpm - media;
-if (diff > 0) setComparisonText(`↑ Excelente! Acima da média em ${diff} ponto${diff > 1 ? "s" : ""}.`);
-else if (diff < 0) setComparisonText(`↓ Você ficou abaixo da média em ${Math.abs(diff)} ponto${Math.abs(diff) > 1 ? "s" : ""}.`);
-else setComparisonText("Você ficou exatamente na média!");
-}
-
-let novoMascote = MascoteFeliz;
-if (media !== null) {
-  const diff = wpm - media;
-  if (diff < -10) novoMascote = MascoteRaiva;
-  else if (diff < 0) novoMascote = MascoteTriste;
-  else novoMascote = MascoteFeliz;
-}
-setMascoteFade(false);
-setTimeout(() => { setMascoteAtual(novoMascote); setMascoteFade(true); }, 300);
-
-}, [media, finished, wpm]);
-
 const wpmColor = wpm < 10 ? "text-red-600" : wpm < 20 ? "text-yellow-500" : wpm < 30 ? "text-blue-600" : "text-green-400";
+const minutos = Math.floor(timeLeft / 60);
+const segundos = timeLeft % 60;
 
 if (!user) return <p className="text-center mt-10">Carregando...</p>;
 
 return ( <div className="flex flex-col items-center justify-start min-h-screen w-full bg-gray-900 px-4 py-6">
 {/* Top Info + Mascote */} <div className="sticky top-0 z-20 w-full max-w-5xl bg-gray-800 rounded-b-lg shadow-md p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4"> <div className="flex flex-col md:flex-row items-center gap-6">
-<div className={`flex-shrink-0 w-32 h-32 md:w-40 md:h-40 transition-all duration-700 ease-in-out transform ${MascoteFade ? "opacity-100 rotate-0" : "opacity-0 -rotate-6"}`}> <Image src={MascoteAtual} alt="Mascote" width={160} height={160} className="drop-shadow-2xl transition-all duration-700 ease-in-out" /> </div> <div className="text-center md:text-left"> <h1 className="text-2xl font-bold mb-2">Teste de Digitação - 3 Minutos</h1>
-<p className={`text-lg ${wpmColor}`}>WPM: <b>{animatedWPM}</b></p> <p>Média: <b>{media !== null ? media : "—"}</b></p>
-<p className={`text-lg ${accuracy < 70 ? "text-red-600" : "text-green-400"}`}>Precisão: <b>{animatedAccuracy}%</b></p> </div> </div> </div>
+<div className={`flex-shrink-0 w-32 h-32 md:w-40 md:h-40 transition-all duration-300 ease-in-out transform ${MascoteFade ? "opacity-100 rotate-0" : "opacity-0 -rotate-6"} ${MascoteAnim}`}> <Image src={MascoteAtual} alt="Mascote" width={160} height={160} className="drop-shadow-2xl transition-all duration-300 ease-in-out" /> </div> <div className="text-center md:text-left"> <h1 className="text-2xl font-bold mb-2">Teste de Digitação - 3 Minutos</h1> <p className="text-lg">Tempo restante: <b>{`${minutos.toString().padStart(2,"0")}:${segundos.toString().padStart(2,"0")}`}</b></p>
+<p className={`text-lg ${wpmColor}`}>WPM: <b>{wpm}</b></p> <p>Média: <b>{media !== null ? media : "—"}</b></p>
+<p className={`text-lg ${accuracy < 70 ? "text-red-600" : "text-green-400"}`}>Precisão: <b>{accuracy}%</b></p> <p className="text-lg mt-1">Letras digitadas: <b>{totalTyped}</b> (<span className="text-green-400">{correctCount}</span> corretas, <span className="text-red-500">{wrongCount}</span> erradas)</p> </div> </div> </div>
 
   {/* Mensagem de Backspace */}
   <div className="w-full max-w-5xl p-2 text-center min-h-[2rem]">
@@ -194,9 +181,9 @@ return ( <div className="flex flex-col items-center justify-start min-h-screen w
   {finished && (
     <div className="flex-1 flex flex-col justify-center items-center text-center mt-8 max-w-3xl">
       <h2 className="text-3xl font-bold mb-4">Tempo Encerrado!</h2>
-      <p className={`text-2xl mb-2 ${wpmColor}`}>WPM: <b>{animatedWPM}</b></p>
+      <p className={`text-2xl mb-2 ${wpmColor}`}>WPM: <b>{wpm}</b></p>
       <p><b>Média:</b> {media !== null ? media : "—"}</p>
-      <p className={`text-2xl mb-2 ${accuracy < 70 ? "text-red-600" : "text-green-400"}`}>Precisão: <b>{animatedAccuracy}%</b></p>
+      <p className={`text-2xl mb-2 ${accuracy < 70 ? "text-red-600" : "text-green-400"}`}>Precisão: <b>{accuracy}%</b></p>
       <p className="mt-6 text-lg font-bold">{comparisonText}</p>
       <p className="mt-2 text-gray-300">Alongue os dedos enquanto espera...</p>
       <p className="mt-4 text-gray-400 text-lg">Redirecionando em {redirectCounter}...</p>
@@ -211,6 +198,12 @@ return ( <div className="flex flex-col items-center justify-start min-h-screen w
     .char-current { border-left: 2px solid #4a90e2; }
     .char-correct { color: #34d399; }
     .char-wrong { color: #f87171; }
+    .bounce { animation: bounce 0.6s ease; }
+    @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-15px); } 60% { transform: translateY(-7px); } }
+    .shake { animation: shake 0.5s ease; }
+    @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
+    .tilt { animation: tilt 0.6s ease; }
+    @keyframes tilt { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-10deg); } }
   `}</style>
 </div>
 
