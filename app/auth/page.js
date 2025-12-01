@@ -68,6 +68,7 @@ e.preventDefault();
 setMessage("");
 setLoading(true);
 
+```
 const form = new FormData(e.target);
 const body = Object.fromEntries(form.entries());
 
@@ -93,23 +94,20 @@ try {
 
 return ( <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-6"> <div className="relative backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md overflow-hidden">
 
-```
-    {/* Mascote flutuante */}
-    <div className="absolute -top-10 -right-10 w-32 h-32 animate-float">
+    {/* Mascote flutuante grande */}
+    <div className="absolute -top-20 -right-10 w-48 h-48 z-50 animate-float pointer-events-none">
       <Image
         src={Mascote}
         alt="TypingBoo Mascote"
-        width={128}
-        height={128}
+        width={192}
+        height={192}
         className="drop-shadow-2xl"
       />
     </div>
 
     {/* Título */}
     <div className="flex flex-col items-center mb-6 relative z-10">
-      <h1 className="text-3xl font-bold text-purple-400 tracking-wide">
-        TypingBoo
-      </h1>
+      <h1 className="text-3xl font-bold text-purple-400 tracking-wide">TypingBoo</h1>
     </div>
 
     {/* Toggle Login / Registro */}
@@ -121,7 +119,6 @@ return ( <div className="min-h-screen flex items-center justify-center bg-gradie
       >
         Login
       </button>
-
       <button
         onClick={() => setIsLogin(false)}
         disabled={loading}
@@ -133,26 +130,9 @@ return ( <div className="min-h-screen flex items-center justify-center bg-gradie
 
     {isLogin ? (
       <form onSubmit={handleLogin} className="flex flex-col gap-4 relative z-10">
-        <input
-          name="username"
-          placeholder="Usuário ou Email"
-          required
-          disabled={loading}
-          className="input-auth"
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Senha"
-          required
-          disabled={loading}
-          className="input-auth"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-auth flex justify-center items-center gap-2"
-        >
+        <input name="username" placeholder="Usuário ou Email" required disabled={loading} className="input-auth" />
+        <input name="password" type="password" placeholder="Senha" required disabled={loading} className="input-auth" />
+        <button type="submit" disabled={loading} className="btn-auth flex justify-center items-center gap-2">
           {loading ? "Carregando..." : "Entrar"}
         </button>
       </form>
@@ -162,45 +142,13 @@ return ( <div className="min-h-screen flex items-center justify-center bg-gradie
         <input name="fullname" placeholder="Nome Completo" required disabled={loading} className="input-auth" />
         <input name="email" type="email" placeholder="Email" required disabled={loading} className="input-auth" />
         <input name="idade" placeholder="Idade" required disabled={loading} className="input-auth" />
-
         <select name="turma" required disabled={loading} className="input-auth">
-          <option value="" disabled selected>
-            Selecione a Turma
-          </option>
-          {turmas.map((t) => (
-            <option key={t.id} value={t.turma_name}>
-              {t.turma_name}
-            </option>
-          ))}
+          <option value="" disabled selected>Selecione a Turma</option>
+          {turmas.map((t) => <option key={t.id} value={t.turma_name}>{t.turma_name}</option>)}
         </select>
-
-        <input
-          name="password"
-          type="password"
-          placeholder="Senha"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={loading}
-          className={`input-auth ${passwordsMatch ? "" : "border-red-500"}`}
-        />
-
-        <input
-          name="confirmPassword"
-          type="password"
-          placeholder="Confirme a Senha"
-          required
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          disabled={loading}
-          className={`input-auth ${passwordsMatch ? "" : "border-red-500"}`}
-        />
-
-        <button
-          type="submit"
-          disabled={!passwordsMatch || loading}
-          className={`btn-auth ${passwordsMatch ? "" : "opacity-50 cursor-not-allowed"} flex justify-center items-center gap-2`}
-        >
+        <input name="password" type="password" placeholder="Senha" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading} className={`input-auth ${passwordsMatch ? "" : "border-red-500"}`} />
+        <input name="confirmPassword" type="password" placeholder="Confirme a Senha" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={loading} className={`input-auth ${passwordsMatch ? "" : "border-red-500"}`} />
+        <button type="submit" disabled={!passwordsMatch || loading} className={`btn-auth ${passwordsMatch ? "" : "opacity-50 cursor-not-allowed"} flex justify-center items-center gap-2`}>
           {loading ? "Carregando..." : "Registrar"}
         </button>
       </form>
