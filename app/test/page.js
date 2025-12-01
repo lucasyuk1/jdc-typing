@@ -110,6 +110,7 @@ setStates(old => {
 expected === key ? setCorrectCount(c => c + 1) : setWrongCount(w => w + 1);
 setPos(pos + 1);
 maybeExtendText();
+
 }
 
 const totalTyped = correctCount + wrongCount;
