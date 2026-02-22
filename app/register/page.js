@@ -47,7 +47,7 @@ export default function RegisterPage() {
 
   const inputStyle = {
     padding: "12px 15px",
-    marginBottom: 15,
+    marginBottom: 20,
     borderRadius: 8,
     border: "1px solid #444",
     background: "#111827",
