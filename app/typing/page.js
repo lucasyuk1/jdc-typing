@@ -67,7 +67,7 @@ export default function TypingPage() {
     await fetch("/api/results", {
       method: "POST",
       body: JSON.stringify({
-        user_id: user?.id || null,
+        usuario_id: user?.id || null,
         wpm,
         accuracy,
         errors,
