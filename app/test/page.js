@@ -119,8 +119,7 @@ export default function TestePage() {
   }, [wpm, media, finished]);
 
   function getBrasiliaISO() {
-    const brasiliaTime = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-    return new Date(brasiliaTime).toISOString();
+  return new Date().toISOString();
   }
 
   async function salvarResultado() {
@@ -130,7 +129,7 @@ export default function TestePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          usuario_id: user.id,
+          usuario_id: user.usuario_id,
           username: user.username,
           turma: user.turma,
           wpm,
