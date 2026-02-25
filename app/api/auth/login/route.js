@@ -41,7 +41,7 @@ if (!isValid) {
 }
 
 // Checagem do ID antes de criar cookie
-if (!user?.id) {
+if (!user?.usuario_id) {
   return new Response(JSON.stringify({ success: false, error: "Usuário inválido" }), { status: 500 });
 }
 
@@ -49,7 +49,7 @@ if (!user?.id) {
 delete user.password_hash;
 
 // Cria cookie seguro
-const cookie = `user_session=${user.id}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=3600`;
+const cookie = `user_session=${user.usuario_id}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=3600`;
 
 // Retorna resposta com cookie
 return new Response(JSON.stringify({ success: true, user }), {
