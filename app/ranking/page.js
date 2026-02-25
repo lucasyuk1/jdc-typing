@@ -32,7 +32,7 @@ try {
 const resp = await fetch("/api/results/ranking", {
 method: "POST",
 headers: { "Content-Type": "application/json" },
-body: JSON.stringify({ mode, usuario_id: user.id, turma: user.turma }),
+body: JSON.stringify({ mode, usuario_id: user.usuario_id, turma: user.turma }),
 });
 const json = await resp.json();
 setRanking(json.success ? json.data : []);
