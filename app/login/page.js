@@ -16,7 +16,7 @@ export default function LoginPage() {
     const data = await res.json();
     if (data.success) {
       localStorage.setItem("jdc-user", JSON.stringify({
-        id: data.user.id,
+        id: data.user.usuario_id,
         username: data.user.username,
         turma: data.user.turma,
         idade: data.user.idade,
