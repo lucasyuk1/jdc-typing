@@ -28,7 +28,7 @@ async function loadResultados() {
   const res = await fetch("/api/results/ranking", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ mode: "pessoal", usuario_id: user.id }),
+    body: JSON.stringify({ mode: "pessoal", usuario_id: user.usuario_id }),
   });
 
   const data = await res.json();
