@@ -17,62 +17,40 @@ export default function TestePage() {
   const [started, setStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(180);
   const [finished, setFinished] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
   const [user, setUser] = useState(null);
   const [media, setMedia] = useState(null);
-  const [redirectCounter, setRedirectCounter] = useState(10);
 
   const inputRef = useRef(null);
   const charRefs = useRef([]);
 
   const [MascoteAtual, setMascoteAtual] = useState(MascoteFeliz);
-  const [MascoteFade, setMascoteFade] = useState(true);
   const [MascoteAnim, setMascoteAnim] = useState("");
 
-  /* =========================
-     CARREGA USUÁRIO
-  ========================= */
+  /* ========================= */
+  /* USER + MÉDIA              */
+  /* ========================= */
 
   useEffect(() => {
     const stored = localStorage.getItem("jdc-user");
-    if (!stored) {
-      router.push("/auth");
-      return;
-    }
+    if (!stored) return router.push("/auth");
     setUser(JSON.parse(stored));
   }, [router]);
-
-  /* =========================
-     CARREGA MÉDIA DO USUÁRIO
-  ========================= */
 
   useEffect(() => {
     if (!user) return;
 
     async function loadMedia() {
-      try {
-        const res = await fetch("/api/results/ranking", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            mode: "pessoal",
-            usuario_id: user.usuario_id,
-          }),
-        });
-
-        const data = await res.json();
-
-        if (data.success && data.data.length > 0) {
-          const soma = data.data.reduce((acc, r) => acc + r.wpm, 0);
-          setMedia(Math.round(soma / data.data.length));
-        } else {
-          setMedia(null);
-        }
-      } catch (err) {
-        console.error(err);
-        setMedia(null);
+      const res = await fetch("/api/results/ranking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "pessoal", usuario_id: user.usuario_id }),
+      });
+      const data = await res.json();
+      if (data.success && data.data.length > 0) {
+        const soma = data.data.reduce((acc, r) => acc + r.wpm, 0);
+        setMedia(Math.round(soma / data.data.length));
       }
     }
 
@@ -80,9 +58,9 @@ export default function TestePage() {
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [user]);
 
-  /* =========================
-     GERA TEXTO INICIAL
-  ========================= */
+  /* ========================= */
+  /* TEXTO                     */
+  /* ========================= */
 
   useEffect(() => {
     const t = generateRandomText(200);
@@ -90,60 +68,41 @@ export default function TestePage() {
     setStates(new Array(t.length).fill("pending"));
   }, []);
 
-  /* =========================
-     SCROLL CURSOR
-  ========================= */
-
   useEffect(() => {
-    if (charRefs.current[pos])
+    if (charRefs.current[pos]) {
       charRefs.current[pos].scrollIntoView({
         behavior: "smooth",
         block: "center",
       });
+    }
   }, [pos]);
-
-  /* =========================
-     EXTENDE TEXTO
-  ========================= */
 
   function maybeExtendText() {
     if (pos < text.length - 200) return;
-
     const extra = generateRandomText(300);
     setText(prev => prev + " " + extra);
     setStates(prev => [...prev, ...new Array(extra.length + 1).fill("pending")]);
   }
 
-  /* =========================
-     DIGITAÇÃO
-  ========================= */
-
   function handleKey(e) {
-    const key = e.key;
-
-    if (key === "Backspace") {
-      setErrorMessage(
-        "Não tente apagar o passado. Cada tecla errada é um passo para a frente."
-      );
-      setTimeout(() => setErrorMessage(""), 5000);
+    if (e.key === "Backspace") {
       e.preventDefault();
       return;
     }
 
     if (!started) setStarted(true);
-
     e.preventDefault();
-    if (key.length !== 1) return;
+    if (e.key.length !== 1) return;
 
     const expected = text[pos];
 
     setStates(old => {
       const updated = [...old];
-      updated[pos] = expected === key ? "correct" : "wrong";
+      updated[pos] = expected === e.key ? "correct" : "wrong";
       return updated;
     });
 
-    expected === key
+    expected === e.key
       ? setCorrectCount(c => c + 1)
       : setWrongCount(w => w + 1);
 
@@ -151,143 +110,139 @@ export default function TestePage() {
     maybeExtendText();
   }
 
-  /* =========================
-     ESTATÍSTICAS
-  ========================= */
+  /* ========================= */
+  /* STATS                     */
+  /* ========================= */
 
   const totalTyped = correctCount + wrongCount;
-
   const accuracy =
     totalTyped > 0
       ? Number(((correctCount / totalTyped) * 100).toFixed(1))
       : 100;
 
   const elapsed = 180 - timeLeft;
-
   const wpm =
     elapsed > 0
       ? Math.round((correctCount / 5) / (elapsed / 60))
       : 0;
 
-  /* =========================
-     MASCOTE
-  ========================= */
+  /* ========================= */
+  /* MASCOTE                   */
+  /* ========================= */
 
   useEffect(() => {
-    if (media === null || finished) return;
+    if (media === null) return;
 
-    let novoMascote = MascoteFeliz;
-    let anim = "";
     const diff = wpm - media;
 
     if (diff < -5) {
-      novoMascote = MascoteRaiva;
-      anim = "shake";
+      setMascoteAtual(MascoteRaiva);
+      setMascoteAnim("shake");
     } else if (diff < 0) {
-      novoMascote = MascoteTriste;
-      anim = "tilt";
+      setMascoteAtual(MascoteTriste);
+      setMascoteAnim("tilt");
     } else {
-      novoMascote = MascoteFeliz;
-      anim = "bounce";
+      setMascoteAtual(MascoteFeliz);
+      setMascoteAnim("bounce");
     }
+  }, [wpm, media]);
 
-    setMascoteFade(false);
-
-    setTimeout(() => {
-      setMascoteAtual(novoMascote);
-      setMascoteFade(true);
-      setMascoteAnim(anim);
-    }, 200);
-  }, [wpm, media, finished]);
-
-  /* =========================
-     SALVAR RESULTADO
-  ========================= */
-
-  async function salvarResultado() {
-    if (!user) return;
-
-    try {
-      await fetch("/api/results", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          usuario_id: user.usuario_id,
-          username: user.username,
-          turma: user.turma,
-          wpm,
-          accuracy,
-          tempo_segundos: 180,
-          created_at: new Date().toISOString(),
-        }),
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  /* =========================
-     CONTAGEM REGRESSIVA
-  ========================= */
+  /* ========================= */
+  /* TIMER                     */
+  /* ========================= */
 
   useEffect(() => {
     if (!started || finished) return;
+    if (timeLeft <= 0) return setFinished(true);
 
-    if (timeLeft <= 0) {
-      finalizarTeste();
-      return;
-    }
-
-    const i = setInterval(() => {
-      setTimeLeft(t => t - 1);
-    }, 1000);
-
+    const i = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(i);
   }, [started, timeLeft, finished]);
 
-  function finalizarTeste() {
-    setFinished(true);
-    salvarResultado();
+  /* ========================= */
+  /* PALAVRA ATUAL             */
+  /* ========================= */
 
-    const c = setInterval(() => {
-      setRedirectCounter(t => {
-        if (t <= 1) {
-          clearInterval(c);
-          router.push("/dashboard");
-        }
-        return t - 1;
-      });
-    }, 1000);
+  function isCurrentWord(index) {
+    const before = text.lastIndexOf(" ", pos - 1) + 1;
+    const after = text.indexOf(" ", pos);
+    const end = after === -1 ? text.length : after;
+    return index >= before && index < end;
   }
 
-  if (!user) return <p className="text-center mt-10">Carregando...</p>;
-
-  /* =========================
-     RENDER
-  ========================= */
+  if (!user) return <p className="text-white mt-10">Carregando...</p>;
 
   return (
-    <div className="flex flex-col items-center min-h-screen w-full bg-gray-900 px-4 py-6">
-      <div className="w-full max-w-5xl bg-gray-800 rounded-lg shadow-md p-6 mb-4">
-        <p>Tempo restante: <b>{timeLeft}s</b></p>
-        <p>WPM: <b>{wpm}</b></p>
-        {media !== null && <p>Média: <b>{media}</b></p>}
-        <p>Precisão: <b>{accuracy}%</b></p>
+    <div className="flex flex-col items-center min-h-screen bg-gray-950 px-4 py-6 text-white">
+
+      {/* ================= HEADER ================= */}
+
+      <div className="w-full max-w-6xl bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl shadow-xl p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-6">
+
+        {/* Mascote */}
+        <div className={`transition-all duration-300 ${MascoteAnim}`}>
+          <Image src={MascoteAtual} width={140} height={140} alt="Mascote" />
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center w-full">
+
+          <div className="bg-gray-800 rounded-xl p-4 shadow-lg">
+            <p className="text-sm text-gray-400">Tempo</p>
+            <p className="text-2xl font-bold">{timeLeft}s</p>
+          </div>
+
+          <div className="bg-gray-800 rounded-xl p-4 shadow-lg">
+            <p className="text-sm text-gray-400">WPM</p>
+            <p className="text-2xl font-bold text-blue-400">{wpm}</p>
+          </div>
+
+          <div className="bg-gray-800 rounded-xl p-4 shadow-lg">
+            <p className="text-sm text-gray-400">Média</p>
+            <p className="text-2xl font-bold text-purple-400">
+              {media ?? "-"}
+            </p>
+          </div>
+
+          <div className="bg-gray-800 rounded-xl p-4 shadow-lg">
+            <p className="text-sm text-gray-400">Precisão</p>
+            <p className={`text-2xl font-bold ${accuracy < 90 ? "text-red-400" : "text-green-400"}`}>
+              {accuracy}%
+            </p>
+          </div>
+
+        </div>
       </div>
+
+      {/* ================= TEXTO ================= */}
 
       <div
         onClick={() => inputRef.current.focus()}
-        className="flex-1 p-6 overflow-y-auto bg-gray-800 rounded-lg font-mono text-gray-300 text-lg leading-relaxed cursor-text min-h-[60vh] max-w-5xl w-full"
+        className="w-full max-w-6xl bg-gray-900 p-8 rounded-2xl font-mono text-lg leading-relaxed min-h-[60vh] cursor-text shadow-inner"
       >
         {text.split("").map((ch, i) => {
-          const colorClass =
+          const isCursor = i === pos;
+          const color =
             states[i] === "correct"
               ? "text-green-400"
               : states[i] === "wrong"
-              ? "text-red-400"
-              : "";
+              ? "text-red-500"
+              : "text-gray-400";
+
+          const wordHighlight = isCurrentWord(i)
+            ? "bg-gray-800/60 rounded"
+            : "";
+
+          const cursorStyle = isCursor
+            ? "border-l-2 border-blue-400 animate-blink bg-blue-900/40"
+            : "";
+
           return (
-            <span key={i} ref={el => (charRefs.current[i] = el)} className={colorClass}>
+            <span
+              key={i}
+              ref={el => (charRefs.current[i] = el)}
+              className={`${color} ${wordHighlight} ${cursorStyle}`}
+            >
               {ch}
             </span>
           );
@@ -297,8 +252,38 @@ export default function TestePage() {
       <input
         ref={inputRef}
         onKeyDown={handleKey}
-        className="opacity-0 absolute pointer-events-none"
+        className="opacity-0 absolute"
       />
+
+      <style jsx>{`
+        @keyframes blink {
+          50% { border-color: transparent; }
+        }
+        .animate-blink {
+          animation: blink 1s step-start infinite;
+        }
+
+        .bounce { animation: bounce 0.6s ease; }
+        @keyframes bounce {
+          0%,100%{transform:translateY(0);}
+          50%{transform:translateY(-10px);}
+        }
+
+        .shake { animation: shake 0.4s ease; }
+        @keyframes shake {
+          0%{transform:translateX(0);}
+          25%{transform:translateX(-4px);}
+          50%{transform:translateX(4px);}
+          75%{transform:translateX(-4px);}
+          100%{transform:translateX(0);}
+        }
+
+        .tilt { animation: tilt 0.5s ease; }
+        @keyframes tilt {
+          0%,100%{transform:rotate(0);}
+          50%{transform:rotate(-8deg);}
+        }
+      `}</style>
     </div>
   );
 }
