@@ -17,6 +17,8 @@ export default function TestePage() {
   const [started, setStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(180);
   const [finished, setFinished] = useState(false);
+  const [redirectCounter, setRedirectCounter] = useState(10);
+
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
   const [user, setUser] = useState(null);
@@ -84,6 +86,8 @@ export default function TestePage() {
   }
 
   function handleKey(e) {
+    if (finished) return;
+
     if (e.key === "Backspace") {
       e.preventDefault();
       return;
@@ -128,7 +132,7 @@ export default function TestePage() {
   /* ================= MASCOTE ================= */
 
   useEffect(() => {
-    if (media === null) return;
+    if (media === null || finished) return;
 
     const diff = wpm - media;
 
@@ -142,30 +146,26 @@ export default function TestePage() {
       setMascoteAtual(MascoteFeliz);
       setMascoteAnim("bounce");
     }
-  }, [wpm, media]);
+  }, [wpm, media, finished]);
 
   /* ================= SALVAR ================= */
 
   async function salvarResultado() {
     if (!user) return;
 
-    try {
-      await fetch("/api/results", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          usuario_id: user.usuario_id,
-          username: user.username,
-          turma: user.turma,
-          wpm,
-          accuracy,
-          tempo_segundos: 180,
-          created_at: new Date().toISOString(), // 🔥 padrão UTC correto
-        }),
-      });
-    } catch (err) {
-      console.error(err);
-    }
+    await fetch("/api/results", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        usuario_id: user.usuario_id,
+        username: user.username,
+        turma: user.turma,
+        wpm,
+        accuracy,
+        tempo_segundos: 180,
+        created_at: new Date().toISOString(),
+      }),
+    });
   }
 
   /* ================= TIMER ================= */
@@ -174,14 +174,28 @@ export default function TestePage() {
     if (!started || finished) return;
 
     if (timeLeft <= 0) {
-      setFinished(true);
-      salvarResultado();
+      finalizarTeste();
       return;
     }
 
     const i = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(i);
   }, [started, timeLeft, finished]);
+
+  async function finalizarTeste() {
+    setFinished(true);
+    await salvarResultado();
+
+    const interval = setInterval(() => {
+      setRedirectCounter(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          router.push("/dashboard");
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
 
   /* ================= PALAVRA ATUAL ================= */
 
@@ -192,48 +206,59 @@ export default function TestePage() {
     return index >= before && index < end;
   }
 
-  if (!user) return <p className="text-white mt-10">Carregando...</p>;
+  if (!user) return null;
+
+  /* ================= TELA FINAL ================= */
+
+  if (finished) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-950 text-white text-center px-6">
+        <Image src={MascoteAtual} width={160} height={160} alt="Mascote" />
+        <h1 className="text-4xl font-bold mt-6 mb-4">Teste Finalizado!</h1>
+
+        <div className="bg-gray-800 rounded-2xl p-6 shadow-xl w-full max-w-md space-y-3">
+          <p><strong>WPM:</strong> {wpm}</p>
+          <p><strong>Precisão:</strong> {accuracy}%</p>
+          {media !== null && <p><strong>Sua média:</strong> {media}</p>}
+        </div>
+
+        <p className="mt-6 text-gray-400">
+          Redirecionando para o dashboard em {redirectCounter}s...
+        </p>
+      </div>
+    );
+  }
+
+  /* ================= RENDER NORMAL ================= */
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-950 px-4 py-6 text-white">
 
-      {/* HEADER */}
-      <div className="w-full max-w-6xl bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl shadow-xl p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-6">
-
+      <div className="w-full max-w-6xl bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl shadow-xl p-6 mb-6 flex justify-between items-center gap-6">
         <div className={`transition-all duration-300 ${MascoteAnim}`}>
           <Image src={MascoteAtual} width={140} height={140} alt="Mascote" />
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center w-full">
-
           <div className="bg-gray-800 rounded-xl p-4 shadow-lg">
             <p className="text-sm text-gray-400">Tempo</p>
             <p className="text-2xl font-bold">{timeLeft}s</p>
           </div>
-
           <div className="bg-gray-800 rounded-xl p-4 shadow-lg">
             <p className="text-sm text-gray-400">WPM</p>
             <p className="text-2xl font-bold text-blue-400">{wpm}</p>
           </div>
-
           <div className="bg-gray-800 rounded-xl p-4 shadow-lg">
             <p className="text-sm text-gray-400">Média</p>
-            <p className="text-2xl font-bold text-purple-400">
-              {media ?? "-"}
-            </p>
+            <p className="text-2xl font-bold text-purple-400">{media ?? "-"}</p>
           </div>
-
           <div className="bg-gray-800 rounded-xl p-4 shadow-lg">
             <p className="text-sm text-gray-400">Precisão</p>
-            <p className={`text-2xl font-bold ${accuracy < 90 ? "text-red-400" : "text-green-400"}`}>
-              {accuracy}%
-            </p>
+            <p className="text-2xl font-bold">{accuracy}%</p>
           </div>
-
         </div>
       </div>
 
-      {/* TEXTO */}
       <div
         onClick={() => inputRef.current.focus()}
         className="w-full max-w-6xl bg-gray-900 p-8 rounded-2xl font-mono text-lg leading-relaxed min-h-[60vh] cursor-text shadow-inner"
@@ -273,36 +298,6 @@ export default function TestePage() {
         onKeyDown={handleKey}
         className="opacity-0 absolute"
       />
-
-      <style jsx>{`
-        @keyframes blink {
-          50% { border-color: transparent; }
-        }
-        .animate-blink {
-          animation: blink 1s step-start infinite;
-        }
-
-        .bounce { animation: bounce 0.6s ease; }
-        @keyframes bounce {
-          0%,100%{transform:translateY(0);}
-          50%{transform:translateY(-10px);}
-        }
-
-        .shake { animation: shake 0.4s ease; }
-        @keyframes shake {
-          0%{transform:translateX(0);}
-          25%{transform:translateX(-4px);}
-          50%{transform:translateX(4px);}
-          75%{transform:translateX(-4px);}
-          100%{transform:translateX(0);}
-        }
-
-        .tilt { animation: tilt 0.5s ease; }
-        @keyframes tilt {
-          0%,100%{transform:rotate(0);}
-          50%{transform:rotate(-8deg);}
-        }
-      `}</style>
     </div>
   );
 }
