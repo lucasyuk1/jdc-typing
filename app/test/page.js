@@ -28,15 +28,15 @@ export default function TestePage() {
   const [MascoteAtual, setMascoteAtual] = useState(MascoteFeliz);
   const [MascoteAnim, setMascoteAnim] = useState("");
 
-  /* ========================= */
-  /* USER + MÉDIA              */
-  /* ========================= */
+  /* ================= USER ================= */
 
   useEffect(() => {
     const stored = localStorage.getItem("jdc-user");
     if (!stored) return router.push("/auth");
     setUser(JSON.parse(stored));
   }, [router]);
+
+  /* ================= MÉDIA ================= */
 
   useEffect(() => {
     if (!user) return;
@@ -47,6 +47,7 @@ export default function TestePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: "pessoal", usuario_id: user.usuario_id }),
       });
+
       const data = await res.json();
       if (data.success && data.data.length > 0) {
         const soma = data.data.reduce((acc, r) => acc + r.wpm, 0);
@@ -58,9 +59,7 @@ export default function TestePage() {
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [user]);
 
-  /* ========================= */
-  /* TEXTO                     */
-  /* ========================= */
+  /* ================= TEXTO ================= */
 
   useEffect(() => {
     const t = generateRandomText(200);
@@ -110,25 +109,23 @@ export default function TestePage() {
     maybeExtendText();
   }
 
-  /* ========================= */
-  /* STATS                     */
-  /* ========================= */
+  /* ================= STATS ================= */
 
   const totalTyped = correctCount + wrongCount;
+
   const accuracy =
     totalTyped > 0
       ? Number(((correctCount / totalTyped) * 100).toFixed(1))
       : 100;
 
   const elapsed = 180 - timeLeft;
+
   const wpm =
     elapsed > 0
       ? Math.round((correctCount / 5) / (elapsed / 60))
       : 0;
 
-  /* ========================= */
-  /* MASCOTE                   */
-  /* ========================= */
+  /* ================= MASCOTE ================= */
 
   useEffect(() => {
     if (media === null) return;
@@ -147,21 +144,46 @@ export default function TestePage() {
     }
   }, [wpm, media]);
 
-  /* ========================= */
-  /* TIMER                     */
-  /* ========================= */
+  /* ================= SALVAR ================= */
+
+  async function salvarResultado() {
+    if (!user) return;
+
+    try {
+      await fetch("/api/results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuario_id: user.usuario_id,
+          username: user.username,
+          turma: user.turma,
+          wpm,
+          accuracy,
+          tempo_segundos: 180,
+          created_at: new Date().toISOString(), // 🔥 padrão UTC correto
+        }),
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  /* ================= TIMER ================= */
 
   useEffect(() => {
     if (!started || finished) return;
-    if (timeLeft <= 0) return setFinished(true);
+
+    if (timeLeft <= 0) {
+      setFinished(true);
+      salvarResultado();
+      return;
+    }
 
     const i = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(i);
   }, [started, timeLeft, finished]);
 
-  /* ========================= */
-  /* PALAVRA ATUAL             */
-  /* ========================= */
+  /* ================= PALAVRA ATUAL ================= */
 
   function isCurrentWord(index) {
     const before = text.lastIndexOf(" ", pos - 1) + 1;
@@ -175,16 +197,13 @@ export default function TestePage() {
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-950 px-4 py-6 text-white">
 
-      {/* ================= HEADER ================= */}
-
+      {/* HEADER */}
       <div className="w-full max-w-6xl bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl shadow-xl p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-6">
 
-        {/* Mascote */}
         <div className={`transition-all duration-300 ${MascoteAnim}`}>
           <Image src={MascoteAtual} width={140} height={140} alt="Mascote" />
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center w-full">
 
           <div className="bg-gray-800 rounded-xl p-4 shadow-lg">
@@ -214,14 +233,14 @@ export default function TestePage() {
         </div>
       </div>
 
-      {/* ================= TEXTO ================= */}
-
+      {/* TEXTO */}
       <div
         onClick={() => inputRef.current.focus()}
         className="w-full max-w-6xl bg-gray-900 p-8 rounded-2xl font-mono text-lg leading-relaxed min-h-[60vh] cursor-text shadow-inner"
       >
         {text.split("").map((ch, i) => {
           const isCursor = i === pos;
+
           const color =
             states[i] === "correct"
               ? "text-green-400"
