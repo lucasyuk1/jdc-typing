@@ -41,7 +41,7 @@ export default function TestePage() {
         const res = await fetch("/api/results/ranking", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mode: "pessoal", usuario_id: parsed.id }),
+          body: JSON.stringify({ mode: "pessoal", usuario_id: user.usuario_id }),
         });
         const data = await res.json();
         if (data.success && data.data.length > 0) {

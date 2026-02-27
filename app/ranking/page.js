@@ -47,7 +47,7 @@ setLoading(false);
 if (!user) return <p className="text-white p-6">Carregando...</p>;
 
 const getRowClass = (r) =>
-r.usuario_id === user.id ? "bg-blue-800/70 font-semibold" : "bg-white/5";
+r.usuario_id === user.usuario_id ? "bg-blue-800/70 font-semibold" : "bg-white/5";
 
 const getRankingDisplay = (index) => {
 if (index === 0) return "🥇";
@@ -66,7 +66,31 @@ return ( <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-9
       <button className="btn-auth px-4 py-2" onClick={() => router.push("/dashboard")}>Voltar</button>
     </div>
   </header>
+  {/* QUADRO SEUS RESULTADOS */}
+  {ranking.length > 0 && (
+  <div className="mb-8 bg-blue-900/40 border border-blue-500 rounded-xl p-4">
+    <h2 className="text-xl font-bold text-blue-300 mb-3">
+      📌 Desafio
+    </h2>
 
+    {ranking
+      .filter(r => r.username === "larbak")
+      .map((r, i) => (
+        <div
+          key={`meu-${i}`}
+          className="flex justify-between bg-blue-800/40 px-4 py-2 rounded mb-2"
+        >
+          <span>{r.wpm} WPM</span>
+          <span>{r.accuracy}%</span>
+          <span>{new Date(r.created_at).toLocaleString("pt-BR")}</span>
+        </div>
+      ))}
+
+    {ranking.filter(r => r.username === "larbak").length === 0 && (
+      <p className="text-gray-300">Você ainda não possui resultados.</p>
+    )}
+  </div>
+)}
   {/* MODO */}
   <div className="flex gap-4 mb-6">
     <button className={`mode-btn ${mode === "geral" ? "active" : ""}`} onClick={() => setMode("geral")}>Geral</button>
