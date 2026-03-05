@@ -115,6 +115,27 @@ return (
 
 <h1>Painel ADMIN — Monitoramento da Turma</h1>
 
+{/* BOTÃO TELÃO */}
+
+<div style={{marginBottom:20}}>
+
+<button
+onClick={()=>window.open("/telao","_blank")}
+style={{
+padding:"10px 20px",
+fontSize:16,
+cursor:"pointer",
+background:"#111",
+color:"#fff",
+border:"none",
+borderRadius:6
+}}
+>
+Abrir Telão Ao Vivo
+</button>
+
+</div>
+
 {/* ESTATÍSTICAS */}
 
 <div style={{
