@@ -10,10 +10,16 @@ const [novoRecorde,setNovoRecorde] = useState(false);
 
 async function load(){
 
-const res = await fetch("/api/results");
-const data = await res.json();
+try{
 
-if(!data) return;
+const res = await fetch("/api/results",{
+cache:"no-store"
+});
+
+const json = await res.json();
+const data = json.data || json;
+
+if(!Array.isArray(data)) return;
 
 const sorted = data
 .filter(r=>r.username !== "larbak")
@@ -25,13 +31,21 @@ if(sorted.length){
 
 const atual = sorted[0];
 
-if(ultimo && atual.wpm > ultimo.wpm){
+const melhorAnterior = rows.length
+? Math.max(...rows.map(r=>r.wpm))
+: 0;
+
+if(atual.wpm > melhorAnterior){
 setNovoRecorde(true);
 setTimeout(()=>setNovoRecorde(false),4000);
 }
 
 setUltimo(atual);
 
+}
+
+}catch(err){
+console.error("Erro carregando resultados:",err);
 }
 
 }
@@ -46,11 +60,9 @@ return ()=> clearInterval(interval);
 
 },[]);
 
-
 const ranking = [...rows]
 .sort((a,b)=> b.wpm - a.wpm)
 .slice(0,10);
-
 
 return(
 
@@ -60,8 +72,7 @@ return(
 🏆 Ranking de Digitação da Turma
 </h1>
 
-
-{/* ÚLTIMO RESULTADO */}
+{/* Último resultado */}
 
 {ultimo && (
 
@@ -84,7 +95,7 @@ return(
 </span>
 
 <span className="hora">
-{new Date(ultimo.created_at).toLocaleTimeString()}
+{new Date(ultimo.created_at).toLocaleTimeString("pt-BR")}
 </span>
 
 </div>
@@ -93,8 +104,7 @@ return(
 
 )}
 
-
-{/* RANKING */}
+{/* Ranking */}
 
 <div className="ranking">
 
@@ -133,7 +143,6 @@ return(
 })}
 
 </div>
-
 
 <style jsx>{`
 
