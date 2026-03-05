@@ -1,11 +1,42 @@
 import { supabase } from "@/lib/supabase";
 
+/* =========================
+   BUSCAR RESULTADOS
+========================= */
+
+export async function GET() {
+
+  const { data, error } = await supabase
+    .from("results")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) {
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 500 }
+    );
+  }
+
+  return new Response(
+    JSON.stringify(data),
+    { status: 200 }
+  );
+}
+
+
+/* =========================
+   INSERIR RESULTADO
+========================= */
+
 export async function POST(req) {
 try {
+
 const body = await req.json();
 
 const {
-  usuario_id,   // deve ser UUID
+  usuario_id,
   username,
   turma,
   wpm,
@@ -13,11 +44,13 @@ const {
   tempo_segundos
 } = body;
 
-// Ajusta para horário de Brasília (UTC-3)
-const created_at = new Date().toISOString();
+/* horário Brasil */
+const created_at = new Date(
+  Date.now() - (3 * 60 * 60 * 1000)
+).toISOString();
 
 const { error } = await supabase
-  .from("results")   // nome da tabela
+  .from("results")
   .insert({
     usuario_id,
     username,
@@ -29,12 +62,58 @@ const { error } = await supabase
   });
 
 if (error)
-  return new Response(JSON.stringify({ success: false, error: error.message }), { status: 400 });
+  return new Response(
+    JSON.stringify({ success: false, error: error.message }),
+    { status: 400 }
+  );
 
-return new Response(JSON.stringify({ success: true }), { status: 200 });
+return new Response(
+  JSON.stringify({ success: true }),
+  { status: 200 }
+);
 
 } catch (err) {
-return new Response(JSON.stringify({ success: false, error: String(err) }), { status: 500 });
+
+return new Response(
+  JSON.stringify({ success: false, error: String(err) }),
+  { status: 500 }
+);
+
 }
 }
 
+
+/* =========================
+   DELETAR RESULTADO
+========================= */
+
+export async function DELETE(req) {
+try {
+
+const { id } = await req.json();
+
+const { error } = await supabase
+  .from("results")
+  .delete()
+  .eq("id", id);
+
+if (error)
+  return new Response(
+    JSON.stringify({ success: false, error: error.message }),
+    { status: 400 }
+  );
+
+return new Response(
+  JSON.stringify({ success: true }),
+  { status: 200 }
+);
+
+} catch (err) {
+
+return new Response(
+  JSON.stringify({ success: false, error: String(err) }),
+  { status: 500 }
+);
+
+}
+}
