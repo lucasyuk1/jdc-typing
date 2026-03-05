@@ -6,6 +6,7 @@ import Chart from "chart.js/auto";
 import Mascote from "../images/mascote.png";
 
 export default function DashboardPage() {
+
 const [user, setUser] = useState(null);
 const [resultados, setResultados] = useState([]);
 const [mediaWPM, setMediaWPM] = useState(null);
@@ -16,15 +17,22 @@ const wpmChartInstance = useRef(null);
 const accuracyChartInstance = useRef(null);
 
 useEffect(() => {
+
 const u = localStorage.getItem("jdc-user");
+
 if (!u) window.location.href = "/auth";
 else setUser(JSON.parse(u));
+
 }, []);
 
+const isAdmin = user?.username === "larbak" && user?.turma === "ADMIN";
+
 useEffect(() => {
+
 if (!user) return;
 
 async function loadResultados() {
+
   const res = await fetch("/api/results/ranking", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -34,17 +42,23 @@ async function loadResultados() {
   const data = await res.json();
 
   if (data.success && data.data.length > 0) {
+
     const sorted = data.data.sort(
       (a, b) => new Date(b.created_at) - new Date(a.created_at)
     );
+
     setResultados(sorted);
 
     const soma = sorted.reduce((acc, r) => acc + r.wpm, 0);
     setMediaWPM(Math.round(soma / sorted.length));
+
   } else {
+
     setResultados([]);
     setMediaWPM(0);
+
   }
+
 }
 
 loadResultados();
@@ -52,6 +66,7 @@ loadResultados();
 }, [user]);
 
 useEffect(() => {
+
 if (!resultados || resultados.length === 0) return;
 
 const ultimos10 = resultados.slice(0, 10).reverse();
@@ -59,6 +74,7 @@ const ultimos10 = resultados.slice(0, 10).reverse();
 const labels = ultimos10.map((r) =>
   new Date(r.created_at).toLocaleDateString("pt-BR")
 );
+
 const wpmData = ultimos10.map((r) => r.wpm);
 const accuracyData = ultimos10.map((r) => r.accuracy);
 
@@ -66,97 +82,243 @@ if (wpmChartInstance.current) wpmChartInstance.current.destroy();
 if (accuracyChartInstance.current) accuracyChartInstance.current.destroy();
 
 wpmChartInstance.current = new Chart(wpmChartRef.current, {
+
   type: "line",
-  data: { labels, datasets: [{ label: "WPM", data: wpmData, borderWidth: 3, tension: 0.4, borderColor: "#4a90e2", backgroundColor: "rgba(74,144,226,0.2)", fill: true, pointRadius: 5 }] },
-  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
+
+  data: {
+    labels,
+    datasets: [
+      {
+        label: "WPM",
+        data: wpmData,
+        borderWidth: 3,
+        tension: 0.4,
+        borderColor: "#4a90e2",
+        backgroundColor: "rgba(74,144,226,0.2)",
+        fill: true,
+        pointRadius: 5
+      }
+    ]
+  },
+
+  options: {
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true } }
+  }
+
 });
 
 accuracyChartInstance.current = new Chart(accuracyChartRef.current, {
+
   type: "line",
-  data: { labels, datasets: [{ label: "Acurácia (%)", data: accuracyData, borderWidth: 3, tension: 0.4, borderColor: "#34d399", backgroundColor: "rgba(52,211,153,0.2)", fill: true, pointRadius: 5 }] },
-  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } },
+
+  data: {
+    labels,
+    datasets: [
+      {
+        label: "Acurácia (%)",
+        data: accuracyData,
+        borderWidth: 3,
+        tension: 0.4,
+        borderColor: "#34d399",
+        backgroundColor: "rgba(52,211,153,0.2)",
+        fill: true,
+        pointRadius: 5
+      }
+    ]
+  },
+
+  options: {
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, max: 100 } }
+  }
+
 });
 
 }, [resultados]);
 
 const handleLogout = () => {
+
 localStorage.removeItem("jdc-user");
 window.location.href = "/auth";
+
 };
 
 if (!user) return <p className="text-white p-6">Carregando...</p>;
 
-return ( <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-8">
+return (
 
-  {/* HEADER */}
-  <header className="flex flex-col md:flex-row justify-between items-center mb-10 relative z-10">
-    <div>
-      <h1 className="text-4xl font-bold text-purple-400 mb-1">Olá, {user.username}!</h1>
-      <p className="text-gray-400">
-        Turma: <span className="font-semibold text-blue-300">{user.turma}</span> • Idade: <b>{user.idade}</b>
-      </p>
-    </div>
+<div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-8">
 
-    <div className="flex items-center gap-4 mt-4 md:mt-0">
-      <Image src={Mascote} alt="Mascote" width={60} height={60} className="animate-float"/>
-      <nav className="flex gap-3">
-        <a href="/test" className="btn-auth px-4 py-2">Fazer Teste</a>
-        <a href="/ranking" className="btn-auth px-4 py-2">Ranking</a>
-        <button onClick={handleLogout} className="btn-logout px-4 py-2">Sair</button>
-      </nav>
-    </div>
-  </header>
+{/* HEADER */}
+<header className="flex flex-col md:flex-row justify-between items-center mb-10 relative z-10">
 
-  {/* MÉDIA WPM */}
-  <div className="card flex flex-col items-center gap-3 mb-12 relative z-10">
-    <Image src={Mascote} width={110} height={110} alt="Mascote" className="animate-bounce"/>
-    <h2 className="text-xl text-gray-200">Sua média de WPM</h2>
-    <p className="text-6xl font-extrabold text-blue-400">{mediaWPM ?? "—"}</p>
-  </div>
+<div>
+<h1 className="text-4xl font-bold text-purple-400 mb-1">
+Olá, {user.username}!
+</h1>
 
-  {/* RESULTADOS RECENTES */}
-  <section className="mb-12 relative z-10">
-    <h2 className="text-3xl font-semibold mb-4">Seus resultados recentes</h2>
-    {resultados.length === 0 ? (
-      <p>Nenhum resultado encontrado.</p>
-    ) : (
-      <div className="grid gap-3">
-        {resultados.slice(0, 10).map((r) => (
-          <div key={r.id} className="card py-3 px-4">
-            <p className="text-lg"><b>WPM:</b> {r.wpm} — <b>Precisão:</b> {r.accuracy}%</p>
-            <p className="text-gray-400 text-sm">{new Date(r.created_at).toLocaleString("pt-BR")}</p>
-          </div>
-        ))}
-      </div>
-    )}
-  </section>
+<p className="text-gray-400">
+Turma: <span className="font-semibold text-blue-300">{user.turma}</span> • Idade: <b>{user.idade}</b>
+</p>
 
-  {/* GRÁFICOS */}
-  <div className="grid md:grid-cols-2 gap-10 relative z-10">
-    <div className="card">
-      <h3 className="text-xl mb-3">Evolução do WPM</h3>
-      <canvas ref={wpmChartRef} />
-    </div>
+</div>
 
-    <div className="card">
-      <h3 className="text-xl mb-3">Evolução da Precisão (%)</h3>
-      <canvas ref={accuracyChartRef} />
-    </div>
-  </div>
+<div className="flex items-center gap-4 mt-4 md:mt-0">
 
-  {/* Mascote flutuante */}
-  <div className="absolute -bottom-10 -right-10 w-32 h-32 animate-float z-0">
-    <Image src={Mascote} alt="Mascote" width={128} height={128} />
-  </div>
+<Image
+src={Mascote}
+alt="Mascote"
+width={60}
+height={60}
+className="animate-float"
+/>
 
-  <style jsx>{`
-    @keyframes float {
-      0%,100%{transform: translateY(0);}
-      50%{transform: translateY(-12px) rotate(-5deg);}
-    }
-    .animate-float{animation: float 3s ease-in-out infinite;}
-  `}</style>
+<nav className="flex gap-3">
+
+<a href="/test" className="btn-auth px-4 py-2">
+Fazer Teste
+</a>
+
+<a href="/ranking" className="btn-auth px-4 py-2">
+Ranking
+</a>
+
+{isAdmin && (
+<a
+href="/admin/live"
+className="btn-auth px-4 py-2 bg-red-600 hover:bg-red-700"
+>
+Monitoramento
+</a>
+)}
+
+<button
+onClick={handleLogout}
+className="btn-logout px-4 py-2"
+>
+Sair
+</button>
+
+</nav>
+
+</div>
+
+</header>
+
+{/* MÉDIA WPM */}
+<div className="card flex flex-col items-center gap-3 mb-12 relative z-10">
+
+<Image
+src={Mascote}
+width={110}
+height={110}
+alt="Mascote"
+className="animate-bounce"
+/>
+
+<h2 className="text-xl text-gray-200">
+Sua média de WPM
+</h2>
+
+<p className="text-6xl font-extrabold text-blue-400">
+{mediaWPM ?? "—"}
+</p>
+
+</div>
+
+{/* RESULTADOS RECENTES */}
+<section className="mb-12 relative z-10">
+
+<h2 className="text-3xl font-semibold mb-4">
+Seus resultados recentes
+</h2>
+
+{resultados.length === 0 ? (
+
+<p>Nenhum resultado encontrado.</p>
+
+) : (
+
+<div className="grid gap-3">
+
+{resultados.slice(0, 10).map((r) => (
+
+<div key={r.id} className="card py-3 px-4">
+
+<p className="text-lg">
+<b>WPM:</b> {r.wpm} — <b>Precisão:</b> {r.accuracy}%
+</p>
+
+<p className="text-gray-400 text-sm">
+{new Date(r.created_at).toLocaleString("pt-BR")}
+</p>
+
+</div>
+
+))}
+
+</div>
+
+)}
+
+</section>
+
+{/* GRÁFICOS */}
+<div className="grid md:grid-cols-2 gap-10 relative z-10">
+
+<div className="card">
+
+<h3 className="text-xl mb-3">
+Evolução do WPM
+</h3>
+
+<canvas ref={wpmChartRef} />
+
+</div>
+
+<div className="card">
+
+<h3 className="text-xl mb-3">
+Evolução da Precisão (%)
+</h3>
+
+<canvas ref={accuracyChartRef} />
+
+</div>
+
+</div>
+
+{/* Mascote flutuante */}
+<div className="absolute -bottom-10 -right-10 w-32 h-32 animate-float z-0">
+
+<Image
+src={Mascote}
+alt="Mascote"
+width={128}
+height={128}
+/>
+
+</div>
+
+<style jsx>{`
+
+@keyframes float {
+
+0%,100% { transform: translateY(0); }
+
+50% { transform: translateY(-12px) rotate(-5deg); }
+
+}
+
+.animate-float {
+animation: float 3s ease-in-out infinite;
+}
+
+`}</style>
+
 </div>
 
 );
+
 }
