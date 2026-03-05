@@ -120,7 +120,7 @@ return (
 <div style={{marginBottom:20}}>
 
 <button
-onClick={()=>window.open("/telao","_blank")}
+onClick={()=>window.open("/admin/telao","_blank")}
 style={{
 padding:"10px 20px",
 fontSize:16,
