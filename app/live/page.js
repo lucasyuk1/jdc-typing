@@ -3,11 +3,11 @@
 import { useEffect, useState, useRef } from "react";
 import Chart from "chart.js/auto";
 
-export default function AdminPage() {
+export default function LivePage(){
 
-const [rows, setRows] = useState([]);
-const [turmaFiltro, setTurmaFiltro] = useState("TODAS");
-const [stats, setStats] = useState({
+const [rows,setRows] = useState([]);
+const [turmaFiltro,setTurmaFiltro] = useState("TODAS");
+const [stats,setStats] = useState({
 mediaWPM:0,
 melhorWPM:0,
 mediaAccuracy:0,
@@ -17,16 +17,33 @@ total:0
 const chartRef = useRef(null);
 const chartInstance = useRef(null);
 
-async function load() {
 
-const res = await fetch("/api/results");
-const data = await res.json();
+async function load(){
 
-setRows(data || []);
+try{
 
-calcularStats(data || []);
+const res = await fetch("/api/results",{
+cache:"no-store"
+});
+
+const json = await res.json();
+const data = json.data || json;
+
+if(!Array.isArray(data)){
+console.log("API retornou algo inválido:",json);
+return;
+}
+
+setRows(data);
+
+calcularStats(data);
+
+}catch(err){
+console.error("Erro carregando resultados:",err);
+}
 
 }
+
 
 function calcularStats(data){
 
@@ -37,23 +54,28 @@ const somaAcc = data.reduce((a,b)=>a+b.accuracy,0);
 const melhor = Math.max(...data.map(r=>r.wpm));
 
 setStats({
-mediaWPM: Math.round(somaWPM/data.length),
-mediaAccuracy: Math.round(somaAcc/data.length),
-melhorWPM: melhor,
-total: data.length
+mediaWPM:Math.round(somaWPM/data.length),
+mediaAccuracy:Math.round(somaAcc/data.length),
+melhorWPM:melhor,
+total:data.length
 });
 
 }
+
 
 useEffect(()=>{
 
 load();
 
-const interval = setInterval(load,5000);
+const interval = setInterval(load,3000);
 
 return ()=>clearInterval(interval);
 
 },[]);
+
+
+
+/* ----------- GRÁFICO ----------- */
 
 useEffect(()=>{
 
@@ -66,24 +88,34 @@ const ultimos = [...rows]
 const labels = ultimos.map(r=>r.username);
 const dados = ultimos.map(r=>r.wpm);
 
-if(chartInstance.current) chartInstance.current.destroy();
+if(chartInstance.current){
+chartInstance.current.destroy();
+}
 
 chartInstance.current = new Chart(chartRef.current,{
 type:"bar",
 data:{
 labels,
-datasets:[{
+datasets:[
+{
 label:"WPM",
 data:dados
-}]
+}
+]
 },
 options:{
-plugins:{legend:{display:false}},
-scales:{y:{beginAtZero:true}}
+plugins:{
+legend:{display:false}
+},
+scales:{
+y:{beginAtZero:true}
+}
 }
 });
 
 },[rows]);
+
+
 
 async function del(id){
 
@@ -99,42 +131,70 @@ setRows(rows.filter(r=>r.id!==id));
 
 }
 
+
+
+/* ----------- FILTROS ----------- */
+
 const turmas = [...new Set(rows.map(r=>r.turma))];
 
 const filtrados = turmaFiltro==="TODAS"
 ? rows
 : rows.filter(r=>r.turma===turmaFiltro);
 
+
+
+/* ----------- RANKING ----------- */
+
 const ranking = [...filtrados]
 .sort((a,b)=>b.wpm-a.wpm)
 .slice(0,10);
 
-return (
+
+
+return(
 
 <div style={{padding:30,fontFamily:"Arial"}}>
 
-<h1>Painel ADMIN — Monitoramento da Turma</h1>
+<h1>Painel AO VIVO — Monitoramento da Turma</h1>
 
-{/* BOTÃO TELÃO */}
 
-<div style={{marginBottom:20}}>
+{/* BOTÕES */}
+
+<div style={{marginBottom:25,display:"flex",gap:10}}>
 
 <button
-onClick={()=>window.open("/admin/telao","_blank")}
+onClick={()=>window.open("/telao","_blank")}
 style={{
 padding:"10px 20px",
 fontSize:16,
-cursor:"pointer",
 background:"#111",
 color:"#fff",
 border:"none",
-borderRadius:6
+borderRadius:6,
+cursor:"pointer"
 }}
 >
-Abrir Telão Ao Vivo
+Abrir Telão
+</button>
+
+<button
+onClick={()=>load()}
+style={{
+padding:"10px 20px",
+fontSize:16,
+background:"#2563eb",
+color:"#fff",
+border:"none",
+borderRadius:6,
+cursor:"pointer"
+}}
+>
+Atualizar
 </button>
 
 </div>
+
+
 
 {/* ESTATÍSTICAS */}
 
@@ -167,7 +227,9 @@ marginBottom:30
 
 </div>
 
-{/* FILTRO TURMA */}
+
+
+{/* FILTRO */}
 
 <div style={{marginBottom:20}}>
 
@@ -186,12 +248,16 @@ onChange={(e)=>setTurmaFiltro(e.target.value)}
 
 </div>
 
+
+
 {/* GRÁFICO */}
 
 <div style={{marginBottom:40}}>
-<h2>Resultados Recentes (WPM)</h2>
+<h2>Resultados Recentes</h2>
 <canvas ref={chartRef}/>
 </div>
+
+
 
 {/* RANKING */}
 
@@ -229,6 +295,8 @@ onChange={(e)=>setTurmaFiltro(e.target.value)}
 
 </div>
 
+
+
 {/* FEED AO VIVO */}
 
 <div>
@@ -255,23 +323,21 @@ onChange={(e)=>setTurmaFiltro(e.target.value)}
 .slice(0,30)
 .map(r=>{
 
-const diffMin = (Date.now()-new Date(r.created_at))/60000;
-const travado = diffMin>5;
+const diffMin=(Date.now()-new Date(r.created_at))/60000;
+const travado=diffMin>5;
 
 return(
 
 <tr
 key={r.id}
-style={{
-background:travado?"#ffdddd":"transparent"
-}}
+style={{background:travado?"#ffdddd":"transparent"}}
 >
 
 <td>{r.username}</td>
 <td>{r.turma}</td>
 <td>{r.wpm}</td>
 <td>{r.accuracy}%</td>
-<td>{new Date(r.created_at).toLocaleString()}</td>
+<td>{new Date(r.created_at).toLocaleString("pt-BR")}</td>
 
 <td>
 <button onClick={()=>del(r.id)}>
