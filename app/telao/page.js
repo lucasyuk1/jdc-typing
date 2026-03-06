@@ -35,19 +35,10 @@ const data = json.data || json;
 if(!Array.isArray(data)) return;
 
 /* =========================
-NORMALIZAR FULLNAME
-========================= */
-
-const normalizado = data.map(r=>({
-...r,
-fullname: r.users?.fullname || r.fullname || r.username
-}));
-
-/* =========================
 FILTRAR ADMIN E PROF
 ========================= */
 
-const filtrado = normalizado.filter(r =>
+const filtrado = data.filter(r =>
 r.username !== "larbak" &&
 r.turma?.toLowerCase() !== "prof"
 );
@@ -74,9 +65,7 @@ const key=r.username;
 
 if(!melhores[key] || r.wpm > melhores[key].wpm){
 
-melhores[key]={
-...r
-};
+melhores[key]={...r};
 
 }
 
@@ -111,7 +100,7 @@ setLeader(rankingCompleto[0]);
 }
 
 /* =========================
-ATUALIZAR RANK ANTERIOR
+SALVAR RANK ANTERIOR
 ========================= */
 
 setRankAnterior(novoRanking);
@@ -223,7 +212,7 @@ return(
 🔥 LÍDER
 
 <div className="leaderNome">
-{nomeCurto(leader.fullname)}
+{nomeCurto(leader.username)}
 </div>
 
 <div className="leaderStats">
@@ -248,7 +237,7 @@ return(
 <div key={i} className="ultimo">
 
 <span className="nome">
-{nomeCurto(u.fullname)}
+{nomeCurto(u.username)}
 </span>
 
 <span className="wpm">
@@ -304,7 +293,7 @@ return(
 </div>
 
 <div className="nome">
-{nomeCurto(r.fullname)}
+{nomeCurto(r.username)}
 </div>
 
 <div className="wpm">
