@@ -36,7 +36,7 @@ if(!Array.isArray(data)) return;
 /* FILTRAR ADMIN E PROFESSORES */
 
 const filtrado = data.filter(r =>
-r.username !== "larbak" ||
+r.username !== "larbak" &&
 r.turma?.toLowerCase() !== "prof"
 );
 
@@ -124,20 +124,25 @@ return()=>clearInterval(rel);
 },[]);
 
 /* =========================
-RANKING DO DIA
+RANKING COMPLETO
 ========================= */
 
-const rankingDia=[...rows]
-.sort((a,b)=>b.wpm-a.wpm)
-.slice(0,10);
+const rankingCompleto=[...rows]
+.sort((a,b)=>b.wpm-a.wpm);
 
 /* =========================
-POSIÇÃO DO RANKING
+TOP 10
+========================= */
+
+const rankingDia=rankingCompleto.slice(0,10);
+
+/* =========================
+POSIÇÃO REAL NO RANKING
 ========================= */
 
 function posicaoGeral(username){
 
-return rankingDia.findIndex(r=>r.username===username)+1;
+return rankingCompleto.findIndex(r=>r.username===username)+1;
 
 }
 
