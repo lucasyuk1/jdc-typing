@@ -20,12 +20,18 @@ const data = json.data || json;
 
 if(!Array.isArray(data)) return;
 
-const hoje = new Date().toISOString().slice(0,10);
+/* DATA DO DIA (Brasil) */
 
-const filtrado = data.filter(r=>
+const hoje = new Date().toLocaleDateString("en-CA");
+
+/* FILTRO */
+
+const filtrado = data.filter(r =>
 r.username !== "larbak" &&
-r.created_at?.slice(0,10)===hoje
+r.created_at?.slice(0,10) === hoje
 );
+
+/* RESULTADOS MAIS RECENTES */
 
 const recentes=[...filtrado]
 .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
@@ -33,11 +39,13 @@ const recentes=[...filtrado]
 setRows(recentes);
 setUltimos(recentes.slice(0,3));
 
+/* RANKING */
+
 const ranking=[...recentes].sort((a,b)=>b.wpm-a.wpm);
 
 if(ranking.length){
 
-if(leader && ranking[0].username!==leader.username){
+if(leader && ranking[0].username !== leader.username){
 setNovoLeader(true);
 setTimeout(()=>setNovoLeader(false),4000);
 }
@@ -47,20 +55,23 @@ setLeader(ranking[0]);
 }
 
 }catch(e){
-console.error(e);
+console.error("Erro carregando telão:",e);
 }
 
 }
+
+/* ATUALIZAÇÃO AUTOMÁTICA */
 
 useEffect(()=>{
 
 load();
 const interval=setInterval(load,3000);
+
 return()=>clearInterval(interval);
 
-},[leader]);
+},[]);
 
-/* relógio */
+/* RELÓGIO */
 
 useEffect(()=>{
 
@@ -72,19 +83,24 @@ return()=>clearInterval(rel);
 
 },[]);
 
-/* ranking */
+/* RANKING FINAL */
 
 const ranking=[...rows]
 .sort((a,b)=>b.wpm-a.wpm)
 .slice(0,10);
 
-const melhorWPM=ranking.length
+/* MAIOR WPM PARA BARRA */
+
+const melhorWPM = ranking.length
 ? Math.max(...ranking.map(r=>r.wpm))
 :100;
+
+/* POSIÇÃO DO JOGADOR */
 
 function posicao(nome){
 
 const ordenado=[...rows].sort((a,b)=>b.wpm-a.wpm);
+
 return ordenado.findIndex(r=>r.username===nome)+1;
 
 }
@@ -95,7 +111,7 @@ return(
 
 <header className="header">
 
-<h1>🏆 Ranking de Digitação Diário</h1>
+<h1>🏆 Ranking de Digitação do Dia</h1>
 
 <div className="relogio">
 {hora}
@@ -115,7 +131,7 @@ return(
 
 )}
 
-{/* ÚLTIMOS */}
+{/* ÚLTIMOS RESULTADOS */}
 
 <div className="ultimos">
 
@@ -133,11 +149,17 @@ className={`ultimo ${pos<=3?"top3":""}`}
 >
 
 <span className="aluno">{u.username}</span>
+
 <span className="wpm">{u.wpm} WPM</span>
+
 <span className="acc">{u.accuracy}%</span>
+
 <span className="rank">#{pos}</span>
+
 <span className="hora">
+
 {new Date(u.created_at).toLocaleTimeString("pt-BR")}
+
 </span>
 
 </div>
@@ -218,6 +240,8 @@ font-size:36px;
 color:#fbbf24;
 }
 
+/* líder */
+
 .leader{
 text-align:center;
 font-size:40px;
@@ -236,6 +260,8 @@ from{transform:scale(1)}
 to{transform:scale(1.05)}
 }
 
+/* últimos */
+
 .ultimos{
 display:flex;
 flex-direction:column;
@@ -250,11 +276,32 @@ background:#111827;
 padding:14px 24px;
 border-radius:12px;
 font-size:26px;
+align-items:center;
 }
 
 .top3{
 border:2px solid gold;
 }
+
+.aluno{
+font-weight:bold;
+color:#fbbf24;
+}
+
+.wpm{
+color:#34d399;
+}
+
+.acc{
+color:#60a5fa;
+}
+
+.rank{
+color:#f87171;
+font-weight:bold;
+}
+
+/* ranking */
 
 .ranking{
 display:flex;
