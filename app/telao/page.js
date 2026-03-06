@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from "react";
 
-export default function TelaoPage() {
+export default function TelaoUltra() {
 
 const [rows,setRows] = useState([]);
 const [ultimos,setUltimos] = useState([]);
-const [novoTop3,setNovoTop3] = useState(false);
+const [leader,setLeader] = useState(null);
+const [novoLeader,setNovoLeader] = useState(false);
+const [hora,setHora] = useState("");
 
 async function load(){
 
 try{
 
-const res = await fetch("/api/results",{ cache:"no-store" });
+const res = await fetch("/api/results",{cache:"no-store"});
 const json = await res.json();
 const data = json.data || json;
 
@@ -20,36 +22,32 @@ if(!Array.isArray(data)) return;
 
 const hoje = new Date().toISOString().slice(0,10);
 
-const filtrado = data.filter(r =>
+const filtrado = data.filter(r=>
 r.username !== "larbak" &&
-r.created_at?.slice(0,10) === hoje
+r.created_at?.slice(0,10)===hoje
 );
 
-const recentes = [...filtrado]
-.sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
+const recentes=[...filtrado]
+.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
 setRows(recentes);
+setUltimos(recentes.slice(0,3));
 
-const ultimos3 = recentes.slice(0,3);
-setUltimos(ultimos3);
+const ranking=[...recentes].sort((a,b)=>b.wpm-a.wpm);
 
-/* verifica se entrou no top3 */
+if(ranking.length){
 
-if(recentes.length){
-
-const ranking = [...recentes].sort((a,b)=>b.wpm-a.wpm);
-const ultimo = recentes[0];
-const pos = ranking.findIndex(r=>r.username===ultimo.username)+1;
-
-if(pos<=3){
-setNovoTop3(true);
-setTimeout(()=>setNovoTop3(false),4000);
+if(leader && ranking[0].username!==leader.username){
+setNovoLeader(true);
+setTimeout(()=>setNovoLeader(false),4000);
 }
+
+setLeader(ranking[0]);
 
 }
 
-}catch(err){
-console.error("Erro carregando resultados:",err);
+}catch(e){
+console.error(e);
 }
 
 }
@@ -57,37 +55,67 @@ console.error("Erro carregando resultados:",err);
 useEffect(()=>{
 
 load();
-const interval = setInterval(load,3000);
-return ()=>clearInterval(interval);
+const interval=setInterval(load,3000);
+return()=>clearInterval(interval);
+
+},[leader]);
+
+/* relógio */
+
+useEffect(()=>{
+
+const rel=setInterval(()=>{
+setHora(new Date().toLocaleTimeString("pt-BR"));
+},1000);
+
+return()=>clearInterval(rel);
 
 },[]);
 
-const ranking = [...rows]
+/* ranking */
+
+const ranking=[...rows]
 .sort((a,b)=>b.wpm-a.wpm)
 .slice(0,10);
 
-function getPosicao(username){
+const melhorWPM=ranking.length
+? Math.max(...ranking.map(r=>r.wpm))
+:100;
 
-const ordenado = [...rows].sort((a,b)=>b.wpm-a.wpm);
-return ordenado.findIndex(r=>r.username===username)+1;
+function posicao(nome){
+
+const ordenado=[...rows].sort((a,b)=>b.wpm-a.wpm);
+return ordenado.findIndex(r=>r.username===nome)+1;
 
 }
-
-/* calcula barra WPM */
-
-const melhorWPM = ranking.length
-? Math.max(...ranking.map(r=>r.wpm))
-: 100;
 
 return(
 
 <div className="telao">
 
-<h1 className="titulo">
-🏆 Ranking de Digitação do Dia
-</h1>
+<header className="header">
 
-{/* ÚLTIMOS RESULTADOS */}
+<h1>🏆 Campeonato de Digitação</h1>
+
+<div className="relogio">
+{hora}
+</div>
+
+</header>
+
+{/* LÍDER */}
+
+{leader &&(
+
+<div className={`leader ${novoLeader?"novo":""}`}>
+
+🔥 LÍDER DO DIA: <b>{leader.username}</b> — {leader.wpm} WPM
+
+</div>
+
+)}
+
+{/* ÚLTIMOS */}
 
 <div className="ultimos">
 
@@ -95,31 +123,19 @@ return(
 
 {ultimos.map((u,i)=>{
 
-const pos = getPosicao(u.username);
+const pos=posicao(u.username);
 
 return(
 
 <div
 key={i}
-className={`ultimo-card ${pos<=3 && novoTop3 ? "top3":""}`}
+className={`ultimo ${pos<=3?"top3":""}`}
 >
 
-<span className="aluno">
-{u.username}
-</span>
-
-<span className="wpm">
-{u.wpm} WPM
-</span>
-
-<span className="accuracy">
-{u.accuracy}%
-</span>
-
-<span className="posicao">
-#{pos} no ranking
-</span>
-
+<span className="aluno">{u.username}</span>
+<span className="wpm">{u.wpm} WPM</span>
+<span className="acc">{u.accuracy}%</span>
+<span className="rank">#{pos}</span>
 <span className="hora">
 {new Date(u.created_at).toLocaleTimeString("pt-BR")}
 </span>
@@ -138,42 +154,34 @@ className={`ultimo-card ${pos<=3 && novoTop3 ? "top3":""}`}
 
 {ranking.map((r,i)=>{
 
-let medalha="";
+const medalha =
+i===0?"🥇":
+i===1?"🥈":
+i===2?"🥉":
+`#${i+1}`;
 
-if(i===0) medalha="🥇";
-if(i===1) medalha="🥈";
-if(i===2) medalha="🥉";
-
-const barra = (r.wpm/melhorWPM)*100;
+const barra=(r.wpm/melhorWPM)*100;
 
 return(
 
 <div key={r.id} className={`linha pos${i+1}`}>
 
-<div className="pos">
-{medalha || `#${i+1}`}
-</div>
+<div className="pos">{medalha}</div>
 
-<div className="nome">
-{r.username}
-</div>
+<div className="nome">{r.username}</div>
 
-<div className="wpm">
-{r.wpm} WPM
-</div>
+<div className="wpm">{r.wpm}</div>
 
 <div className="barra">
 
 <div
-className="barra-preenchida"
+className="fill"
 style={{width:`${barra}%`}}
 />
 
 </div>
 
-<div className="accuracy">
-{r.accuracy}%
-</div>
+<div className="acc">{r.accuracy}%</div>
 
 </div>
 
@@ -187,95 +195,85 @@ style={{width:`${barra}%`}}
 
 .telao{
 background:#020617;
-min-height:100vh;
 color:white;
+min-height:100vh;
 padding:40px;
-font-family:Arial, Helvetica, sans-serif;
+font-family:Arial;
 }
 
-.titulo{
-font-size:64px;
-text-align:center;
-margin-bottom:40px;
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:30px;
+}
+
+.header h1{
+font-size:60px;
 color:#38bdf8;
 }
 
-/* ULTIMOS RESULTADOS */
-
-.ultimos{
-text-align:center;
-margin-bottom:60px;
-display:flex;
-flex-direction:column;
-gap:20px;
-align-items:center;
+.relogio{
+font-size:36px;
+color:#fbbf24;
 }
 
-.ultimo-card{
-display:flex;
-gap:30px;
-padding:20px 40px;
+.leader{
+text-align:center;
+font-size:40px;
 background:#111827;
-border-radius:16px;
-font-size:28px;
-align-items:center;
+padding:20px;
+border-radius:12px;
+margin-bottom:30px;
+}
+
+.novo{
+animation:pulse 0.8s infinite alternate;
+}
+
+@keyframes pulse{
+from{transform:scale(1)}
+to{transform:scale(1.05)}
+}
+
+.ultimos{
+display:flex;
+flex-direction:column;
+gap:12px;
+margin-bottom:40px;
+}
+
+.ultimo{
+display:flex;
+gap:25px;
+background:#111827;
+padding:14px 24px;
+border-radius:12px;
+font-size:26px;
 }
 
 .top3{
-animation:top3 0.7s infinite alternate;
+border:2px solid gold;
 }
-
-@keyframes top3{
-from{transform:scale(1)}
-to{transform:scale(1.06)}
-}
-
-.aluno{
-color:#fbbf24;
-font-weight:bold;
-}
-
-.wpm{
-color:#34d399;
-font-weight:bold;
-}
-
-.accuracy{
-color:#60a5fa;
-}
-
-.posicao{
-color:#f87171;
-font-weight:bold;
-}
-
-.hora{
-color:#9ca3af;
-font-size:20px;
-}
-
-/* RANKING */
 
 .ranking{
 display:flex;
 flex-direction:column;
-gap:16px;
-max-width:1200px;
-margin:auto;
+gap:14px;
 }
 
 .linha{
 display:grid;
-grid-template-columns:100px 1fr 150px 300px 150px;
+grid-template-columns:100px 1fr 120px 350px 120px;
 align-items:center;
-padding:22px;
-border-radius:12px;
-font-size:32px;
+font-size:30px;
+padding:20px;
 background:#111827;
+border-radius:10px;
 }
 
 .pos{
-font-size:46px;
+font-size:40px;
 text-align:center;
 }
 
@@ -283,25 +281,22 @@ text-align:center;
 font-weight:bold;
 }
 
-/* BARRA DE VELOCIDADE */
-
 .barra{
 background:#1f2937;
-height:18px;
+height:20px;
 border-radius:10px;
 overflow:hidden;
 }
 
-.barra-preenchida{
+.fill{
 background:linear-gradient(90deg,#22c55e,#4ade80);
 height:100%;
-transition:width 0.6s;
+transition:width .5s;
 }
 
 .pos1{
 background:linear-gradient(90deg,#f59e0b,#fde047);
 color:black;
-font-weight:bold;
 }
 
 .pos2{
