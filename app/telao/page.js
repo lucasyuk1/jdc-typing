@@ -95,7 +95,7 @@ return(
 
 <header className="header">
 
-<h1>🏆 Campeonato de Digitação</h1>
+<h1>🏆 Ranking de Digitação Diário</h1>
 
 <div className="relogio">
 {hora}
