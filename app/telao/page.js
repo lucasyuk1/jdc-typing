@@ -9,6 +9,10 @@ const [ultimos,setUltimos] = useState([]);
 const [leader,setLeader] = useState(null);
 const [hora,setHora] = useState("");
 
+/* =========================
+CORTAR NOMES LONGOS
+========================= */
+
 function nomeCurto(nome){
 if(!nome) return "";
 return nome.length > 18 ? nome.slice(0,18) + "…" : nome;
@@ -24,20 +28,31 @@ try{
 
 const res = await fetch("/api/results",{cache:"no-store"});
 const json = await res.json();
+
 const data = json.data || json;
 
 if(!Array.isArray(data)) return;
 
-const filtrado = data.filter(r => r.username !== "larbak");
+/* FILTRAR ADMIN E PROFESSORES */
 
-/* últimos resultados */
+const filtrado = data.filter(r =>
+r.username !== "larbak" &&
+r.turma?.toLowerCase() !== "prof"
+);
+
+/* =========================
+ULTIMOS RESULTADOS
+========================= */
 
 const recentes=[...filtrado]
 .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
 setUltimos(recentes.slice(0,5));
 
-/* remover repetidos */
+/* =========================
+REMOVER REPETIDOS
+(MANTER MAIOR WPM)
+========================= */
 
 const melhores={};
 
@@ -60,7 +75,9 @@ const unicos=Object.values(melhores);
 
 setRows(unicos);
 
-/* líder */
+/* =========================
+DEFINIR LIDER
+========================= */
 
 const ranking=[...unicos].sort((a,b)=>b.wpm-a.wpm);
 
@@ -90,7 +107,9 @@ return()=>clearInterval(interval);
 
 },[]);
 
-/* relógio */
+/* =========================
+RELÓGIO
+========================= */
 
 useEffect(()=>{
 
@@ -105,14 +124,16 @@ return()=>clearInterval(rel);
 },[]);
 
 /* =========================
-RANKING
+RANKING DO DIA
 ========================= */
 
 const rankingDia=[...rows]
 .sort((a,b)=>b.wpm-a.wpm)
 .slice(0,10);
 
-/* função posição geral */
+/* =========================
+POSIÇÃO DO RANKING
+========================= */
 
 function posicaoGeral(username){
 
@@ -140,7 +161,7 @@ return(
 
 <div className="grid">
 
-{/* ESQUERDA */}
+{/* COLUNA ESQUERDA */}
 
 <div className="coluna">
 
@@ -200,7 +221,7 @@ return(
 
 </div>
 
-{/* DIREITA */}
+{/* COLUNA DIREITA */}
 
 <div className="coluna">
 
