@@ -20,6 +20,14 @@ return nome.length > 18 ? nome.slice(0,18) + "…" : nome;
 }
 
 /* =========================
+PEGAR NOME CORRETO
+========================= */
+
+function displayName(r){
+return r.fullname || r.username;
+}
+
+/* =========================
 CARREGAR RESULTADOS
 ========================= */
 
@@ -212,7 +220,7 @@ return(
 🔥 LÍDER
 
 <div className="leaderNome">
-{nomeCurto(leader.username)}
+{nomeCurto(displayName(leader))}
 </div>
 
 <div className="leaderStats">
@@ -237,7 +245,7 @@ return(
 <div key={i} className="ultimo">
 
 <span className="nome">
-{nomeCurto(u.username)}
+{nomeCurto(displayName(u))}
 </span>
 
 <span className="wpm">
@@ -293,7 +301,7 @@ return(
 </div>
 
 <div className="nome">
-{nomeCurto(r.username)}
+{nomeCurto(displayName(r))}
 </div>
 
 <div className="wpm">
