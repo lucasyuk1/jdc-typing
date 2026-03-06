@@ -8,6 +8,7 @@ const [rows,setRows] = useState([]);
 const [ultimos,setUltimos] = useState([]);
 const [leader,setLeader] = useState(null);
 const [hora,setHora] = useState("");
+const [rankAnterior,setRankAnterior] = useState({});
 
 /* =========================
 CORTAR NOMES LONGOS
@@ -33,9 +34,20 @@ const data = json.data || json;
 
 if(!Array.isArray(data)) return;
 
-/* FILTRAR ADMIN E PROFESSORES */
+/* =========================
+NORMALIZAR FULLNAME
+========================= */
 
-const filtrado = data.filter(r =>
+const normalizado = data.map(r=>({
+...r,
+fullname: r.users?.fullname || r.fullname || r.username
+}));
+
+/* =========================
+FILTRAR ADMIN E PROF
+========================= */
+
+const filtrado = normalizado.filter(r =>
 r.username !== "larbak" &&
 r.turma?.toLowerCase() !== "prof"
 );
@@ -63,8 +75,7 @@ const key=r.username;
 if(!melhores[key] || r.wpm > melhores[key].wpm){
 
 melhores[key]={
-...r,
-fullname:r.fullname || r.username
+...r
 };
 
 }
@@ -76,14 +87,34 @@ const unicos=Object.values(melhores);
 setRows(unicos);
 
 /* =========================
+RANKING COMPLETO
+========================= */
+
+const rankingCompleto=[...unicos].sort((a,b)=>b.wpm-a.wpm);
+
+/* =========================
+MAPA DE POSIÇÕES
+========================= */
+
+const novoRanking={};
+
+rankingCompleto.forEach((r,i)=>{
+novoRanking[r.username]=i+1;
+});
+
+/* =========================
 DEFINIR LIDER
 ========================= */
 
-const ranking=[...unicos].sort((a,b)=>b.wpm-a.wpm);
-
-if(ranking.length){
-setLeader(ranking[0]);
+if(rankingCompleto.length){
+setLeader(rankingCompleto[0]);
 }
+
+/* =========================
+ATUALIZAR RANK ANTERIOR
+========================= */
+
+setRankAnterior(novoRanking);
 
 }catch(e){
 
@@ -137,13 +168,28 @@ TOP 10
 const rankingDia=rankingCompleto.slice(0,10);
 
 /* =========================
-POSIÇÃO REAL NO RANKING
+POSIÇÃO REAL
 ========================= */
 
 function posicaoGeral(username){
-
 return rankingCompleto.findIndex(r=>r.username===username)+1;
+}
 
+/* =========================
+MOVIMENTO DE RANKING
+========================= */
+
+function movimentoRanking(username){
+
+const atual = posicaoGeral(username);
+const anterior = rankAnterior[username];
+
+if(!anterior) return "novo";
+
+if(atual < anterior) return "subiu";
+if(atual > anterior) return "desceu";
+
+return "igual";
 }
 
 /* =========================
@@ -195,13 +241,14 @@ return(
 {ultimos.map((u,i)=>{
 
 const pos = posicaoGeral(u.username);
+const mov = movimentoRanking(u.username);
 
 return(
 
 <div key={i} className="ultimo">
 
 <span className="nome">
-{nomeCurto(u.fullname || u.username)}
+{nomeCurto(u.fullname)}
 </span>
 
 <span className="wpm">
@@ -212,8 +259,14 @@ return(
 {u.accuracy}%
 </span>
 
-<span className="rank">
+<span className={`rank ${mov}`}>
+
 {pos ? `#${pos}` : "-"}
+
+{mov==="subiu" && " 🔼"}
+{mov==="desceu" && " 🔽"}
+{mov==="novo" && " ✨"}
+
 </span>
 
 </div>
@@ -343,16 +396,27 @@ border-radius:12px;
 
 .ultimo{
 display:grid;
-grid-template-columns:1fr 80px 80px 80px;
+grid-template-columns:1fr 80px 80px 120px;
 font-size:22px;
 padding:8px 0;
 border-bottom:1px solid #1f2937;
 }
 
 .rank{
-color:#fbbf24;
 font-weight:bold;
 text-align:center;
+}
+
+.rank.subiu{
+color:#22c55e;
+}
+
+.rank.desceu{
+color:#ef4444;
+}
+
+.rank.novo{
+color:#38bdf8;
 }
 
 /* RANKING */
