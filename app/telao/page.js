@@ -36,7 +36,7 @@ if(!Array.isArray(data)) return;
 /* FILTRAR ADMIN E PROFESSORES */
 
 const filtrado = data.filter(r =>
-r.username !== "larbak" &&
+r.username !== "larbak" ||
 r.turma?.toLowerCase() !== "prof"
 );
 
