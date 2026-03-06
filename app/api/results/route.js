@@ -54,6 +54,7 @@ const { error } = await supabase
   .insert({
     usuario_id,
     username,
+    fullname,
     turma,
     wpm,
     accuracy,
