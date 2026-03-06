@@ -70,7 +70,7 @@ ULTIMOS RESULTADOS
 const recentes=[...filtrado]
 .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
-setUltimos(recentes.slice(0,5));
+setUltimos(recentes.slice(0,10));
 
 /* =========================
 REMOVER REPETIDOS
