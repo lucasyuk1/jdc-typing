@@ -9,6 +9,24 @@ const [ultimos,setUltimos] = useState([]);
 const [leader,setLeader] = useState(null);
 const [hora,setHora] = useState("");
 
+/* =========================
+FUNÇÃO PARA CORTAR NOMES
+========================= */
+
+function nomeCurto(nome){
+
+if(!nome) return "";
+
+return nome.length > 18
+? nome.slice(0,18) + "…"
+: nome;
+
+}
+
+/* =========================
+CARREGAR RESULTADOS
+========================= */
+
 async function load(){
 
 try{
@@ -21,29 +39,34 @@ if(!Array.isArray(data)) return;
 
 const hoje = new Date().toLocaleDateString("en-CA");
 
+/* FILTRAR RESULTADOS DO DIA */
+
 const filtrado = data.filter(r =>
 r.username !== "larbak" &&
 r.created_at?.slice(0,10) === hoje
 );
 
-/* ordenar por mais recente */
+/* ORDENAR POR MAIS RECENTE */
 
 const recentes=[...filtrado]
 .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
 setUltimos(recentes.slice(0,5));
 
-/* ---------------------------------
-REMOVER REPETIDOS (manter maior WPM)
----------------------------------- */
+/* REMOVER REPETIDOS (MAIOR WPM) */
 
 const melhores={};
 
 filtrado.forEach(r=>{
 
-if(!melhores[r.username] || r.wpm > melhores[r.username].wpm){
+const key = r.username;
 
-melhores[r.username]=r;
+if(!melhores[key] || r.wpm > melhores[key].wpm){
+
+melhores[key] = {
+...r,
+fullname: r.fullname || r.username
+};
 
 }
 
@@ -53,7 +76,7 @@ const unicos = Object.values(melhores);
 
 setRows(unicos);
 
-/* líder do dia */
+/* LIDER DO DIA */
 
 const ranking=[...unicos].sort((a,b)=>b.wpm-a.wpm);
 
@@ -67,13 +90,21 @@ console.error("Erro carregando telão:",e);
 
 }
 
+/* =========================
+AUTO UPDATE
+========================= */
+
 useEffect(()=>{
 
 load();
 const interval=setInterval(load,3000);
+
 return()=>clearInterval(interval);
 
 },[]);
+
+
+/* RELÓGIO */
 
 useEffect(()=>{
 
@@ -86,20 +117,18 @@ return()=>clearInterval(rel);
 },[]);
 
 
-
-/* ---------------------------
+/* =========================
 RANKING DO DIA
----------------------------- */
+========================= */
 
 const rankingDia=[...rows]
 .sort((a,b)=>b.wpm-a.wpm)
 .slice(0,10);
 
 
-
-/* ---------------------------
+/* =========================
 RANKING GERAL POR MÉDIA
----------------------------- */
+========================= */
 
 function rankingGeral(){
 
@@ -107,27 +136,30 @@ const medias={};
 
 rows.forEach(r=>{
 
-if(!medias[r.username]){
+const key = r.username;
 
-medias[r.username]={
+if(!medias[key]){
+
+medias[key]={
+username:r.username,
 fullname:r.fullname || r.username,
 valores:[]
 };
 
 }
 
-medias[r.username].valores.push(r.wpm);
+medias[key].valores.push(r.wpm);
 
 });
 
-const lista=Object.entries(medias).map(([username,dados])=>{
+const lista=Object.values(medias).map(dados=>{
 
 const media =
 dados.valores.reduce((a,b)=>a+b,0) /
 dados.valores.length;
 
 return{
-username,
+username:dados.username,
 fullname:dados.fullname,
 media
 };
@@ -145,8 +177,9 @@ return geral.findIndex(p=>p.username===username)+1;
 }
 
 
-
-/* ============================= */
+/* =========================
+INTERFACE
+========================= */
 
 return(
 
@@ -163,10 +196,9 @@ return(
 </header>
 
 
-
 <div className="grid">
 
-{/* ESQUERDA */}
+{/* COLUNA ESQUERDA */}
 
 <div className="coluna">
 
@@ -177,7 +209,7 @@ return(
 🔥 LÍDER DO DIA
 
 <div className="leaderNome">
-{leader.fullname || leader.username}
+{nomeCurto(leader.fullname)}
 </div>
 
 <div className="leaderStats">
@@ -188,8 +220,6 @@ return(
 
 )}
 
-
-
 <div className="ultimos">
 
 <h2>⚡ Últimos Resultados</h2>
@@ -199,7 +229,7 @@ return(
 <div key={i} className="ultimo">
 
 <span className="nome">
-{u.fullname || u.username}
+{nomeCurto(u.fullname || u.username)}
 </span>
 
 <span className="stats">
@@ -219,8 +249,7 @@ return(
 </div>
 
 
-
-{/* DIREITA */}
+{/* COLUNA DIREITA */}
 
 <div className="coluna">
 
@@ -247,7 +276,7 @@ return(
 </div>
 
 <div className="nome">
-{r.fullname || r.username}
+{nomeCurto(r.fullname)}
 </div>
 
 <div className="stats">
@@ -269,7 +298,6 @@ GR #{geralPos}
 </div>
 
 </div>
-
 
 
 <style jsx>{`
@@ -313,7 +341,6 @@ gap:20px;
 }
 
 
-
 /* LIDER */
 
 .leader{
@@ -335,7 +362,6 @@ color:#4ade80;
 }
 
 
-
 /* ULTIMOS */
 
 .ultimos{
@@ -355,7 +381,6 @@ padding:10px 0;
 font-size:22px;
 border-bottom:1px solid #1f2937;
 }
-
 
 
 /* RANKING */
