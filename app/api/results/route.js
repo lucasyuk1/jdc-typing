@@ -10,7 +10,7 @@ export async function GET() {
     .from("results")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(200);
+    .limit(10000);
 
   if (error) {
     return new Response(
