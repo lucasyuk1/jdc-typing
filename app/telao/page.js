@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default function TelaoUltra() {
+export default function TelaoUltra(){
 
 const [rows,setRows] = useState([]);
 const [ultimos,setUltimos] = useState([]);
@@ -20,7 +20,7 @@ const data = json.data || json;
 
 if(!Array.isArray(data)) return;
 
-/* DATA DO DIA (Brasil) */
+/* DATA DO DIA */
 
 const hoje = new Date().toLocaleDateString("en-CA");
 
@@ -31,7 +31,7 @@ r.username !== "larbak" &&
 r.created_at?.slice(0,10) === hoje
 );
 
-/* RESULTADOS MAIS RECENTES */
+/* MAIS RECENTES */
 
 const recentes=[...filtrado]
 .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
@@ -83,24 +83,23 @@ return()=>clearInterval(rel);
 
 },[]);
 
-/* RANKING FINAL */
+/* RANKING */
 
 const ranking=[...rows]
 .sort((a,b)=>b.wpm-a.wpm)
 .slice(0,10);
 
-/* MAIOR WPM PARA BARRA */
+/* MAIOR WPM */
 
 const melhorWPM = ranking.length
 ? Math.max(...ranking.map(r=>r.wpm))
 :100;
 
-/* POSIÇÃO DO JOGADOR */
+/* POSIÇÃO */
 
 function posicao(nome){
 
 const ordenado=[...rows].sort((a,b)=>b.wpm-a.wpm);
-
 return ordenado.findIndex(r=>r.username===nome)+1;
 
 }
@@ -124,9 +123,7 @@ return(
 {leader &&(
 
 <div className={`leader ${novoLeader?"novo":""}`}>
-
-🔥 LÍDER DO DIA: <b>{leader.username}</b> — {leader.wpm} WPM
-
+🔥 LÍDER DO DIA: <b>{leader.username}</b> — {leader.wpm} WPM — {leader.accuracy}%
 </div>
 
 )}
@@ -143,23 +140,18 @@ const pos=posicao(u.username);
 
 return(
 
-<div
-key={i}
-className={`ultimo ${pos<=3?"top3":""}`}
->
+<div key={i} className={`ultimo ${pos<=3?"top3":""}`}>
 
 <span className="aluno">{u.username}</span>
 
-<span className="wpm">{u.wpm} WPM</span>
-
-<span className="acc">{u.accuracy}%</span>
+<span className="estat">
+{u.wpm} WPM — {u.accuracy}%
+</span>
 
 <span className="rank">#{pos}</span>
 
 <span className="hora">
-
 {new Date(u.created_at).toLocaleTimeString("pt-BR")}
-
 </span>
 
 </div>
@@ -192,7 +184,9 @@ return(
 
 <div className="nome">{r.username}</div>
 
-<div className="wpm">{r.wpm}</div>
+<div className="estat">
+{r.wpm} WPM — {r.accuracy}%
+</div>
 
 <div className="barra">
 
@@ -202,8 +196,6 @@ style={{width:`${barra}%`}}
 />
 
 </div>
-
-<div className="acc">{r.accuracy}%</div>
 
 </div>
 
@@ -223,6 +215,8 @@ padding:40px;
 font-family:Arial;
 }
 
+/* HEADER */
+
 .header{
 display:flex;
 justify-content:space-between;
@@ -231,20 +225,20 @@ margin-bottom:30px;
 }
 
 .header h1{
-font-size:60px;
+font-size:56px;
 color:#38bdf8;
 }
 
 .relogio{
-font-size:36px;
+font-size:34px;
 color:#fbbf24;
 }
 
-/* líder */
+/* LIDER */
 
 .leader{
 text-align:center;
-font-size:40px;
+font-size:38px;
 background:#111827;
 padding:20px;
 border-radius:12px;
@@ -252,7 +246,7 @@ margin-bottom:30px;
 }
 
 .novo{
-animation:pulse 0.8s infinite alternate;
+animation:pulse .8s infinite alternate;
 }
 
 @keyframes pulse{
@@ -260,7 +254,7 @@ from{transform:scale(1)}
 to{transform:scale(1.05)}
 }
 
-/* últimos */
+/* ULTIMOS */
 
 .ultimos{
 display:flex;
@@ -270,12 +264,12 @@ margin-bottom:40px;
 }
 
 .ultimo{
-display:flex;
-gap:25px;
+display:grid;
+grid-template-columns:1fr 260px 100px 140px;
 background:#111827;
-padding:14px 24px;
-border-radius:12px;
-font-size:26px;
+padding:16px 24px;
+border-radius:10px;
+font-size:24px;
 align-items:center;
 }
 
@@ -288,20 +282,23 @@ font-weight:bold;
 color:#fbbf24;
 }
 
-.wpm{
+.estat{
 color:#34d399;
-}
-
-.acc{
-color:#60a5fa;
+text-align:center;
 }
 
 .rank{
-color:#f87171;
 font-weight:bold;
+color:#60a5fa;
+text-align:center;
 }
 
-/* ranking */
+.hora{
+color:#9ca3af;
+text-align:right;
+}
+
+/* RANKING */
 
 .ranking{
 display:flex;
@@ -311,7 +308,7 @@ gap:14px;
 
 .linha{
 display:grid;
-grid-template-columns:100px 1fr 120px 350px 120px;
+grid-template-columns:90px 1fr 260px 400px;
 align-items:center;
 font-size:30px;
 padding:20px;
@@ -330,7 +327,7 @@ font-weight:bold;
 
 .barra{
 background:#1f2937;
-height:20px;
+height:22px;
 border-radius:10px;
 overflow:hidden;
 }
@@ -340,6 +337,8 @@ background:linear-gradient(90deg,#22c55e,#4ade80);
 height:100%;
 transition:width .5s;
 }
+
+/* TOP 3 */
 
 .pos1{
 background:linear-gradient(90deg,#f59e0b,#fde047);
