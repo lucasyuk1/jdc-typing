@@ -20,26 +20,18 @@ const data = json.data || json;
 
 if(!Array.isArray(data)) return;
 
-/* DATA DO DIA */
-
 const hoje = new Date().toLocaleDateString("en-CA");
-
-/* FILTRO */
 
 const filtrado = data.filter(r =>
 r.username !== "larbak" &&
 r.created_at?.slice(0,10) === hoje
 );
 
-/* MAIS RECENTES */
-
 const recentes=[...filtrado]
 .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
 setRows(recentes);
 setUltimos(recentes.slice(0,3));
-
-/* RANKING */
 
 const ranking=[...recentes].sort((a,b)=>b.wpm-a.wpm);
 
@@ -60,8 +52,6 @@ console.error("Erro carregando telão:",e);
 
 }
 
-/* ATUALIZAÇÃO AUTOMÁTICA */
-
 useEffect(()=>{
 
 load();
@@ -70,8 +60,6 @@ const interval=setInterval(load,3000);
 return()=>clearInterval(interval);
 
 },[]);
-
-/* RELÓGIO */
 
 useEffect(()=>{
 
@@ -83,19 +71,9 @@ return()=>clearInterval(rel);
 
 },[]);
 
-/* RANKING */
-
 const ranking=[...rows]
 .sort((a,b)=>b.wpm-a.wpm)
 .slice(0,10);
-
-/* MAIOR WPM */
-
-const melhorWPM = ranking.length
-? Math.max(...ranking.map(r=>r.wpm))
-:100;
-
-/* POSIÇÃO */
 
 function posicao(nome){
 
@@ -118,17 +96,18 @@ return(
 
 </header>
 
-{/* LÍDER */}
-
 {leader &&(
 
 <div className={`leader ${novoLeader?"novo":""}`}>
-🔥 LÍDER DO DIA: <b>{leader.username}</b> — {leader.wpm} WPM — {leader.accuracy}%
+🔥 LÍDER DO DIA: <b>{leader.username}</b>
+
+<span className="box">
+{leader.wpm} WPM • {leader.accuracy}%
+</span>
+
 </div>
 
 )}
-
-{/* ÚLTIMOS RESULTADOS */}
 
 <div className="ultimos">
 
@@ -144,8 +123,8 @@ return(
 
 <span className="aluno">{u.username}</span>
 
-<span className="estat">
-{u.wpm} WPM — {u.accuracy}%
+<span className="box">
+{u.wpm} WPM • {u.accuracy}%
 </span>
 
 <span className="rank">#{pos}</span>
@@ -162,8 +141,6 @@ return(
 
 </div>
 
-{/* RANKING */}
-
 <div className="ranking">
 
 {ranking.map((r,i)=>{
@@ -174,8 +151,6 @@ i===1?"🥈":
 i===2?"🥉":
 `#${i+1}`;
 
-const barra=(r.wpm/melhorWPM)*100;
-
 return(
 
 <div key={r.id} className={`linha pos${i+1}`}>
@@ -184,17 +159,8 @@ return(
 
 <div className="nome">{r.username}</div>
 
-<div className="estat">
-{r.wpm} WPM — {r.accuracy}%
-</div>
-
-<div className="barra">
-
-<div
-className="fill"
-style={{width:`${barra}%`}}
-/>
-
+<div className="box">
+{r.wpm} WPM • {r.accuracy}%
 </div>
 
 </div>
@@ -254,6 +220,19 @@ from{transform:scale(1)}
 to{transform:scale(1.05)}
 }
 
+/* BOX DE NÚMEROS */
+
+.box{
+border:2px solid #22c55e;
+padding:6px 16px;
+border-radius:8px;
+margin-left:15px;
+font-weight:bold;
+font-size:28px;
+background:#020617;
+color:#4ade80;
+}
+
 /* ULTIMOS */
 
 .ultimos{
@@ -282,11 +261,6 @@ font-weight:bold;
 color:#fbbf24;
 }
 
-.estat{
-color:#34d399;
-text-align:center;
-}
-
 .rank{
 font-weight:bold;
 color:#60a5fa;
@@ -308,9 +282,9 @@ gap:14px;
 
 .linha{
 display:grid;
-grid-template-columns:90px 1fr 260px 400px;
+grid-template-columns:90px 1fr 300px;
 align-items:center;
-font-size:30px;
+font-size:32px;
 padding:20px;
 background:#111827;
 border-radius:10px;
@@ -323,19 +297,6 @@ text-align:center;
 
 .nome{
 font-weight:bold;
-}
-
-.barra{
-background:#1f2937;
-height:22px;
-border-radius:10px;
-overflow:hidden;
-}
-
-.fill{
-background:linear-gradient(90deg,#22c55e,#4ade80);
-height:100%;
-transition:width .5s;
 }
 
 /* TOP 3 */

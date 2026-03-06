@@ -45,9 +45,9 @@ const {
 } = body;
 
 /* horário Brasil */
-const created_at = new Date(
-  Date.now() - (3 * 60 * 60 * 1000)
-).toISOString();
+const created_at = new Date().toLocaleString("pt-BR", {
+  timeZone: "America/Sao_Paulo"
+});
 
 const { error } = await supabase
   .from("results")
