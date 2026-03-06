@@ -24,22 +24,6 @@ return nome.length > 18
 }
 
 /* =========================
-PEGAR DATA LOCAL YYYY-MM-DD
-========================= */
-
-function dataLocal(data){
-
-const d = new Date(data);
-
-const ano = d.getFullYear();
-const mes = String(d.getMonth()+1).padStart(2,"0");
-const dia = String(d.getDate()).padStart(2,"0");
-
-return `${ano}-${mes}-${dia}`;
-
-}
-
-/* =========================
 CARREGAR RESULTADOS
 ========================= */
 
@@ -49,23 +33,14 @@ try{
 
 const res = await fetch("/api/results",{cache:"no-store"});
 const json = await res.json();
+
 const data = json.data || json;
 
 if(!Array.isArray(data)) return;
 
-const hoje = dataLocal(new Date());
+/* REMOVER USUARIO ADMIN */
 
-/* FILTRAR RESULTADOS DO DIA */
-
-const filtrado = data.filter(r => {
-
-if(r.username === "larbak") return false;
-
-const dia = dataLocal(r.created_at);
-
-return dia === hoje;
-
-});
+const filtrado = data.filter(r => r.username !== "larbak");
 
 /* ORDENAR POR MAIS RECENTE */
 
@@ -74,7 +49,7 @@ const recentes=[...filtrado]
 
 setUltimos(recentes.slice(0,5));
 
-/* REMOVER REPETIDOS (MAIOR WPM) */
+/* REMOVER REPETIDOS (MAIOR WPM POR USERNAME) */
 
 const melhores={};
 
@@ -97,7 +72,7 @@ const unicos = Object.values(melhores);
 
 setRows(unicos);
 
-/* LIDER DO DIA */
+/* DEFINIR LIDER */
 
 const ranking=[...unicos].sort((a,b)=>b.wpm-a.wpm);
 
@@ -146,7 +121,7 @@ return()=>clearInterval(rel);
 
 
 /* =========================
-RANKING DO DIA
+RANKING
 ========================= */
 
 const rankingDia=[...rows]
@@ -183,7 +158,7 @@ return(
 
 <div className="leader">
 
-🔥 LÍDER DO DIA
+🔥 LÍDER
 
 <div className="leaderNome">
 {nomeCurto(leader.fullname)}
@@ -232,7 +207,7 @@ return(
 
 <div className="ranking">
 
-<h2>📊 Ranking do Dia</h2>
+<h2>📊 Ranking</h2>
 
 {rankingDia.map((r,i)=>{
 
@@ -340,10 +315,6 @@ color:#4ade80;
 background:#111827;
 padding:20px;
 border-radius:12px;
-}
-
-.ultimos h2{
-margin-bottom:10px;
 }
 
 .ultimo{
