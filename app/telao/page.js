@@ -283,10 +283,6 @@ return(
 {r.wpm} WPM • {r.accuracy}%
 </div>
 
-<div className="geral">
-GR #{geralPos}
-</div>
-
 </div>
 
 )
