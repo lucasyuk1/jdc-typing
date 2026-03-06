@@ -26,13 +26,36 @@ r.username !== "larbak" &&
 r.created_at?.slice(0,10) === hoje
 );
 
+/* ordenar por mais recente */
+
 const recentes=[...filtrado]
 .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
-setRows(recentes);
 setUltimos(recentes.slice(0,5));
 
-const ranking=[...recentes].sort((a,b)=>b.wpm-a.wpm);
+/* ---------------------------------
+REMOVER REPETIDOS (manter maior WPM)
+---------------------------------- */
+
+const melhores={};
+
+filtrado.forEach(r=>{
+
+if(!melhores[r.username] || r.wpm > melhores[r.username].wpm){
+
+melhores[r.username]=r;
+
+}
+
+});
+
+const unicos = Object.values(melhores);
+
+setRows(unicos);
+
+/* líder do dia */
+
+const ranking=[...unicos].sort((a,b)=>b.wpm-a.wpm);
 
 if(ranking.length){
 setLeader(ranking[0]);
@@ -63,30 +86,49 @@ return()=>clearInterval(rel);
 },[]);
 
 
-/* ranking do dia */
+
+/* ---------------------------
+RANKING DO DIA
+---------------------------- */
 
 const rankingDia=[...rows]
 .sort((a,b)=>b.wpm-a.wpm)
 .slice(0,10);
 
 
-/* ranking geral por média */
+
+/* ---------------------------
+RANKING GERAL POR MÉDIA
+---------------------------- */
 
 function rankingGeral(){
 
 const medias={};
 
 rows.forEach(r=>{
-if(!medias[r.username]) medias[r.username]=[];
-medias[r.username].push(r.wpm);
+
+if(!medias[r.username]){
+
+medias[r.username]={
+fullname:r.fullname || r.username,
+valores:[]
+};
+
+}
+
+medias[r.username].valores.push(r.wpm);
+
 });
 
-const lista=Object.entries(medias).map(([nome,valores])=>{
+const lista=Object.entries(medias).map(([username,dados])=>{
 
-const media=valores.reduce((a,b)=>a+b,0)/valores.length;
+const media =
+dados.valores.reduce((a,b)=>a+b,0) /
+dados.valores.length;
 
 return{
-nome,
+username,
+fullname:dados.fullname,
 media
 };
 
@@ -98,12 +140,13 @@ return lista.sort((a,b)=>b.media-a.media);
 
 const geral = rankingGeral();
 
-function posicaoGeral(nome){
-
-return geral.findIndex(p=>p.nome===nome)+1;
-
+function posicaoGeral(username){
+return geral.findIndex(p=>p.username===username)+1;
 }
 
+
+
+/* ============================= */
 
 return(
 
@@ -120,6 +163,7 @@ return(
 </header>
 
 
+
 <div className="grid">
 
 {/* ESQUERDA */}
@@ -133,7 +177,7 @@ return(
 🔥 LÍDER DO DIA
 
 <div className="leaderNome">
-{leader.username}
+{leader.fullname || leader.username}
 </div>
 
 <div className="leaderStats">
@@ -144,6 +188,8 @@ return(
 
 )}
 
+
+
 <div className="ultimos">
 
 <h2>⚡ Últimos Resultados</h2>
@@ -152,7 +198,9 @@ return(
 
 <div key={i} className="ultimo">
 
-<span className="nome">{u.username}</span>
+<span className="nome">
+{u.fullname || u.username}
+</span>
 
 <span className="stats">
 {u.wpm} WPM • {u.accuracy}%
@@ -169,6 +217,7 @@ return(
 </div>
 
 </div>
+
 
 
 {/* DIREITA */}
@@ -198,7 +247,7 @@ return(
 </div>
 
 <div className="nome">
-{r.username}
+{r.fullname || r.username}
 </div>
 
 <div className="stats">
@@ -220,6 +269,7 @@ GR #{geralPos}
 </div>
 
 </div>
+
 
 
 <style jsx>{`
@@ -262,6 +312,8 @@ flex-direction:column;
 gap:20px;
 }
 
+
+
 /* LIDER */
 
 .leader{
@@ -282,6 +334,8 @@ font-size:28px;
 color:#4ade80;
 }
 
+
+
 /* ULTIMOS */
 
 .ultimos{
@@ -301,6 +355,8 @@ padding:10px 0;
 font-size:22px;
 border-bottom:1px solid #1f2937;
 }
+
+
 
 /* RANKING */
 
