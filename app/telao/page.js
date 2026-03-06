@@ -7,7 +7,6 @@ export default function TelaoUltra(){
 const [rows,setRows] = useState([]);
 const [ultimos,setUltimos] = useState([]);
 const [leader,setLeader] = useState(null);
-const [novoLeader,setNovoLeader] = useState(false);
 const [hora,setHora] = useState("");
 
 async function load(){
@@ -31,19 +30,12 @@ const recentes=[...filtrado]
 .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
 setRows(recentes);
-setUltimos(recentes.slice(0,3));
+setUltimos(recentes.slice(0,5));
 
 const ranking=[...recentes].sort((a,b)=>b.wpm-a.wpm);
 
 if(ranking.length){
-
-if(leader && ranking[0].username !== leader.username){
-setNovoLeader(true);
-setTimeout(()=>setNovoLeader(false),4000);
-}
-
 setLeader(ranking[0]);
-
 }
 
 }catch(e){
@@ -56,7 +48,6 @@ useEffect(()=>{
 
 load();
 const interval=setInterval(load,3000);
-
 return()=>clearInterval(interval);
 
 },[]);
@@ -71,16 +62,48 @@ return()=>clearInterval(rel);
 
 },[]);
 
-const ranking=[...rows]
+
+/* ranking do dia */
+
+const rankingDia=[...rows]
 .sort((a,b)=>b.wpm-a.wpm)
 .slice(0,10);
 
-function posicao(nome){
 
-const ordenado=[...rows].sort((a,b)=>b.wpm-a.wpm);
-return ordenado.findIndex(r=>r.username===nome)+1;
+/* ranking geral por média */
+
+function rankingGeral(){
+
+const medias={};
+
+rows.forEach(r=>{
+if(!medias[r.username]) medias[r.username]=[];
+medias[r.username].push(r.wpm);
+});
+
+const lista=Object.entries(medias).map(([nome,valores])=>{
+
+const media=valores.reduce((a,b)=>a+b,0)/valores.length;
+
+return{
+nome,
+media
+};
+
+});
+
+return lista.sort((a,b)=>b.media-a.media);
 
 }
+
+const geral = rankingGeral();
+
+function posicaoGeral(nome){
+
+return geral.findIndex(p=>p.nome===nome)+1;
+
+}
+
 
 return(
 
@@ -88,7 +111,7 @@ return(
 
 <header className="header">
 
-<h1>🏆 Ranking de Digitação do Dia</h1>
+<h1>🏆 Ranking de Digitação</h1>
 
 <div className="relogio">
 {hora}
@@ -96,14 +119,26 @@ return(
 
 </header>
 
+
+<div className="grid">
+
+{/* ESQUERDA */}
+
+<div className="coluna">
+
 {leader &&(
 
-<div className={`leader ${novoLeader?"novo":""}`}>
-🔥 LÍDER DO DIA: <b>{leader.username}</b>
+<div className="leader">
 
-<span className="box">
+🔥 LÍDER DO DIA
+
+<div className="leaderNome">
+{leader.username}
+</div>
+
+<div className="leaderStats">
 {leader.wpm} WPM • {leader.accuracy}%
-</span>
+</div>
 
 </div>
 
@@ -113,21 +148,15 @@ return(
 
 <h2>⚡ Últimos Resultados</h2>
 
-{ultimos.map((u,i)=>{
+{ultimos.map((u,i)=>(
 
-const pos=posicao(u.username);
+<div key={i} className="ultimo">
 
-return(
+<span className="nome">{u.username}</span>
 
-<div key={i} className={`ultimo ${pos<=3?"top3":""}`}>
-
-<span className="aluno">{u.username}</span>
-
-<span className="box">
+<span className="stats">
 {u.wpm} WPM • {u.accuracy}%
 </span>
-
-<span className="rank">#{pos}</span>
 
 <span className="hora">
 {new Date(u.created_at).toLocaleTimeString("pt-BR")}
@@ -135,15 +164,22 @@ return(
 
 </div>
 
-)
-
-})}
+))}
 
 </div>
 
+</div>
+
+
+{/* DIREITA */}
+
+<div className="coluna">
+
 <div className="ranking">
 
-{ranking.map((r,i)=>{
+<h2>📊 Ranking do Dia</h2>
+
+{rankingDia.map((r,i)=>{
 
 const medalha =
 i===0?"🥇":
@@ -151,16 +187,26 @@ i===1?"🥈":
 i===2?"🥉":
 `#${i+1}`;
 
+const geralPos = posicaoGeral(r.username);
+
 return(
 
-<div key={r.id} className={`linha pos${i+1}`}>
+<div key={r.id} className="linha">
 
-<div className="pos">{medalha}</div>
+<div className="pos">
+{medalha}
+</div>
 
-<div className="nome">{r.username}</div>
+<div className="nome">
+{r.username}
+</div>
 
-<div className="box">
+<div className="stats">
 {r.wpm} WPM • {r.accuracy}%
+</div>
+
+<div className="geral">
+GR #{geralPos}
 </div>
 
 </div>
@@ -171,149 +217,124 @@ return(
 
 </div>
 
+</div>
+
+</div>
+
+
 <style jsx>{`
 
 .telao{
 background:#020617;
 color:white;
 min-height:100vh;
-padding:40px;
+padding:30px;
 font-family:Arial;
 }
-
-/* HEADER */
 
 .header{
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:30px;
+margin-bottom:20px;
 }
 
 .header h1{
-font-size:56px;
+font-size:48px;
 color:#38bdf8;
 }
 
 .relogio{
-font-size:34px;
+font-size:32px;
 color:#fbbf24;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:30px;
+height:calc(100vh - 120px);
+}
+
+.coluna{
+display:flex;
+flex-direction:column;
+gap:20px;
 }
 
 /* LIDER */
 
 .leader{
-text-align:center;
-font-size:38px;
 background:#111827;
-padding:20px;
+padding:25px;
 border-radius:12px;
-margin-bottom:30px;
+text-align:center;
 }
 
-.novo{
-animation:pulse .8s infinite alternate;
-}
-
-@keyframes pulse{
-from{transform:scale(1)}
-to{transform:scale(1.05)}
-}
-
-/* BOX DE NÚMEROS */
-
-.box{
-border:2px solid #22c55e;
-padding:6px 16px;
-border-radius:8px;
-margin-left:15px;
+.leaderNome{
+font-size:42px;
 font-weight:bold;
+color:#fbbf24;
+}
+
+.leaderStats{
 font-size:28px;
-background:#020617;
 color:#4ade80;
 }
 
 /* ULTIMOS */
 
 .ultimos{
-display:flex;
-flex-direction:column;
-gap:12px;
-margin-bottom:40px;
+background:#111827;
+padding:20px;
+border-radius:12px;
+}
+
+.ultimos h2{
+margin-bottom:10px;
 }
 
 .ultimo{
 display:grid;
-grid-template-columns:1fr 260px 100px 140px;
-background:#111827;
-padding:16px 24px;
-border-radius:10px;
-font-size:24px;
-align-items:center;
-}
-
-.top3{
-border:2px solid gold;
-}
-
-.aluno{
-font-weight:bold;
-color:#fbbf24;
-}
-
-.rank{
-font-weight:bold;
-color:#60a5fa;
-text-align:center;
-}
-
-.hora{
-color:#9ca3af;
-text-align:right;
+grid-template-columns:1fr 200px 120px;
+padding:10px 0;
+font-size:22px;
+border-bottom:1px solid #1f2937;
 }
 
 /* RANKING */
 
 .ranking{
-display:flex;
-flex-direction:column;
-gap:14px;
+background:#111827;
+padding:20px;
+border-radius:12px;
+flex:1;
 }
 
 .linha{
 display:grid;
-grid-template-columns:90px 1fr 300px;
+grid-template-columns:80px 1fr 220px 120px;
 align-items:center;
-font-size:32px;
-padding:20px;
-background:#111827;
-border-radius:10px;
+font-size:26px;
+padding:12px 0;
+border-bottom:1px solid #1f2937;
 }
 
 .pos{
-font-size:40px;
-text-align:center;
+font-size:32px;
 }
 
 .nome{
 font-weight:bold;
 }
 
-/* TOP 3 */
-
-.pos1{
-background:linear-gradient(90deg,#f59e0b,#fde047);
-color:black;
+.stats{
+color:#4ade80;
 }
 
-.pos2{
-background:linear-gradient(90deg,#9ca3af,#e5e7eb);
-color:black;
-}
-
-.pos3{
-background:linear-gradient(90deg,#b45309,#f59e0b);
-color:black;
+.geral{
+color:#60a5fa;
+font-weight:bold;
 }
 
 `}</style>
