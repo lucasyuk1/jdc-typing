@@ -5,42 +5,46 @@ import { useEffect, useState } from "react";
 export default function TelaoPage() {
 
 const [rows,setRows] = useState([]);
-const [ultimo,setUltimo] = useState(null);
-const [novoRecorde,setNovoRecorde] = useState(false);
+const [ultimos,setUltimos] = useState([]);
+const [novoTop3,setNovoTop3] = useState(false);
 
 async function load(){
 
 try{
 
-const res = await fetch("/api/results",{
-cache:"no-store"
-});
-
+const res = await fetch("/api/results",{ cache:"no-store" });
 const json = await res.json();
 const data = json.data || json;
 
 if(!Array.isArray(data)) return;
 
-const sorted = data
-.filter(r=>r.username !== "larbak")
+const hoje = new Date().toISOString().slice(0,10);
+
+const filtrado = data.filter(r =>
+r.username !== "larbak" &&
+r.created_at?.slice(0,10) === hoje
+);
+
+const recentes = [...filtrado]
 .sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
 
-setRows(sorted);
+setRows(recentes);
 
-if(sorted.length){
+const ultimos3 = recentes.slice(0,3);
+setUltimos(ultimos3);
 
-const atual = sorted[0];
+/* verifica se entrou no top3 */
 
-const melhorAnterior = rows.length
-? Math.max(...rows.map(r=>r.wpm))
-: 0;
+if(recentes.length){
 
-if(atual.wpm > melhorAnterior){
-setNovoRecorde(true);
-setTimeout(()=>setNovoRecorde(false),4000);
+const ranking = [...recentes].sort((a,b)=>b.wpm-a.wpm);
+const ultimo = recentes[0];
+const pos = ranking.findIndex(r=>r.username===ultimo.username)+1;
+
+if(pos<=3){
+setNovoTop3(true);
+setTimeout(()=>setNovoTop3(false),4000);
 }
-
-setUltimo(atual);
 
 }
 
@@ -53,68 +57,94 @@ console.error("Erro carregando resultados:",err);
 useEffect(()=>{
 
 load();
-
 const interval = setInterval(load,3000);
-
-return ()=> clearInterval(interval);
+return ()=>clearInterval(interval);
 
 },[]);
 
 const ranking = [...rows]
-.sort((a,b)=> b.wpm - a.wpm)
+.sort((a,b)=>b.wpm-a.wpm)
 .slice(0,10);
+
+function getPosicao(username){
+
+const ordenado = [...rows].sort((a,b)=>b.wpm-a.wpm);
+return ordenado.findIndex(r=>r.username===username)+1;
+
+}
+
+/* calcula barra WPM */
+
+const melhorWPM = ranking.length
+? Math.max(...ranking.map(r=>r.wpm))
+: 100;
 
 return(
 
 <div className="telao">
 
 <h1 className="titulo">
-🏆 Ranking de Digitação da Turma
+🏆 Ranking de Digitação do Dia
 </h1>
 
-{/* Último resultado */}
+{/* ÚLTIMOS RESULTADOS */}
 
-{ultimo && (
+<div className="ultimos">
 
-<div className={`ultimo ${novoRecorde ? "recorde":""}`}>
+<h2>⚡ Últimos Resultados</h2>
 
-<h2>⚡ Último Resultado</h2>
+{ultimos.map((u,i)=>{
 
-<div className="ultimo-card">
+const pos = getPosicao(u.username);
+
+return(
+
+<div
+key={i}
+className={`ultimo-card ${pos<=3 && novoTop3 ? "top3":""}`}
+>
 
 <span className="aluno">
-{ultimo.username}
+{u.username}
 </span>
 
 <span className="wpm">
-{ultimo.wpm} WPM
+{u.wpm} WPM
 </span>
 
 <span className="accuracy">
-{ultimo.accuracy}% precisão
+{u.accuracy}%
+</span>
+
+<span className="posicao">
+#{pos} no ranking
 </span>
 
 <span className="hora">
-{new Date(ultimo.created_at).toLocaleTimeString("pt-BR")}
+{new Date(u.created_at).toLocaleTimeString("pt-BR")}
 </span>
 
 </div>
 
+)
+
+})}
+
 </div>
 
-)}
-
-{/* Ranking */}
+{/* RANKING */}
 
 <div className="ranking">
 
 {ranking.map((r,i)=>{
 
-let medalha = "";
+let medalha="";
 
 if(i===0) medalha="🥇";
 if(i===1) medalha="🥈";
 if(i===2) medalha="🥉";
+
+const barra = (r.wpm/melhorWPM)*100;
 
 return(
 
@@ -132,6 +162,15 @@ return(
 {r.wpm} WPM
 </div>
 
+<div className="barra">
+
+<div
+className="barra-preenchida"
+style={{width:`${barra}%`}}
+/>
+
+</div>
+
 <div className="accuracy">
 {r.accuracy}%
 </div>
@@ -147,159 +186,132 @@ return(
 <style jsx>{`
 
 .telao{
-
 background:#020617;
 min-height:100vh;
 color:white;
 padding:40px;
 font-family:Arial, Helvetica, sans-serif;
-
 }
 
 .titulo{
-
 font-size:64px;
 text-align:center;
-margin-bottom:50px;
+margin-bottom:40px;
 color:#38bdf8;
-
 }
 
-/* Último resultado */
+/* ULTIMOS RESULTADOS */
 
-.ultimo{
-
+.ultimos{
 text-align:center;
 margin-bottom:60px;
-transition:0.4s;
-
-}
-
-.recorde{
-
-animation:recorde 1s infinite alternate;
-
-}
-
-@keyframes recorde{
-
-from{transform:scale(1)}
-to{transform:scale(1.05)}
-
+display:flex;
+flex-direction:column;
+gap:20px;
+align-items:center;
 }
 
 .ultimo-card{
-
-display:inline-flex;
-gap:40px;
-padding:25px 50px;
+display:flex;
+gap:30px;
+padding:20px 40px;
 background:#111827;
-border-radius:20px;
-font-size:34px;
+border-radius:16px;
+font-size:28px;
 align-items:center;
+}
 
+.top3{
+animation:top3 0.7s infinite alternate;
+}
+
+@keyframes top3{
+from{transform:scale(1)}
+to{transform:scale(1.06)}
 }
 
 .aluno{
-
 color:#fbbf24;
 font-weight:bold;
-font-size:36px;
-
 }
 
 .wpm{
-
 color:#34d399;
 font-weight:bold;
-
 }
 
 .accuracy{
-
 color:#60a5fa;
+}
 
+.posicao{
+color:#f87171;
+font-weight:bold;
 }
 
 .hora{
-
 color:#9ca3af;
-font-size:22px;
-
+font-size:20px;
 }
 
-/* Ranking */
+/* RANKING */
 
 .ranking{
-
 display:flex;
 flex-direction:column;
 gap:16px;
-max-width:1100px;
+max-width:1200px;
 margin:auto;
-
 }
 
 .linha{
-
 display:grid;
-grid-template-columns:120px 1fr 220px 220px;
+grid-template-columns:100px 1fr 150px 300px 150px;
 align-items:center;
 padding:22px;
 border-radius:12px;
-font-size:34px;
+font-size:32px;
 background:#111827;
-animation:fade 0.4s ease;
-
-}
-
-@keyframes fade{
-
-from{
-opacity:0;
-transform:translateY(10px);
-}
-
-to{
-opacity:1;
-transform:translateY(0);
-}
-
 }
 
 .pos{
-
 font-size:46px;
 text-align:center;
-
 }
 
 .nome{
-
 font-weight:bold;
+}
 
+/* BARRA DE VELOCIDADE */
+
+.barra{
+background:#1f2937;
+height:18px;
+border-radius:10px;
+overflow:hidden;
+}
+
+.barra-preenchida{
+background:linear-gradient(90deg,#22c55e,#4ade80);
+height:100%;
+transition:width 0.6s;
 }
 
 .pos1{
-
 background:linear-gradient(90deg,#f59e0b,#fde047);
 color:black;
 font-weight:bold;
-
 }
 
 .pos2{
-
 background:linear-gradient(90deg,#9ca3af,#e5e7eb);
 color:black;
-
 }
 
 .pos3{
-
 background:linear-gradient(90deg,#b45309,#f59e0b);
 color:black;
-
 }
 
 `}</style>
