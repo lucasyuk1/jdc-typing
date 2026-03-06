@@ -38,6 +38,7 @@ const body = await req.json();
 const {
   usuario_id,
   username,
+  fullname,
   turma,
   wpm,
   accuracy,
