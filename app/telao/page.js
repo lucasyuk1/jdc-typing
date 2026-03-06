@@ -10,7 +10,7 @@ const [leader,setLeader] = useState(null);
 const [hora,setHora] = useState("");
 
 /* =========================
-FUNÇÃO PARA CORTAR NOMES
+CORTAR NOMES LONGOS
 ========================= */
 
 function nomeCurto(nome){
@@ -20,6 +20,22 @@ if(!nome) return "";
 return nome.length > 18
 ? nome.slice(0,18) + "…"
 : nome;
+
+}
+
+/* =========================
+PEGAR DATA LOCAL YYYY-MM-DD
+========================= */
+
+function dataLocal(data){
+
+const d = new Date(data);
+
+const ano = d.getFullYear();
+const mes = String(d.getMonth()+1).padStart(2,"0");
+const dia = String(d.getDate()).padStart(2,"0");
+
+return `${ano}-${mes}-${dia}`;
 
 }
 
@@ -37,14 +53,19 @@ const data = json.data || json;
 
 if(!Array.isArray(data)) return;
 
-const hoje = new Date().toLocaleDateString("en-CA");
+const hoje = dataLocal(new Date());
 
 /* FILTRAR RESULTADOS DO DIA */
 
-const filtrado = data.filter(r =>
-r.username !== "larbak" &&
-r.created_at?.slice(0,10) === hoje
-);
+const filtrado = data.filter(r => {
+
+if(r.username === "larbak") return false;
+
+const dia = dataLocal(r.created_at);
+
+return dia === hoje;
+
+});
 
 /* ORDENAR POR MAIS RECENTE */
 
@@ -85,7 +106,9 @@ setLeader(ranking[0]);
 }
 
 }catch(e){
+
 console.error("Erro carregando telão:",e);
+
 }
 
 }
@@ -97,6 +120,7 @@ AUTO UPDATE
 useEffect(()=>{
 
 load();
+
 const interval=setInterval(load,3000);
 
 return()=>clearInterval(interval);
@@ -104,12 +128,16 @@ return()=>clearInterval(interval);
 },[]);
 
 
-/* RELÓGIO */
+/* =========================
+RELÓGIO
+========================= */
 
 useEffect(()=>{
 
 const rel=setInterval(()=>{
+
 setHora(new Date().toLocaleTimeString("pt-BR"));
+
 },1000);
 
 return()=>clearInterval(rel);
@@ -124,57 +152,6 @@ RANKING DO DIA
 const rankingDia=[...rows]
 .sort((a,b)=>b.wpm-a.wpm)
 .slice(0,10);
-
-
-/* =========================
-RANKING GERAL POR MÉDIA
-========================= */
-
-function rankingGeral(){
-
-const medias={};
-
-rows.forEach(r=>{
-
-const key = r.username;
-
-if(!medias[key]){
-
-medias[key]={
-username:r.username,
-fullname:r.fullname || r.username,
-valores:[]
-};
-
-}
-
-medias[key].valores.push(r.wpm);
-
-});
-
-const lista=Object.values(medias).map(dados=>{
-
-const media =
-dados.valores.reduce((a,b)=>a+b,0) /
-dados.valores.length;
-
-return{
-username:dados.username,
-fullname:dados.fullname,
-media
-};
-
-});
-
-return lista.sort((a,b)=>b.media-a.media);
-
-}
-
-const geral = rankingGeral();
-
-function posicaoGeral(username){
-return geral.findIndex(p=>p.username===username)+1;
-}
 
 
 /* =========================
@@ -232,12 +209,12 @@ return(
 {nomeCurto(u.fullname || u.username)}
 </span>
 
-<span className="stats">
-{u.wpm} WPM • {u.accuracy}%
+<span className="wpm">
+{u.wpm} WPM
 </span>
 
-<span className="hora">
-{new Date(u.created_at).toLocaleTimeString("pt-BR")}
+<span className="acc">
+{u.accuracy}%
 </span>
 
 </div>
@@ -265,11 +242,9 @@ i===1?"🥈":
 i===2?"🥉":
 `#${i+1}`;
 
-const geralPos = posicaoGeral(r.username);
-
 return(
 
-<div key={r.id} className="linha">
+<div key={r.username} className="linha">
 
 <div className="pos">
 {medalha}
@@ -279,8 +254,12 @@ return(
 {nomeCurto(r.fullname)}
 </div>
 
-<div className="stats">
-{r.wpm} WPM • {r.accuracy}%
+<div className="wpm">
+{r.wpm}
+</div>
+
+<div className="acc">
+{r.accuracy}%
 </div>
 
 </div>
@@ -327,7 +306,6 @@ color:#fbbf24;
 display:grid;
 grid-template-columns:1fr 1fr;
 gap:30px;
-height:calc(100vh - 120px);
 }
 
 .coluna{
@@ -335,7 +313,6 @@ display:flex;
 flex-direction:column;
 gap:20px;
 }
-
 
 /* LIDER */
 
@@ -357,7 +334,6 @@ font-size:28px;
 color:#4ade80;
 }
 
-
 /* ULTIMOS */
 
 .ultimos{
@@ -372,12 +348,11 @@ margin-bottom:10px;
 
 .ultimo{
 display:grid;
-grid-template-columns:1fr 200px 120px;
-padding:10px 0;
+grid-template-columns:1fr 120px 100px;
 font-size:22px;
+padding:8px 0;
 border-bottom:1px solid #1f2937;
 }
-
 
 /* RANKING */
 
@@ -385,15 +360,14 @@ border-bottom:1px solid #1f2937;
 background:#111827;
 padding:20px;
 border-radius:12px;
-flex:1;
 }
 
 .linha{
 display:grid;
-grid-template-columns:80px 1fr 220px 120px;
+grid-template-columns:80px 1fr 100px 100px;
 align-items:center;
 font-size:26px;
-padding:12px 0;
+padding:10px 0;
 border-bottom:1px solid #1f2937;
 }
 
@@ -405,13 +379,15 @@ font-size:32px;
 font-weight:bold;
 }
 
-.stats{
+.wpm{
 color:#4ade80;
+font-weight:bold;
+text-align:center;
 }
 
-.geral{
-color:#60a5fa;
-font-weight:bold;
+.acc{
+color:#38bdf8;
+text-align:center;
 }
 
 `}</style>
