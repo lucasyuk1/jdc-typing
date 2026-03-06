@@ -11,6 +11,18 @@ const [hora,setHora] = useState("");
 const [rankAnterior,setRankAnterior] = useState({});
 
 /* =========================
+FORMATAR NÚMEROS
+========================= */
+
+function formatWPM(v){
+return Math.round(Number(v) || 0);
+}
+
+function formatACC(v){
+return Math.round(Number(v) || 0);
+}
+
+/* =========================
 CORTAR NOMES LONGOS
 ========================= */
 
@@ -24,7 +36,7 @@ PEGAR NOME CORRETO
 ========================= */
 
 function displayName(r){
-return r.fullname || r.username;
+return r?.fullname || r?.username || "Aluno";
 }
 
 /* =========================
@@ -47,8 +59,8 @@ FILTRAR ADMIN E PROF
 ========================= */
 
 const filtrado = data.filter(r =>
-r.username !== "larbak" &&
-r.turma?.toLowerCase() !== "prof"
+r?.username !== "larbak" &&
+r?.turma?.toLowerCase() !== "prof"
 );
 
 /* =========================
@@ -71,23 +83,19 @@ filtrado.forEach(r=>{
 
 const key=r.username;
 
-if(!melhores[key] || r.wpm > melhores[key].wpm){
-
+if(!melhores[key] || Number(r.wpm) > Number(melhores[key].wpm)){
 melhores[key]={...r};
-
 }
 
 });
 
 const unicos=Object.values(melhores);
 
-setRows(unicos);
-
 /* =========================
-RANKING COMPLETO
+RANKING
 ========================= */
 
-const rankingCompleto=[...unicos].sort((a,b)=>b.wpm-a.wpm);
+const ranking=[...unicos].sort((a,b)=>Number(b.wpm)-Number(a.wpm));
 
 /* =========================
 MAPA DE POSIÇÕES
@@ -95,7 +103,7 @@ MAPA DE POSIÇÕES
 
 const novoRanking={};
 
-rankingCompleto.forEach((r,i)=>{
+ranking.forEach((r,i)=>{
 novoRanking[r.username]=i+1;
 });
 
@@ -103,14 +111,13 @@ novoRanking[r.username]=i+1;
 DEFINIR LIDER
 ========================= */
 
-if(rankingCompleto.length){
-setLeader(rankingCompleto[0]);
-}
+setLeader(ranking[0] || null);
 
 /* =========================
-SALVAR RANK ANTERIOR
+SALVAR
 ========================= */
 
+setRows(unicos);
 setRankAnterior(novoRanking);
 
 }catch(e){
@@ -156,7 +163,7 @@ RANKING COMPLETO
 ========================= */
 
 const rankingCompleto=[...rows]
-.sort((a,b)=>b.wpm-a.wpm);
+.sort((a,b)=>Number(b.wpm)-Number(a.wpm));
 
 /* =========================
 TOP 10
@@ -224,7 +231,7 @@ return(
 </div>
 
 <div className="leaderStats">
-{leader.wpm} WPM • {leader.accuracy}%
+{formatWPM(leader.wpm)} WPM • {formatACC(leader.accuracy)}%
 </div>
 
 </div>
@@ -249,11 +256,11 @@ return(
 </span>
 
 <span className="wpm">
-{u.wpm}
+{formatWPM(u.wpm)}
 </span>
 
 <span className="acc">
-{u.accuracy}%
+{formatACC(u.accuracy)}%
 </span>
 
 <span className={`rank ${mov}`}>
@@ -305,11 +312,11 @@ return(
 </div>
 
 <div className="wpm">
-{r.wpm}
+{formatWPM(r.wpm)}
 </div>
 
 <div className="acc">
-{r.accuracy}%
+{formatACC(r.accuracy)}%
 </div>
 
 </div>
