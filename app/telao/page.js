@@ -9,18 +9,9 @@ const [ultimos,setUltimos] = useState([]);
 const [leader,setLeader] = useState(null);
 const [hora,setHora] = useState("");
 
-/* =========================
-CORTAR NOMES LONGOS
-========================= */
-
 function nomeCurto(nome){
-
 if(!nome) return "";
-
-return nome.length > 18
-? nome.slice(0,18) + "…"
-: nome;
-
+return nome.length > 18 ? nome.slice(0,18) + "…" : nome;
 }
 
 /* =========================
@@ -33,46 +24,43 @@ try{
 
 const res = await fetch("/api/results",{cache:"no-store"});
 const json = await res.json();
-
 const data = json.data || json;
 
 if(!Array.isArray(data)) return;
 
-/* REMOVER USUARIO ADMIN */
-
 const filtrado = data.filter(r => r.username !== "larbak");
 
-/* ORDENAR POR MAIS RECENTE */
+/* últimos resultados */
 
 const recentes=[...filtrado]
 .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
 setUltimos(recentes.slice(0,5));
 
-/* REMOVER REPETIDOS (MAIOR WPM POR USERNAME) */
+/* remover repetidos */
 
 const melhores={};
 
 filtrado.forEach(r=>{
 
-const key = r.username;
+const key=r.username;
 
 if(!melhores[key] || r.wpm > melhores[key].wpm){
 
-melhores[key] = {
+melhores[key]={
 ...r,
-fullname: r.fullname || r.username
+fullname:r.fullname || r.username
 };
 
 }
 
 });
 
-const unicos = Object.values(melhores);
+const unicos=Object.values(melhores);
 
 setRows(unicos);
 
-/* DEFINIR LIDER */
+/* líder */
 
 const ranking=[...unicos].sort((a,b)=>b.wpm-a.wpm);
 
@@ -102,10 +90,7 @@ return()=>clearInterval(interval);
 
 },[]);
 
-
-/* =========================
-RELÓGIO
-========================= */
+/* relógio */
 
 useEffect(()=>{
 
@@ -119,7 +104,6 @@ return()=>clearInterval(rel);
 
 },[]);
 
-
 /* =========================
 RANKING
 ========================= */
@@ -128,6 +112,13 @@ const rankingDia=[...rows]
 .sort((a,b)=>b.wpm-a.wpm)
 .slice(0,10);
 
+/* função posição geral */
+
+function posicaoGeral(username){
+
+return rankingDia.findIndex(r=>r.username===username)+1;
+
+}
 
 /* =========================
 INTERFACE
@@ -147,10 +138,9 @@ return(
 
 </header>
 
-
 <div className="grid">
 
-{/* COLUNA ESQUERDA */}
+{/* ESQUERDA */}
 
 <div className="coluna">
 
@@ -176,7 +166,11 @@ return(
 
 <h2>⚡ Últimos Resultados</h2>
 
-{ultimos.map((u,i)=>(
+{ultimos.map((u,i)=>{
+
+const pos = posicaoGeral(u.username);
+
+return(
 
 <div key={i} className="ultimo">
 
@@ -185,23 +179,28 @@ return(
 </span>
 
 <span className="wpm">
-{u.wpm} WPM
+{u.wpm}
 </span>
 
 <span className="acc">
 {u.accuracy}%
 </span>
 
-</div>
-
-))}
-
-</div>
+<span className="rank">
+{pos ? `#${pos}` : "-"}
+</span>
 
 </div>
 
+)
 
-{/* COLUNA DIREITA */}
+})}
+
+</div>
+
+</div>
+
+{/* DIREITA */}
 
 <div className="coluna">
 
@@ -248,7 +247,6 @@ return(
 </div>
 
 </div>
-
 
 <style jsx>{`
 
@@ -319,10 +317,16 @@ border-radius:12px;
 
 .ultimo{
 display:grid;
-grid-template-columns:1fr 120px 100px;
+grid-template-columns:1fr 80px 80px 80px;
 font-size:22px;
 padding:8px 0;
 border-bottom:1px solid #1f2937;
+}
+
+.rank{
+color:#fbbf24;
+font-weight:bold;
+text-align:center;
 }
 
 /* RANKING */
