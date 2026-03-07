@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function Telao() {
@@ -8,6 +8,10 @@ export default function Telao() {
   const [ranking, setRanking] = useState([]);
   const [ultimos, setUltimos] = useState([]);
   const [lider, setLider] = useState(null);
+
+  const [alerta, setAlerta] = useState(null);
+
+  const top3Anterior = useRef([]);
 
   async function carregarDados() {
 
@@ -19,12 +23,10 @@ export default function Telao() {
     if (!data) return;
 
     const filtrado = data.filter(r =>
-        r.username !== "larbak" &&
-        r.turma &&
-        !r.turma.toLowerCase().includes("prof")
+      r.username !== "larbak" &&
+      r.turma &&
+      !r.turma.toLowerCase().includes("prof")
     );
-
-    setUltimos(filtrado.slice(0, 12));
 
     const mapa = {};
 
@@ -34,11 +36,50 @@ export default function Telao() {
       }
     });
 
-    const top = Object.values(mapa)
-      .sort((a, b) => b.wpm - a.wpm)
-      .slice(0, 10);
+    const rankingCompleto = Object.values(mapa)
+      .sort((a, b) => b.wpm - a.wpm);
+
+    const top = rankingCompleto.slice(0, 10);
+
+    const ultimosComPosicao = filtrado.slice(0, 12).map(r => {
+
+      const pos = rankingCompleto.findIndex(
+        p => p.username === r.username
+      );
+
+      return {
+        ...r,
+        posicao: pos >= 0 ? pos + 1 : "-"
+      };
+
+    });
+
+    const top3Atual = top.slice(0, 3).map(r => r.username);
+
+    const novoTop3 = top3Atual.find(
+      u => !top3Anterior.current.includes(u)
+    );
+
+    if (novoTop3) {
+
+      const aluno = top.find(r => r.username === novoTop3);
+
+      setAlerta({
+        nome: aluno.fullname || aluno.username,
+        turma: aluno.turma,
+        pos: top3Atual.indexOf(novoTop3) + 1
+      });
+
+      setTimeout(() => {
+        setAlerta(null);
+      }, 5000);
+
+    }
+
+    top3Anterior.current = top3Atual;
 
     setRanking(top);
+    setUltimos(ultimosComPosicao);
     setLider(top[0]);
 
   }
@@ -62,11 +103,6 @@ export default function Telao() {
     return `${i + 1}º`;
   }
 
-  function barraWPM(wpm) {
-    const max = 120;
-    return Math.min((wpm / max) * 100, 100);
-  }
-
   return (
 
     <div style={{
@@ -76,14 +112,14 @@ export default function Telao() {
       width: "100vw",
       padding: "40px",
       boxSizing: "border-box",
-      fontFamily: "sans-serif"
+      fontFamily: "Inter, system-ui, sans-serif"
     }}>
 
       <style>{`
 
         .grid-main{
           display:grid;
-          grid-template-columns: 1fr 1.4fr;
+          grid-template-columns:1fr 1.4fr;
           gap:40px;
           width:100%;
         }
@@ -106,23 +142,81 @@ export default function Telao() {
           100%{box-shadow:0 0 0 gold}
         }
 
-        .bar-bg{
-          background:#1e293b;
-          height:10px;
-          border-radius:6px;
-          overflow:hidden;
-          margin-top:8px;
+        .nome{
+          font-weight:700;
+          letter-spacing:.4px;
         }
 
-        .bar-fill{
-          background:#22c55e;
+        .turma{
+          font-size:18px;
+          opacity:.7;
+          margin-left:8px;
+        }
+
+        .posicao{
+          background:#334155;
+          padding:4px 10px;
+          border-radius:8px;
+          font-size:18px;
+          margin-right:10px;
+        }
+
+        .alerta{
+          position:fixed;
+          top:0;
+          left:0;
+          width:100%;
           height:100%;
-          transition:width .6s ease;
+          background:rgba(0,0,0,0.85);
+          display:flex;
+          flex-direction:column;
+          justify-content:center;
+          align-items:center;
+          z-index:9999;
+          animation:fadeIn .5s;
+        }
+
+        .alerta h1{
+          font-size:80px;
+          color:gold;
+          margin-bottom:20px;
+        }
+
+        .alerta h2{
+          font-size:70px;
+          font-weight:800;
+        }
+
+        .alerta p{
+          font-size:40px;
+          margin-top:10px;
+          opacity:.9;
+        }
+
+        @keyframes fadeIn{
+          from{opacity:0}
+          to{opacity:1}
         }
 
       `}</style>
 
-      {/* LIDER */}
+      {alerta && (
+
+        <div className="alerta">
+
+          <h1>🔥 NOVO TOP 3</h1>
+
+          <h2>
+            {alerta.nome}
+          </h2>
+
+          <p>
+            entrou em {alerta.pos}º lugar • {alerta.turma}
+          </p>
+
+        </div>
+
+      )}
 
       {lider && (
 
@@ -145,7 +239,7 @@ export default function Telao() {
 
           <div style={{
             fontSize: "72px",
-            fontWeight: "bold",
+            fontWeight: "800",
             marginTop: "10px"
           }}>
             {lider.fullname || lider.username}
@@ -164,9 +258,7 @@ export default function Telao() {
 
       <div className="grid-main">
 
-        {/* ULTIMOS */}
-
-        <div style={{ width: "100%" }}>
+        <div>
 
           <h2 style={{
             fontSize: "38px",
@@ -180,17 +272,28 @@ export default function Telao() {
             <div key={i} style={{
               display: "flex",
               justifyContent: "space-between",
+              alignItems: "center",
               padding: "16px",
               background: "#1e293b",
               marginBottom: "12px",
               borderRadius: "12px",
-              fontSize: "26px",
-              width: "100%"
+              fontSize: "26px"
             }}>
 
-              <span>
-                {r.fullname || r.username}
-              </span>
+              <div style={{
+                display: "flex",
+                alignItems: "center"
+              }}>
+
+                <span className="posicao">
+                  #{r.posicao}
+                </span>
+
+                <span className="nome">
+                  {r.fullname || r.username}
+                </span>
+
+              </div>
 
               <span style={{ fontWeight: "bold" }}>
                 {r.wpm} WPM • {r.accuracy}%
@@ -202,9 +305,7 @@ export default function Telao() {
 
         </div>
 
-        {/* RANKING */}
-
-        <div style={{ width: "100%" }}>
+        <div>
 
           <h2 style={{
             fontSize: "42px",
@@ -223,7 +324,6 @@ export default function Telao() {
                 marginBottom: "14px",
                 borderRadius: "14px",
                 fontSize: "30px",
-                width: "100%",
                 background:
                   i === 0 ? "#78350f" :
                   i === 1 ? "#334155" :
@@ -242,16 +342,22 @@ export default function Telao() {
                   alignItems: "center",
                   gap: "14px"
                 }}>
+
                   <span style={{ fontSize: "34px" }}>
                     {medalha(i)}
                   </span>
 
-                  {r.fullname || r.username}
+                  <span className="nome">
+                    {r.fullname || r.username}
+                  </span>
+
+                  <span className="turma">
+                    ({r.turma})
+                  </span>
+
                 </div>
 
-                <div style={{
-                  fontWeight: "bold"
-                }}>
+                <div style={{ fontWeight: "bold" }}>
                   {r.wpm} WPM • {r.accuracy}%
                 </div>
 
