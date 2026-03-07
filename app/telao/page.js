@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function Telao() {
 
-  const [top, setTop] = useState([]);
+  const [ranking, setRanking] = useState([]);
   const [ultimos, setUltimos] = useState([]);
   const [lider, setLider] = useState(null);
 
@@ -18,30 +18,26 @@ export default function Telao() {
 
     if (!data) return;
 
-    // remover professor e admin
     const filtrado = data.filter(
       r => r.username !== "larbak" && r.turma !== "Prof"
     );
 
-    // últimos resultados
-    const ult = filtrado.slice(0, 10);
-    setUltimos(ult);
+    setUltimos(filtrado.slice(0, 12));
 
-    // manter apenas melhor resultado por usuário
     const mapa = {};
 
-    filtrado.forEach((r) => {
+    filtrado.forEach(r => {
       if (!mapa[r.username] || r.wpm > mapa[r.username].wpm) {
         mapa[r.username] = r;
       }
     });
 
-    const ranking = Object.values(mapa)
+    const top = Object.values(mapa)
       .sort((a, b) => b.wpm - a.wpm)
       .slice(0, 10);
 
-    setTop(ranking);
-    setLider(ranking[0]);
+    setRanking(top);
+    setLider(top[0]);
 
   }
 
@@ -49,19 +45,24 @@ export default function Telao() {
 
     carregarDados();
 
-    const intervalo = setInterval(() => {
+    const interval = setInterval(() => {
       carregarDados();
     }, 3000);
 
-    return () => clearInterval(intervalo);
+    return () => clearInterval(interval);
 
   }, []);
 
-  function medalha(pos) {
-    if (pos === 0) return "🥇";
-    if (pos === 1) return "🥈";
-    if (pos === 2) return "🥉";
-    return `${pos + 1}º`;
+  function medalha(i) {
+    if (i === 0) return "🥇";
+    if (i === 1) return "🥈";
+    if (i === 2) return "🥉";
+    return `${i + 1}º`;
+  }
+
+  function barraWPM(wpm) {
+    const max = 120;
+    return Math.min((wpm / max) * 100, 100);
   }
 
   return (
@@ -70,32 +71,78 @@ export default function Telao() {
       background: "#0f172a",
       color: "white",
       minHeight: "100vh",
-      padding: "30px",
+      width: "100vw",
+      padding: "40px",
+      boxSizing: "border-box",
       fontFamily: "sans-serif"
     }}>
 
-      {/* HEADER LÍDER */}
+      <style>{`
+
+        .grid-main{
+          display:grid;
+          grid-template-columns: 1fr 1.4fr;
+          gap:40px;
+          width:100%;
+        }
+
+        .rank-item{
+          transition:all .5s ease;
+        }
+
+        .rank-item:hover{
+          transform:scale(1.02);
+        }
+
+        .top3{
+          animation:pulse 2s infinite;
+        }
+
+        @keyframes pulse{
+          0%{box-shadow:0 0 0 gold}
+          50%{box-shadow:0 0 20px gold}
+          100%{box-shadow:0 0 0 gold}
+        }
+
+        .bar-bg{
+          background:#1e293b;
+          height:10px;
+          border-radius:6px;
+          overflow:hidden;
+          margin-top:8px;
+        }
+
+        .bar-fill{
+          background:#22c55e;
+          height:100%;
+          transition:width .6s ease;
+        }
+
+      `}</style>
+
+      {/* LIDER */}
 
       {lider && (
 
         <div style={{
-          textAlign: "center",
-          marginBottom: "35px",
-          padding: "25px",
+          width: "100%",
+          padding: "30px",
+          marginBottom: "40px",
           background: "#1e293b",
-          borderRadius: "14px",
-          border: "2px solid #eab308"
+          borderRadius: "16px",
+          border: "3px solid gold",
+          textAlign: "center"
         }}>
 
           <div style={{
-            fontSize: "28px",
-            opacity: 0.7
+            fontSize: "32px",
+            opacity: 0.8
           }}>
             🏆 LÍDER DO RANKING
           </div>
 
           <div style={{
-            fontSize: "64px",
+            fontSize: "72px",
             fontWeight: "bold",
             marginTop: "10px"
           }}>
@@ -103,8 +150,7 @@ export default function Telao() {
           </div>
 
           <div style={{
-            fontSize: "40px",
-            marginTop: "10px",
+            fontSize: "44px",
             color: "#22c55e"
           }}>
             {lider.wpm} WPM • {lider.accuracy}%
@@ -114,20 +160,14 @@ export default function Telao() {
 
       )}
 
-      {/* GRID PRINCIPAL */}
+      <div className="grid-main">
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1.2fr",
-        gap: "35px"
-      }}>
+        {/* ULTIMOS */}
 
-        {/* ESQUERDA - ÚLTIMOS */}
-
-        <div>
+        <div style={{ width: "100%" }}>
 
           <h2 style={{
-            fontSize: "32px",
+            fontSize: "38px",
             marginBottom: "20px"
           }}>
             ⏱ Últimos Resultados
@@ -138,26 +178,21 @@ export default function Telao() {
             <div key={i} style={{
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center",
-              padding: "14px",
+              padding: "16px",
               background: "#1e293b",
-              marginBottom: "10px",
-              borderRadius: "10px",
-              fontSize: "22px"
+              marginBottom: "12px",
+              borderRadius: "12px",
+              fontSize: "26px",
+              width: "100%"
             }}>
 
-              <div>
+              <span>
                 {r.fullname || r.username}
-              </div>
+              </span>
 
-              <div style={{
-                display: "flex",
-                gap: "25px",
-                fontWeight: "bold"
-              }}>
-                <span>{r.wpm} WPM</span>
-                <span>{r.accuracy}%</span>
-              </div>
+              <span style={{ fontWeight: "bold" }}>
+                {r.wpm} WPM • {r.accuracy}%
+              </span>
 
             </div>
 
@@ -165,66 +200,68 @@ export default function Telao() {
 
         </div>
 
-        {/* DIREITA - TOP 10 */}
+        {/* RANKING */}
 
-        <div>
+        <div style={{ width: "100%" }}>
 
           <h2 style={{
-            fontSize: "34px",
+            fontSize: "42px",
             marginBottom: "20px"
           }}>
-            🏆 Ranking Geral
+            🏆 Top 10
           </h2>
 
-          {top.map((r, i) => (
+          {ranking.map((r, i) => (
 
-            <div key={i} style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "16px",
-              marginBottom: "12px",
-              borderRadius: "12px",
-              fontSize: "26px",
-              background:
-                i === 0 ? "#78350f" :
-                i === 1 ? "#334155" :
-                i === 2 ? "#92400e" :
-                "#1e293b",
-              border:
-                i === 0 ? "2px solid gold" :
-                i === 1 ? "2px solid silver" :
-                i === 2 ? "2px solid #cd7f32" :
-                "1px solid #334155"
-            }}>
+            <div
+              key={r.username}
+              className={`rank-item ${i < 3 ? "top3" : ""}`}
+              style={{
+                padding: "18px",
+                marginBottom: "14px",
+                borderRadius: "14px",
+                fontSize: "30px",
+                width: "100%",
+                background:
+                  i === 0 ? "#78350f" :
+                  i === 1 ? "#334155" :
+                  i === 2 ? "#92400e" :
+                  "#1e293b"
+              }}
+            >
 
               <div style={{
                 display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                fontWeight: i < 3 ? "bold" : "normal"
+                justifyContent: "space-between"
               }}>
 
-                <span style={{
-                  fontSize: "30px",
-                  width: "45px"
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "14px"
                 }}>
-                  {medalha(i)}
-                </span>
+                  <span style={{ fontSize: "34px" }}>
+                    {medalha(i)}
+                  </span>
 
-                <span>
                   {r.fullname || r.username}
-                </span>
+                </div>
+
+                <div style={{
+                  fontWeight: "bold"
+                }}>
+                  {r.wpm} WPM • {r.accuracy}%
+                </div>
 
               </div>
 
-              <div style={{
-                display: "flex",
-                gap: "28px",
-                fontWeight: "bold"
-              }}>
-                <span>{r.wpm} WPM</span>
-                <span>{r.accuracy}%</span>
+              <div className="bar-bg">
+                <div
+                  className="bar-fill"
+                  style={{
+                    width: `${barraWPM(r.wpm)}%`
+                  }}
+                />
               </div>
 
             </div>
