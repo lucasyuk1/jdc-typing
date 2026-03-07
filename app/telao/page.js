@@ -5,34 +5,38 @@ import { supabase } from "@/lib/supabase";
 
 export default function Telao() {
 
-const [ranking, setRanking] = useState([]);
-const [ultimos, setUltimos] = useState([]);
-const [lider, setLider] = useState(null);
-const [alerta, setAlerta] = useState(null);
+const [ranking,setRanking] = useState([]);
+const [ultimos,setUltimos] = useState([]);
+const [lider,setLider] = useState(null);
+const [alerta,setAlerta] = useState(null);
+const [testesHoje,setTestesHoje] = useState(0);
 
 const top3Anterior = useRef([]);
 
-function formatarHora(dataISO) {
+function formatarDataHora(dataISO){
 
-if (!dataISO) return "";
+if(!dataISO) return "";
 
 const data = new Date(dataISO);
 
-return data.toLocaleTimeString("pt-BR", {
-hour: "2-digit",
-minute: "2-digit"
+return data.toLocaleString("pt-BR",{
+timeZone:"America/Sao_Paulo",
+day:"2-digit",
+month:"2-digit",
+hour:"2-digit",
+minute:"2-digit"
 });
 
 }
 
-function barraPrecisao(acc){
+function ehHoje(dataISO){
 
-let cor = "#22c55e";
+const data = new Date(dataISO);
 
-if(acc < 95) cor = "#facc15";
-if(acc < 90) cor = "#ef4444";
+const hoje = new Date();
 
-return {width:`${acc}%`,background:cor}
+return data.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"}) ===
+hoje.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"});
 
 }
 
@@ -50,6 +54,9 @@ r.username !== "larbak" &&
 r.turma &&
 !r.turma.toLowerCase().includes("prof")
 );
+
+const totalHoje = filtrado.filter(r => ehHoje(r.created_at)).length;
+setTestesHoje(totalHoje);
 
 const mapa = {};
 
@@ -89,8 +96,8 @@ p=>p.username === r.username
 
 return{
 ...r,
-posicao: pos >= 0 ? pos + 1 : "-",
-hora: formatarHora(r.created_at)
+posicao: pos >=0 ? pos+1 : "-",
+hora: formatarDataHora(r.created_at)
 }
 
 });
@@ -98,7 +105,7 @@ hora: formatarHora(r.created_at)
 const top3Atual = top.slice(0,3).map(r=>r.username);
 
 const novoTop3 = top3Atual.find(
-u=>!top3Anterior.current.includes(u)
+u => !top3Anterior.current.includes(u)
 );
 
 if(novoTop3){
@@ -163,7 +170,7 @@ gap:40px;
 }
 
 .rank{
-transition:all .5s;
+transition:all .4s;
 }
 
 .rank:hover{
@@ -202,22 +209,16 @@ font-weight:800;
 font-size:40px;
 }
 
-.barra-bg{
-width:120px;
-height:10px;
-background:#334155;
-border-radius:10px;
-overflow:hidden;
-}
-
-.barra{
-height:100%;
-}
-
 .hora{
-font-size:14px;
+font-size:15px;
 opacity:.6;
 margin-left:10px;
+}
+
+.stats{
+font-size:24px;
+opacity:.8;
+margin-bottom:20px;
 }
 
 `}</style>
@@ -235,6 +236,10 @@ margin-left:10px;
 </div>
 
 )}
+
+<div className="stats">
+⚡ {testesHoje} testes realizados hoje
+</div>
 
 <div className="grid">
 
@@ -271,16 +276,6 @@ color:"#22c55e"
 {lider.wpm} WPM • 🎯 {lider.accuracy}%
 </div>
 
-<div style={{
-marginTop:"10px",
-display:"flex",
-justifyContent:"center"
-}}>
-<div className="barra-bg">
-<div className="barra" style={barraPrecisao(lider.accuracy)}></div>
-</div>
-</div>
-
 </div>
 
 )}
@@ -306,28 +301,14 @@ fontSize:"22px"
 <b>#{r.posicao}</b>{" "}
 {r.fullname || r.username}
 
-<span className="hora">{r.hora}</span>
+<span className="hora">
+{r.hora}
+</span>
 
 </div>
 
-<div style={{
-display:"flex",
-alignItems:"center",
-gap:"12px"
-}}>
-
-<span>
-{r.wpm} WPM
-</span>
-
-<span>
-🎯 {r.accuracy}%
-</span>
-
-<div className="barra-bg">
-<div className="barra" style={barraPrecisao(r.accuracy)}></div>
-</div>
-
+<div>
+{r.wpm} WPM • 🎯 {r.accuracy}%
 </div>
 
 </div>
@@ -364,14 +345,13 @@ i===2 ? "#92400e":
 
 <div style={{
 display:"flex",
-justifyContent:"space-between",
-alignItems:"center"
+justifyContent:"space-between"
 }}>
 
 <div style={{
 display:"flex",
-alignItems:"center",
-gap:"12px"
+gap:"12px",
+alignItems:"center"
 }}>
 
 <span style={{fontSize:"30px"}}>
@@ -388,24 +368,8 @@ gap:"12px"
 
 </div>
 
-<div style={{
-display:"flex",
-alignItems:"center",
-gap:"14px"
-}}>
-
-<span>
-{r.wpm} WPM
-</span>
-
-<span>
-🎯 {r.accuracy}%
-</span>
-
-<div className="barra-bg">
-<div className="barra" style={barraPrecisao(r.accuracy)}></div>
-</div>
-
+<div>
+{r.wpm} WPM • 🎯 {r.accuracy}%
 </div>
 
 </div>
