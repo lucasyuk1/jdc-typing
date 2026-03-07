@@ -5,69 +5,34 @@ import { supabase } from "@/lib/supabase";
 
 export default function Telao() {
 
-const [ranking, setRanking] = useState([]);
-const [ultimos, setUltimos] = useState([]);
-const [lider, setLider] = useState(null);
-const [alerta, setAlerta] = useState(null);
-const [testesHoje, setTestesHoje] = useState(0);
+const [ranking,setRanking] = useState([]);
+const [ultimos,setUltimos] = useState([]);
+const [lider,setLider] = useState(null);
+const [alerta,setAlerta] = useState(null);
 
 const top3Anterior = useRef([]);
 
-const TIMEZONE = "America/Sao_Paulo";
+/* ---------------- MEDALHAS ---------------- */
 
-/* ------------------ UTILIDADES ------------------ */
-
-function formatarDataHora(dataISO) {
-
-if (!dataISO) return "";
-
-const data = new Date(dataISO);
-
-const dia = data.toLocaleDateString("pt-BR", {
-timeZone: TIMEZONE,
-day: "2-digit",
-month: "2-digit"
-});
-
-const hora = data.toLocaleTimeString("pt-BR", {
-timeZone: TIMEZONE,
-hour: "2-digit",
-minute: "2-digit"
-});
-
-return `${dia} -- ${hora}`;
-
+function medalha(i){
+if(i===0) return "🥇";
+if(i===1) return "🥈";
+if(i===2) return "🥉";
+return `${i+1}º`;
 }
 
-function ehHoje(dataISO) {
+/* ---------------- DADOS ---------------- */
 
-const data = new Date(dataISO);
-const hoje = new Date();
-
-return data.toLocaleDateString("pt-BR", { timeZone: TIMEZONE }) ===
-hoje.toLocaleDateString("pt-BR", { timeZone: TIMEZONE });
-
-}
-
-function medalha(i) {
-if (i === 0) return "🥇";
-if (i === 1) return "🥈";
-if (i === 2) return "🥉";
-return `${i + 1}º`;
-}
-
-/* ------------------ CARREGAR DADOS ------------------ */
-
-async function carregarDados() {
+async function carregarDados(){
 
 const { data } = await supabase
 .from("results")
-.select("*")
-.order("created_at", { ascending: false });
+.select("username, fullname, turma, wpm, accuracy, created_at")
+.order("created_at",{ascending:false});
 
-if (!data) return;
+if(!data) return;
 
-/* filtro usuários */
+/* filtro */
 
 const filtrado = data.filter(r =>
 r.username !== "larbak" &&
@@ -75,114 +40,105 @@ r.turma &&
 !r.turma.toLowerCase().includes("prof")
 );
 
-/* contador testes hoje */
-
-const hoje = filtrado.filter(r => ehHoje(r.created_at));
-setTestesHoje(hoje.length);
-
 /* melhor resultado por usuário */
 
-const mapa = {};
+const melhores = {};
 
-filtrado.forEach(r => {
+for(const r of filtrado){
 
-const atual = mapa[r.username];
+const atual = melhores[r.username];
 
-if (!atual) {
-mapa[r.username] = r;
-return;
-}
-
-if (
+if(!atual ||
 r.wpm > atual.wpm ||
 (r.wpm === atual.wpm && r.accuracy > atual.accuracy)
-) {
-mapa[r.username] = r;
+){
+melhores[r.username] = r;
 }
 
-});
+}
 
 /* ranking */
 
-const rankingCompleto = Object.values(mapa).sort((a, b) => {
-if (b.wpm !== a.wpm) return b.wpm - a.wpm;
-return b.accuracy - a.accuracy;
+const rankingCompleto = Object.values(melhores)
+.sort((a,b)=>{
+if(b.wpm !== a.wpm) return b.wpm-a.wpm;
+return b.accuracy-a.accuracy;
 });
 
-const top = rankingCompleto.slice(0, 10);
+/* mapa de posições */
+
+const posicoes = {};
+rankingCompleto.forEach((r,i)=>{
+posicoes[r.username] = i+1;
+});
+
+const top = rankingCompleto.slice(0,10);
 
 /* últimos resultados */
 
-const ultimosComPosicao = filtrado.slice(0, 8).map(r => {
-
-const pos = rankingCompleto.findIndex(
-p => p.username === r.username
-);
-
-return {
+const ultimosFormatados = filtrado
+.slice(0,8)
+.map(r=>({
 ...r,
-posicao: pos >= 0 ? pos + 1 : "-",
-hora: formatarDataHora(r.created_at)
-};
-
-});
+posicao: posicoes[r.username] || "-"
+}));
 
 /* detectar novo top3 */
 
-const top3Atual = top.slice(0, 3).map(r => r.username);
+const top3Atual = top.slice(0,3).map(r=>r.username);
 
-const novoTop3 = top3Atual.find(
+const novo = top3Atual.find(
 u => !top3Anterior.current.includes(u)
 );
 
-if (novoTop3) {
+if(novo){
 
-const aluno = top.find(r => r.username === novoTop3);
+const aluno = top.find(r=>r.username===novo);
 
 setAlerta({
 nome: aluno.fullname || aluno.username,
 turma: aluno.turma,
-pos: top3Atual.indexOf(novoTop3) + 1
+pos: top3Atual.indexOf(novo)+1
 });
 
-setTimeout(() => setAlerta(null), 5000);
+setTimeout(()=>setAlerta(null),5000);
 
 }
 
 top3Anterior.current = top3Atual;
 
-/* atualizar estados */
+/* estados */
 
 setRanking(top);
-setUltimos(ultimosComPosicao);
+setUltimos(ultimosFormatados);
 setLider(top[0]);
 
 }
 
-/* ------------------ EFFECT ------------------ */
+/* ---------------- EFFECT ---------------- */
 
-useEffect(() => {
+useEffect(()=>{
 
 carregarDados();
 
-const interval = setInterval(carregarDados, 3000);
+const interval = setInterval(carregarDados,3000);
 
-return () => clearInterval(interval);
+return ()=>clearInterval(interval);
 
-}, []);
+},[]);
 
-/* ------------------ UI ------------------ */
+/* ---------------- UI ---------------- */
 
-return (
+return(
 
 <div style={{
-background: "#0f172a",
-color: "white",
-minHeight: "100vh",
-width: "100vw",
-padding: "40px",
-boxSizing: "border-box",
-fontFamily: "Inter,system-ui,sans-serif"
+background:"#0f172a",
+color:"white",
+minHeight:"100vh",
+width:"100vw",
+padding:"40px",
+boxSizing:"border-box",
+fontFamily:"Inter,system-ui,sans-serif"
 }}>
 
 <style>{`
@@ -239,12 +195,6 @@ opacity:.6;
 margin-left:10px;
 }
 
-.stats{
-font-size:24px;
-opacity:.8;
-margin-bottom:20px;
-}
-
 `}</style>
 
 {alerta && (
@@ -260,10 +210,6 @@ margin-bottom:20px;
 </div>
 
 )}
-
-<div className="stats">
-⚡ {testesHoje} testes realizados hoje
-</div>
 
 <div className="grid">
 
@@ -320,7 +266,7 @@ fontSize:"22px"
 {r.fullname || r.username}
 
 <span className="hora">
-{r.hora}
+{r.created_at}
 </span>
 
 </div>
