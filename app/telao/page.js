@@ -64,50 +64,75 @@ r?.turma?.toLowerCase() !== "prof"
 );
 
 /* =========================
-ULTIMOS RESULTADOS
+REMOVER DUPLICADOS
+MANTENDO MAIOR WPM
+E PRESERVANDO FULLNAME
 ========================= */
 
-const recentes=[...filtrado]
-.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+const melhores = {};
 
-setUltimos(recentes.slice(0,10));
+filtrado.forEach(r => {
 
-/* =========================
-REMOVER REPETIDOS
-========================= */
+const key = r.username;
 
-const melhores={};
+if(!melhores[key]){
+  melhores[key] = {...r};
+  return;
+}
 
-filtrado.forEach(r=>{
+if(Number(r.wpm) > Number(melhores[key].wpm)){
+  melhores[key] = {
+    ...r,
+    fullname: r.fullname || melhores[key].fullname
+  };
+}
 
-const key=r.username;
-
-if(!melhores[key] || Number(r.wpm) > Number(melhores[key].wpm)){
-melhores[key]={...r};
+if(!melhores[key].fullname && r.fullname){
+  melhores[key].fullname = r.fullname;
 }
 
 });
 
-const unicos=Object.values(melhores);
+const unicos = Object.values(melhores);
 
 /* =========================
 RANKING
 ========================= */
 
-const ranking=[...unicos].sort((a,b)=>Number(b.wpm)-Number(a.wpm));
+const ranking = [...unicos].sort((a,b)=>Number(b.wpm)-Number(a.wpm));
 
 /* =========================
-MAPA POSIÇÕES
+MAPA DE POSIÇÕES
 ========================= */
 
-const novoRanking={};
+const novoRanking = {};
 
 ranking.forEach((r,i)=>{
 novoRanking[r.username]=i+1;
 });
 
 /* =========================
-DEFINIR LIDER
+ULTIMOS RESULTADOS
+========================= */
+
+const recentes = [...filtrado]
+.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
+.slice(0,10)
+.map(r => {
+
+const melhor = melhores[r.username];
+
+return {
+...r,
+fullname: melhor?.fullname || r.fullname
+};
+
+});
+
+setUltimos(recentes);
+
+/* =========================
+LIDER
 ========================= */
 
 setLeader(ranking[0] || null);
@@ -340,8 +365,6 @@ padding:40px;
 font-family:Arial;
 }
 
-/* HEADER */
-
 .header{
 display:flex;
 justify-content:space-between;
@@ -359,8 +382,6 @@ font-size:36px;
 color:#fbbf24;
 }
 
-/* GRID */
-
 .grid{
 display:grid;
 grid-template-columns:1fr 1fr;
@@ -372,8 +393,6 @@ display:flex;
 flex-direction:column;
 gap:25px;
 }
-
-/* LIDER */
 
 .leader{
 background:#111827;
@@ -394,8 +413,6 @@ font-size:30px;
 color:#4ade80;
 margin-top:5px;
 }
-
-/* ULTIMOS */
 
 .ultimos{
 background:#111827;
@@ -443,8 +460,6 @@ text-align:center;
 .rank.subiu{ color:#22c55e; }
 .rank.desceu{ color:#ef4444; }
 .rank.novo{ color:#38bdf8; }
-
-/* RANKING */
 
 .ranking{
 background:#111827;
