@@ -28,7 +28,7 @@ CORTAR NOMES LONGOS
 
 function nomeCurto(nome){
 if(!nome) return "";
-return nome.length > 18 ? nome.slice(0,18) + "…" : nome;
+return nome.length > 26 ? nome.slice(0,26) + "…" : nome;
 }
 
 /* =========================
@@ -74,7 +74,6 @@ setUltimos(recentes.slice(0,10));
 
 /* =========================
 REMOVER REPETIDOS
-(MANTER MAIOR WPM)
 ========================= */
 
 const melhores={};
@@ -98,7 +97,7 @@ RANKING
 const ranking=[...unicos].sort((a,b)=>Number(b.wpm)-Number(a.wpm));
 
 /* =========================
-MAPA DE POSIÇÕES
+MAPA POSIÇÕES
 ========================= */
 
 const novoRanking={};
@@ -180,7 +179,7 @@ return rankingCompleto.findIndex(r=>r.username===username)+1;
 }
 
 /* =========================
-MOVIMENTO DE RANKING
+MOVIMENTO RANKING
 ========================= */
 
 function movimentoRanking(username){
@@ -337,115 +336,92 @@ return(
 background:#020617;
 color:white;
 min-height:100vh;
-padding:30px;
+padding:40px;
 font-family:Arial;
 }
+
+/* HEADER */
 
 .header{
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:20px;
+margin-bottom:30px;
 }
 
 .header h1{
-font-size:48px;
+font-size:54px;
 color:#38bdf8;
 }
 
 .relogio{
-font-size:32px;
+font-size:36px;
 color:#fbbf24;
 }
+
+/* GRID */
 
 .grid{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:30px;
+gap:40px;
 }
 
 .coluna{
 display:flex;
 flex-direction:column;
-gap:20px;
+gap:25px;
 }
 
 /* LIDER */
 
 .leader{
 background:#111827;
-padding:25px;
-border-radius:12px;
+padding:30px;
+border-radius:14px;
 text-align:center;
 }
 
 .leaderNome{
-font-size:42px;
+font-size:48px;
 font-weight:bold;
 color:#fbbf24;
+margin-top:8px;
 }
 
 .leaderStats{
-font-size:28px;
+font-size:30px;
 color:#4ade80;
+margin-top:5px;
 }
 
 /* ULTIMOS */
 
 .ultimos{
 background:#111827;
-padding:20px;
-border-radius:12px;
+padding:24px;
+border-radius:14px;
+}
+
+.ultimos h2{
+font-size:28px;
+margin-bottom:10px;
 }
 
 .ultimo{
 display:grid;
-grid-template-columns:1fr 80px 80px 120px;
-font-size:22px;
-padding:8px 0;
-border-bottom:1px solid #1f2937;
-}
-
-.rank{
-font-weight:bold;
-text-align:center;
-}
-
-.rank.subiu{
-color:#22c55e;
-}
-
-.rank.desceu{
-color:#ef4444;
-}
-
-.rank.novo{
-color:#38bdf8;
-}
-
-/* RANKING */
-
-.ranking{
-background:#111827;
-padding:20px;
-border-radius:12px;
-}
-
-.linha{
-display:grid;
-grid-template-columns:80px 1fr 100px 100px;
+grid-template-columns:2fr 90px 90px 140px;
 align-items:center;
-font-size:26px;
+font-size:24px;
 padding:10px 0;
 border-bottom:1px solid #1f2937;
 }
 
-.pos{
-font-size:32px;
-}
-
 .nome{
 font-weight:bold;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
 }
 
 .wpm{
@@ -456,6 +432,42 @@ text-align:center;
 
 .acc{
 color:#38bdf8;
+text-align:center;
+}
+
+.rank{
+font-weight:bold;
+text-align:center;
+}
+
+.rank.subiu{ color:#22c55e; }
+.rank.desceu{ color:#ef4444; }
+.rank.novo{ color:#38bdf8; }
+
+/* RANKING */
+
+.ranking{
+background:#111827;
+padding:24px;
+border-radius:14px;
+}
+
+.ranking h2{
+font-size:28px;
+margin-bottom:10px;
+}
+
+.linha{
+display:grid;
+grid-template-columns:90px 2fr 120px 120px;
+align-items:center;
+font-size:30px;
+padding:12px 0;
+border-bottom:1px solid #1f2937;
+}
+
+.pos{
+font-size:34px;
 text-align:center;
 }
 
