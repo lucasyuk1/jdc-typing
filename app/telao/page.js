@@ -18,8 +18,10 @@ export default function Telao() {
 
     if (!data) return;
 
-    const filtrado = data.filter(
-      r => r.username !== "larbak" && r.turma !== "Prof"
+    const filtrado = data.filter(r =>
+        r.username !== "larbak" &&
+        r.turma &&
+        !r.turma.toLowerCase().includes("prof")
     );
 
     setUltimos(filtrado.slice(0, 12));
