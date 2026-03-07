@@ -11,7 +11,7 @@ const [hora,setHora] = useState("");
 const [rankAnterior,setRankAnterior] = useState({});
 
 /* =========================
-FORMATAR NÚMEROS
+FORMATAR
 ========================= */
 
 function formatWPM(v){
@@ -23,32 +23,32 @@ return Math.round(Number(v) || 0);
 }
 
 /* =========================
-CORTAR NOMES LONGOS
+NOME CURTO
 ========================= */
 
 function nomeCurto(nome){
 if(!nome) return "";
-return nome.length > 26 ? nome.slice(0,26) + "…" : nome;
+return nome.length > 26 ? nome.slice(0,26)+"…" : nome;
 }
 
 /* =========================
-PEGAR NOME CORRETO
+PEGAR NOME
 ========================= */
 
 function displayName(r){
 
-const nome = (r?.fullname || "").trim();
+if(!r) return "Aluno";
 
-if(nome.length > 0){
-return nome;
+if(r.fullname && r.fullname.trim() !== ""){
+return r.fullname.trim();
 }
 
-return r?.username || "Aluno";
+return r.username || "Aluno";
 
 }
 
 /* =========================
-CARREGAR RESULTADOS
+LOAD
 ========================= */
 
 async function load(){
@@ -63,7 +63,7 @@ const data = json.data || json;
 if(!Array.isArray(data)) return;
 
 /* =========================
-FILTRAR ADMIN E PROF
+FILTRAR
 ========================= */
 
 const filtrado = data.filter(r =>
@@ -72,40 +72,34 @@ r?.turma?.toLowerCase() !== "prof"
 );
 
 /* =========================
-REMOVER DUPLICADOS
-MANTENDO MAIOR WPM
+MELHOR POR USER
 ========================= */
 
-const melhores = {};
+const mapa = {};
 
-filtrado.forEach(r => {
+filtrado.forEach(r=>{
 
 const key = r.username;
 
-if(!melhores[key]){
-melhores[key] = {...r};
+if(!mapa[key]){
+mapa[key] = {...r};
 return;
 }
 
-if(Number(r.wpm) > Number(melhores[key].wpm)){
-
-melhores[key] = {
+if(Number(r.wpm) > Number(mapa[key].wpm)){
+mapa[key] = {
 ...r,
-fullname:
-(r.fullname && r.fullname.trim() !== "")
-? r.fullname
-: melhores[key].fullname
+fullname: r.fullname || mapa[key].fullname
 };
-
 }
 
-if(!melhores[key].fullname && r.fullname && r.fullname.trim() !== ""){
-melhores[key].fullname = r.fullname;
+if(!mapa[key].fullname && r.fullname){
+mapa[key].fullname = r.fullname;
 }
 
 });
 
-const unicos = Object.values(melhores);
+const unicos = Object.values(mapa);
 
 /* =========================
 RANKING
@@ -116,55 +110,40 @@ const ranking = [...unicos].sort(
 );
 
 /* =========================
-MAPA DE POSIÇÕES
+MAPA POSIÇÃO
 ========================= */
 
-const novoRanking = {};
+const novoRanking={};
 
 ranking.forEach((r,i)=>{
 novoRanking[r.username]=i+1;
 });
 
 /* =========================
-ULTIMOS RESULTADOS
+ULTIMOS
 ========================= */
 
-const recentes = [...filtrado]
+const recentes=[...filtrado]
 .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
 .slice(0,10)
-.map(r => {
+.map(r=>{
 
-const melhor = melhores[r.username];
+const melhor = mapa[r.username];
 
-return {
+return{
 ...r,
-fullname:
-(melhor?.fullname && melhor.fullname.trim() !== "")
-? melhor.fullname
-: r.fullname
+fullname: melhor?.fullname || r.fullname
 };
 
 });
 
 setUltimos(recentes);
-
-/* =========================
-LIDER
-========================= */
-
 setLeader(ranking[0] || null);
-
-/* =========================
-SALVAR
-========================= */
-
 setRows(unicos);
 setRankAnterior(novoRanking);
 
 }catch(e){
-
 console.error("Erro carregando telão:",e);
-
 }
 
 }
@@ -190,9 +169,7 @@ RELÓGIO
 useEffect(()=>{
 
 const rel=setInterval(()=>{
-
 setHora(new Date().toLocaleTimeString("pt-BR"));
-
 },1000);
 
 return()=>clearInterval(rel);
@@ -200,20 +177,17 @@ return()=>clearInterval(rel);
 },[]);
 
 /* =========================
-RANKING COMPLETO
+RANKING
 ========================= */
 
-const rankingCompleto=[...rows]
-.sort((a,b)=>Number(b.wpm)-Number(a.wpm));
-
-/* =========================
-TOP 10
-========================= */
+const rankingCompleto=[...rows].sort(
+(a,b)=>Number(b.wpm)-Number(a.wpm)
+);
 
 const rankingDia=rankingCompleto.slice(0,10);
 
 /* =========================
-POSIÇÃO REAL
+POSIÇÃO
 ========================= */
 
 function posicaoGeral(username){
@@ -221,7 +195,7 @@ return rankingCompleto.findIndex(r=>r.username===username)+1;
 }
 
 /* =========================
-MOVIMENTO RANKING
+MOVIMENTO
 ========================= */
 
 function movimentoRanking(username){
@@ -230,7 +204,6 @@ const atual = posicaoGeral(username);
 const anterior = rankAnterior[username];
 
 if(!anterior) return "novo";
-
 if(atual < anterior) return "subiu";
 if(atual > anterior) return "desceu";
 
@@ -238,7 +211,7 @@ return "igual";
 }
 
 /* =========================
-INTERFACE
+UI
 ========================= */
 
 return(
@@ -257,7 +230,7 @@ return(
 
 <div className="grid">
 
-{/* COLUNA ESQUERDA */}
+{/* ESQUERDA */}
 
 <div className="coluna">
 
@@ -324,7 +297,7 @@ return(
 
 </div>
 
-{/* COLUNA DIREITA */}
+{/* DIREITA */}
 
 <div className="coluna">
 
