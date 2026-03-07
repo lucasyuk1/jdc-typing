@@ -12,7 +12,21 @@ const [alerta,setAlerta] = useState(null);
 
 const top3Anterior = useRef([]);
 
-/* ---------------- MEDALHAS ---------------- */
+/* ----------- FORMATAR DATA (SUPER LEVE) ----------- */
+
+function formatarDataHora(dataISO){
+
+if(!dataISO) return "";
+
+const dia = dataISO.slice(8,10);
+const mes = dataISO.slice(5,7);
+const hora = dataISO.slice(11,16);
+
+return `${dia}/${mes} -- ${hora}`;
+
+}
+
+/* ----------- MEDALHAS ----------- */
 
 function medalha(i){
 if(i===0) return "🥇";
@@ -21,14 +35,15 @@ if(i===2) return "🥉";
 return `${i+1}º`;
 }
 
-/* ---------------- DADOS ---------------- */
+/* ----------- BUSCAR DADOS ----------- */
 
 async function carregarDados(){
 
 const { data } = await supabase
 .from("results")
 .select("username, fullname, turma, wpm, accuracy, created_at")
-.order("created_at",{ascending:false});
+.order("created_at",{ascending:false})
+.limit(200);
 
 if(!data) return;
 
@@ -72,6 +87,8 @@ rankingCompleto.forEach((r,i)=>{
 posicoes[r.username] = i+1;
 });
 
+/* top10 */
+
 const top = rankingCompleto.slice(0,10);
 
 /* últimos resultados */
@@ -80,7 +97,8 @@ const ultimosFormatados = filtrado
 .slice(0,8)
 .map(r=>({
 ...r,
-posicao: posicoes[r.username] || "-"
+posicao: posicoes[r.username] || "-",
+hora: formatarDataHora(r.created_at)
 }));
 
 /* detectar novo top3 */
@@ -107,7 +125,7 @@ setTimeout(()=>setAlerta(null),5000);
 
 top3Anterior.current = top3Atual;
 
-/* estados */
+/* atualizar estados */
 
 setRanking(top);
 setUltimos(ultimosFormatados);
@@ -115,7 +133,7 @@ setLider(top[0]);
 
 }
 
-/* ---------------- EFFECT ---------------- */
+/* ----------- EFFECT ----------- */
 
 useEffect(()=>{
 
@@ -127,7 +145,7 @@ return ()=>clearInterval(interval);
 
 },[]);
 
-/* ---------------- UI ---------------- */
+/* ----------- UI ----------- */
 
 return(
 
@@ -266,7 +284,7 @@ fontSize:"22px"
 {r.fullname || r.username}
 
 <span className="hora">
-{r.created_at}
+{r.hora}
 </span>
 
 </div>

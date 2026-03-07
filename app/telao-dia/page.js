@@ -3,13 +3,16 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
-export default function TelaoDia() {
+export default function TelaoDia(){
 
 const [ranking,setRanking] = useState([]);
 const [ultimos,setUltimos] = useState([]);
 const [lider,setLider] = useState(null);
 const [alerta,setAlerta] = useState(null);
 const [testesHoje,setTestesHoje] = useState(0);
+const [dataSelecionada,setDataSelecionada] = useState(
+new Date().toISOString().slice(0,10)
+);
 
 const top3Anterior = useRef([]);
 
@@ -17,41 +20,29 @@ function formatarDataHora(dataISO){
 
 if(!dataISO) return "";
 
-const data = new Date(dataISO);
+const dia = dataISO.slice(8,10);
+const mes = dataISO.slice(5,7);
+const hora = dataISO.slice(11,16);
 
-return data.toLocaleString("pt-BR",{
-timeZone:"America/Sao_Paulo",
-day:"2-digit",
-month:"2-digit",
-hour:"2-digit",
-minute:"2-digit"
-});
-
-}
-
-function ehHoje(dataISO){
-
-const data = new Date(dataISO);
-
-const hoje = new Date();
-
-return data.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"}) ===
-hoje.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"});
+return `${dia}/${mes} ${hora}`;
 
 }
 
 async function carregarDados(){
 
+const inicio = `${dataSelecionada}T00:00:00`;
+const fim = `${dataSelecionada}T23:59:59`;
+
 const { data } = await supabase
 .from("results")
 .select("*")
+.gte("created_at",inicio)
+.lte("created_at",fim)
 .order("created_at",{ascending:false});
 
 if(!data) return;
 
-const hoje = data.filter(r => ehHoje(r.created_at));
-
-const filtrado = hoje.filter(r =>
+const filtrado = data.filter(r =>
 r.username !== "larbak" &&
 r.turma &&
 !r.turma.toLowerCase().includes("prof")
@@ -137,11 +128,11 @@ carregarDados();
 
 const interval = setInterval(()=>{
 carregarDados();
-},3000);
+},5000);
 
 return ()=>clearInterval(interval);
 
-},[]);
+},[dataSelecionada]);
 
 function medalha(i){
 if(i===0) return "🥇";
@@ -211,7 +202,7 @@ font-size:40px;
 }
 
 .hora{
-font-size:15px;
+font-size:16px;
 opacity:.6;
 margin-left:10px;
 }
@@ -226,6 +217,11 @@ margin-bottom:20px;
 font-size:46px;
 font-weight:800;
 margin-bottom:10px;
+}
+
+.filtro{
+margin-bottom:20px;
+font-size:20px;
 }
 
 `}</style>
@@ -245,11 +241,27 @@ margin-bottom:10px;
 )}
 
 <div className="titulo">
-📅 Ranking de Digitação — Hoje
+📅 Ranking de Digitação — Dia
+</div>
+
+<div className="filtro">
+
+Selecionar dia:{" "}
+
+<input
+type="date"
+value={dataSelecionada}
+onChange={(e)=>setDataSelecionada(e.target.value)}
+style={{
+fontSize:"18px",
+padding:"6px"
+}}
+/>
+
 </div>
 
 <div className="stats">
-⚡ {testesHoje} testes realizados hoje
+⚡ {testesHoje} testes neste dia
 </div>
 
 <div className="grid">
