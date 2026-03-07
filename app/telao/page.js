@@ -18,14 +18,19 @@ export default function Telao() {
 
     if (!data) return;
 
+    // remover professor e admin
+    const filtrado = data.filter(
+      r => r.username !== "larbak" && r.turma !== "Prof"
+    );
+
     // últimos resultados
-    const ult = data.slice(0, 10);
+    const ult = filtrado.slice(0, 10);
     setUltimos(ult);
 
-    // remover duplicados mantendo maior wpm
+    // manter apenas melhor resultado por usuário
     const mapa = {};
 
-    data.forEach((r) => {
+    filtrado.forEach((r) => {
       if (!mapa[r.username] || r.wpm > mapa[r.username].wpm) {
         mapa[r.username] = r;
       }
@@ -37,6 +42,7 @@ export default function Telao() {
 
     setTop(ranking);
     setLider(ranking[0]);
+
   }
 
   useEffect(() => {
@@ -51,34 +57,45 @@ export default function Telao() {
 
   }, []);
 
+  function medalha(pos) {
+    if (pos === 0) return "🥇";
+    if (pos === 1) return "🥈";
+    if (pos === 2) return "🥉";
+    return `${pos + 1}º`;
+  }
+
   return (
 
     <div style={{
       background: "#0f172a",
       color: "white",
       minHeight: "100vh",
-      padding: "20px",
+      padding: "30px",
       fontFamily: "sans-serif"
     }}>
 
-      {/* HEADER COM LÍDER */}
+      {/* HEADER LÍDER */}
 
       {lider && (
 
         <div style={{
           textAlign: "center",
-          marginBottom: "30px",
-          padding: "20px",
+          marginBottom: "35px",
+          padding: "25px",
           background: "#1e293b",
-          borderRadius: "12px"
+          borderRadius: "14px",
+          border: "2px solid #eab308"
         }}>
 
-          <div style={{ fontSize: "28px", opacity: 0.7 }}>
-            🏆 LÍDER ATUAL
+          <div style={{
+            fontSize: "28px",
+            opacity: 0.7
+          }}>
+            🏆 LÍDER DO RANKING
           </div>
 
           <div style={{
-            fontSize: "60px",
+            fontSize: "64px",
             fontWeight: "bold",
             marginTop: "10px"
           }}>
@@ -97,15 +114,15 @@ export default function Telao() {
 
       )}
 
-      {/* LAYOUT 2 COLUNAS */}
+      {/* GRID PRINCIPAL */}
 
       <div style={{
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "30px"
+        gridTemplateColumns: "1fr 1.2fr",
+        gap: "35px"
       }}>
 
-        {/* ESQUERDA */}
+        {/* ESQUERDA - ÚLTIMOS */}
 
         <div>
 
@@ -121,10 +138,11 @@ export default function Telao() {
             <div key={i} style={{
               display: "flex",
               justifyContent: "space-between",
-              padding: "12px",
+              alignItems: "center",
+              padding: "14px",
               background: "#1e293b",
-              marginBottom: "8px",
-              borderRadius: "8px",
+              marginBottom: "10px",
+              borderRadius: "10px",
               fontSize: "22px"
             }}>
 
@@ -134,10 +152,11 @@ export default function Telao() {
 
               <div style={{
                 display: "flex",
-                gap: "20px"
+                gap: "25px",
+                fontWeight: "bold"
               }}>
-                <div>{r.wpm} WPM</div>
-                <div>{r.accuracy}%</div>
+                <span>{r.wpm} WPM</span>
+                <span>{r.accuracy}%</span>
               </div>
 
             </div>
@@ -146,15 +165,15 @@ export default function Telao() {
 
         </div>
 
-        {/* DIREITA */}
+        {/* DIREITA - TOP 10 */}
 
         <div>
 
           <h2 style={{
-            fontSize: "32px",
+            fontSize: "34px",
             marginBottom: "20px"
           }}>
-            🏆 Top 10 Geral
+            🏆 Ranking Geral
           </h2>
 
           {top.map((r, i) => (
@@ -162,30 +181,50 @@ export default function Telao() {
             <div key={i} style={{
               display: "flex",
               justifyContent: "space-between",
-              padding: "14px",
-              background: i === 0
-                ? "#ca8a04"
-                : i === 1
-                ? "#475569"
-                : i === 2
-                ? "#78350f"
-                : "#1e293b",
-              marginBottom: "10px",
-              borderRadius: "8px",
-              fontSize: "24px",
-              fontWeight: i < 3 ? "bold" : "normal"
+              alignItems: "center",
+              padding: "16px",
+              marginBottom: "12px",
+              borderRadius: "12px",
+              fontSize: "26px",
+              background:
+                i === 0 ? "#78350f" :
+                i === 1 ? "#334155" :
+                i === 2 ? "#92400e" :
+                "#1e293b",
+              border:
+                i === 0 ? "2px solid gold" :
+                i === 1 ? "2px solid silver" :
+                i === 2 ? "2px solid #cd7f32" :
+                "1px solid #334155"
             }}>
 
-              <div>
-                {i + 1}º — {r.fullname || r.username}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                fontWeight: i < 3 ? "bold" : "normal"
+              }}>
+
+                <span style={{
+                  fontSize: "30px",
+                  width: "45px"
+                }}>
+                  {medalha(i)}
+                </span>
+
+                <span>
+                  {r.fullname || r.username}
+                </span>
+
               </div>
 
               <div style={{
                 display: "flex",
-                gap: "25px"
+                gap: "28px",
+                fontWeight: "bold"
               }}>
-                <div>{r.wpm} WPM</div>
-                <div>{r.accuracy}%</div>
+                <span>{r.wpm} WPM</span>
+                <span>{r.accuracy}%</span>
               </div>
 
             </div>
