@@ -33,31 +33,45 @@ async function carregarDados(){
 const inicio = `${dataSelecionada}T00:00:00`;
 const fim = `${dataSelecionada}T23:59:59`;
 
-const { data } = await supabase
+/* RESULTADOS DO DIA */
+
+const { data: dataDia } = await supabase
 .from("results")
 .select("*")
 .gte("created_at",inicio)
 .lte("created_at",fim)
 .order("created_at",{ascending:false});
 
-if(!data) return;
+/* RESULTADOS GERAIS */
 
-const filtrado = data.filter(r =>
+const { data: dataGeral } = await supabase
+.from("results")
+.select("*");
+
+if(!dataDia || !dataGeral) return;
+
+/* FILTRO */
+
+const filtro = r =>
 r.username !== "larbak" &&
 r.turma &&
-!r.turma.toLowerCase().includes("prof")
-);
+!r.turma.toLowerCase().includes("prof");
 
-setTestesHoje(filtrado.length);
+const hoje = dataDia.filter(filtro);
+const geral = dataGeral.filter(filtro);
 
-const mapa = {};
+setTestesHoje(hoje.length);
 
-filtrado.forEach(r=>{
+/* RANKING GERAL */
 
-const atual = mapa[r.username];
+const mapaGeral = {};
+
+geral.forEach(r=>{
+
+const atual = mapaGeral[r.username];
 
 if(!atual){
-mapa[r.username] = r;
+mapaGeral[r.username] = r;
 return;
 }
 
@@ -65,24 +79,54 @@ if(
 r.wpm > atual.wpm ||
 (r.wpm === atual.wpm && r.accuracy > atual.accuracy)
 ){
-mapa[r.username] = r;
+mapaGeral[r.username] = r;
 }
 
 });
 
-const rankingCompleto = Object.values(mapa)
+const rankingGeral = Object.values(mapaGeral)
 .sort((a,b)=>{
 if(b.wpm !== a.wpm) return b.wpm - a.wpm;
 return b.accuracy - a.accuracy;
 });
 
-const top = rankingCompleto.slice(0,10);
+/* RANKING DO DIA */
 
-const ultimosComPosicao = filtrado
+const mapaDia = {};
+
+hoje.forEach(r=>{
+
+const atual = mapaDia[r.username];
+
+if(!atual){
+mapaDia[r.username] = r;
+return;
+}
+
+if(
+r.wpm > atual.wpm ||
+(r.wpm === atual.wpm && r.accuracy > atual.accuracy)
+){
+mapaDia[r.username] = r;
+}
+
+});
+
+const rankingDia = Object.values(mapaDia)
+.sort((a,b)=>{
+if(b.wpm !== a.wpm) return b.wpm - a.wpm;
+return b.accuracy - a.accuracy;
+});
+
+const top = rankingDia.slice(0,10);
+
+/* ÚLTIMOS RESULTADOS */
+
+const ultimosComPosicao = hoje
 .slice(0,8)
 .map(r=>{
 
-const pos = rankingCompleto.findIndex(
+const pos = rankingGeral.findIndex(
 p=>p.username === r.username
 );
 
@@ -93,6 +137,8 @@ hora: formatarDataHora(r.created_at)
 }
 
 });
+
+/* ALERTA TOP 3 */
 
 const top3Atual = top.slice(0,3).map(r=>r.username);
 
