@@ -8,7 +8,6 @@ export default function Telao() {
   const [ranking, setRanking] = useState([]);
   const [ultimos, setUltimos] = useState([]);
   const [lider, setLider] = useState(null);
-
   const [alerta, setAlerta] = useState(null);
 
   const top3Anterior = useRef([]);
@@ -41,7 +40,7 @@ export default function Telao() {
 
     const top = rankingCompleto.slice(0, 10);
 
-    const ultimosComPosicao = filtrado.slice(0, 12).map(r => {
+    const ultimosComPosicao = filtrado.slice(0, 8).map(r => {
 
       const pos = rankingCompleto.findIndex(
         p => p.username === r.username
@@ -70,10 +69,7 @@ export default function Telao() {
         pos: top3Atual.indexOf(novoTop3) + 1
       });
 
-      setTimeout(() => {
-        setAlerta(null);
-      }, 5000);
-
+      setTimeout(() => setAlerta(null), 5000);
     }
 
     top3Anterior.current = top3Atual;
@@ -144,7 +140,6 @@ export default function Telao() {
 
         .nome{
           font-weight:700;
-          letter-spacing:.4px;
         }
 
         .turma{
@@ -173,13 +168,11 @@ export default function Telao() {
           justify-content:center;
           align-items:center;
           z-index:9999;
-          animation:fadeIn .5s;
         }
 
         .alerta h1{
           font-size:80px;
           color:gold;
-          margin-bottom:20px;
         }
 
         .alerta h2{
@@ -189,13 +182,6 @@ export default function Telao() {
 
         .alerta p{
           font-size:40px;
-          margin-top:10px;
-          opacity:.9;
-        }
-
-        @keyframes fadeIn{
-          from{opacity:0}
-          to{opacity:1}
         }
 
       `}</style>
@@ -206,9 +192,7 @@ export default function Telao() {
 
           <h1>🔥 NOVO TOP 3</h1>
 
-          <h2>
-            {alerta.nome}
-          </h2>
+          <h2>{alerta.nome}</h2>
 
           <p>
             entrou em {alerta.pos}º lugar • {alerta.turma}
@@ -218,51 +202,51 @@ export default function Telao() {
 
       )}
 
-      {lider && (
-
-        <div style={{
-          width: "100%",
-          padding: "30px",
-          marginBottom: "40px",
-          background: "#1e293b",
-          borderRadius: "16px",
-          border: "3px solid gold",
-          textAlign: "center"
-        }}>
-
-          <div style={{
-            fontSize: "32px",
-            opacity: 0.8
-          }}>
-            🏆 LÍDER DO RANKING
-          </div>
-
-          <div style={{
-            fontSize: "72px",
-            fontWeight: "800",
-            marginTop: "10px"
-          }}>
-            {lider.fullname || lider.username}
-          </div>
-
-          <div style={{
-            fontSize: "44px",
-            color: "#22c55e"
-          }}>
-            {lider.wpm} WPM • {lider.accuracy}%
-          </div>
-
-        </div>
-
-      )}
-
       <div className="grid-main">
+
+        {/* COLUNA ESQUERDA */}
 
         <div>
 
+          {lider && (
+
+            <div style={{
+              padding: "25px",
+              marginBottom: "30px",
+              background: "#1e293b",
+              borderRadius: "16px",
+              border: "3px solid gold",
+              textAlign: "center"
+            }}>
+
+              <div style={{
+                fontSize: "28px",
+                opacity: 0.8
+              }}>
+                🏆 Líder do Ranking
+              </div>
+
+              <div style={{
+                fontSize: "60px",
+                fontWeight: "800"
+              }}>
+                {lider.fullname || lider.username}
+              </div>
+
+              <div style={{
+                fontSize: "36px",
+                color: "#22c55e"
+              }}>
+                {lider.wpm} WPM • {lider.accuracy}%
+              </div>
+
+            </div>
+
+          )}
+
           <h2 style={{
-            fontSize: "38px",
-            marginBottom: "20px"
+            fontSize: "36px",
+            marginBottom: "16px"
           }}>
             ⏱ Últimos Resultados
           </h2>
@@ -272,18 +256,14 @@ export default function Telao() {
             <div key={i} style={{
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center",
-              padding: "16px",
+              padding: "14px",
               background: "#1e293b",
-              marginBottom: "12px",
-              borderRadius: "12px",
-              fontSize: "26px"
+              marginBottom: "10px",
+              borderRadius: "10px",
+              fontSize: "24px"
             }}>
 
-              <div style={{
-                display: "flex",
-                alignItems: "center"
-              }}>
+              <div>
 
                 <span className="posicao">
                   #{r.posicao}
@@ -305,6 +285,8 @@ export default function Telao() {
 
         </div>
 
+        {/* COLUNA DIREITA */}
+
         <div>
 
           <h2 style={{
@@ -321,9 +303,9 @@ export default function Telao() {
               className={`rank-item ${i < 3 ? "top3" : ""}`}
               style={{
                 padding: "18px",
-                marginBottom: "14px",
+                marginBottom: "12px",
                 borderRadius: "14px",
-                fontSize: "30px",
+                fontSize: "28px",
                 background:
                   i === 0 ? "#78350f" :
                   i === 1 ? "#334155" :
@@ -343,7 +325,7 @@ export default function Telao() {
                   gap: "14px"
                 }}>
 
-                  <span style={{ fontSize: "34px" }}>
+                  <span style={{ fontSize: "32px" }}>
                     {medalha(i)}
                   </span>
 
