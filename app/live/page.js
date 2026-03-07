@@ -178,6 +178,21 @@ Abrir Telão
 </button>
 
 <button
+onClick={()=>window.open("/telao-dia","_blank")}
+style={{
+padding:"10px 20px",
+fontSize:16,
+background:"#111",
+color:"#fff",
+border:"none",
+borderRadius:6,
+cursor:"pointer"
+}}
+>
+Abrir Ranking Diário
+</button>
+
+<button
 onClick={()=>load()}
 style={{
 padding:"10px 20px",

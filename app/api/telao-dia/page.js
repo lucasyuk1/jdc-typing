@@ -3,155 +3,127 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
-export default function Telao() {
+export default function TelaoDia() {
 
-const [ranking, setRanking] = useState([]);
-const [ultimos, setUltimos] = useState([]);
-const [lider, setLider] = useState(null);
-const [alerta, setAlerta] = useState(null);
-const [testesHoje, setTestesHoje] = useState(0);
+const [ranking,setRanking] = useState([]);
+const [ultimos,setUltimos] = useState([]);
+const [lider,setLider] = useState(null);
+const [alerta,setAlerta] = useState(null);
+const [testesHoje,setTestesHoje] = useState(0);
 
 const top3Anterior = useRef([]);
 
-const TIMEZONE = "America/Sao_Paulo";
+function formatarDataHora(dataISO){
 
-/* ------------------ UTILIDADES ------------------ */
-
-function formatarDataHora(dataISO) {
-
-if (!dataISO) return "";
+if(!dataISO) return "";
 
 const data = new Date(dataISO);
 
-const dia = data.toLocaleDateString("pt-BR", {
-timeZone: TIMEZONE,
-day: "2-digit",
-month: "2-digit"
+return data.toLocaleString("pt-BR",{
+timeZone:"America/Sao_Paulo",
+day:"2-digit",
+month:"2-digit",
+hour:"2-digit",
+minute:"2-digit"
 });
-
-const hora = data.toLocaleTimeString("pt-BR", {
-timeZone: TIMEZONE,
-hour: "2-digit",
-minute: "2-digit"
-});
-
-return `${dia} -- ${hora}`;
 
 }
 
-function ehHoje(dataISO) {
+function ehHoje(dataISO){
 
 const data = new Date(dataISO);
+
 const hoje = new Date();
 
-return data.toLocaleDateString("pt-BR", { timeZone: TIMEZONE }) ===
-hoje.toLocaleDateString("pt-BR", { timeZone: TIMEZONE });
+return data.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"}) ===
+hoje.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"});
 
 }
 
-function medalha(i) {
-if (i === 0) return "🥇";
-if (i === 1) return "🥈";
-if (i === 2) return "🥉";
-return `${i + 1}º`;
-}
-
-/* ------------------ CARREGAR DADOS ------------------ */
-
-async function carregarDados() {
+async function carregarDados(){
 
 const { data } = await supabase
 .from("results")
 .select("*")
-.order("created_at", { ascending: false });
+.order("created_at",{ascending:false});
 
-if (!data) return;
+if(!data) return;
 
-/* filtro usuários */
+const hoje = data.filter(r => ehHoje(r.created_at));
 
-const filtrado = data.filter(r =>
+const filtrado = hoje.filter(r =>
 r.username !== "larbak" &&
 r.turma &&
 !r.turma.toLowerCase().includes("prof")
 );
 
-/* contador testes hoje */
-
-const hoje = filtrado.filter(r => ehHoje(r.created_at));
-setTestesHoje(hoje.length);
-
-/* melhor resultado por usuário */
+setTestesHoje(filtrado.length);
 
 const mapa = {};
 
-filtrado.forEach(r => {
+filtrado.forEach(r=>{
 
 const atual = mapa[r.username];
 
-if (!atual) {
+if(!atual){
 mapa[r.username] = r;
 return;
 }
 
-if (
+if(
 r.wpm > atual.wpm ||
 (r.wpm === atual.wpm && r.accuracy > atual.accuracy)
-) {
+){
 mapa[r.username] = r;
 }
 
 });
 
-/* ranking */
-
-const rankingCompleto = Object.values(mapa).sort((a, b) => {
-if (b.wpm !== a.wpm) return b.wpm - a.wpm;
+const rankingCompleto = Object.values(mapa)
+.sort((a,b)=>{
+if(b.wpm !== a.wpm) return b.wpm - a.wpm;
 return b.accuracy - a.accuracy;
 });
 
-const top = rankingCompleto.slice(0, 10);
+const top = rankingCompleto.slice(0,10);
 
-/* últimos resultados */
-
-const ultimosComPosicao = filtrado.slice(0, 8).map(r => {
+const ultimosComPosicao = filtrado
+.slice(0,8)
+.map(r=>{
 
 const pos = rankingCompleto.findIndex(
-p => p.username === r.username
+p=>p.username === r.username
 );
 
-return {
+return{
 ...r,
-posicao: pos >= 0 ? pos + 1 : "-",
+posicao: pos >=0 ? pos+1 : "-",
 hora: formatarDataHora(r.created_at)
-};
+}
 
 });
 
-/* detectar novo top3 */
-
-const top3Atual = top.slice(0, 3).map(r => r.username);
+const top3Atual = top.slice(0,3).map(r=>r.username);
 
 const novoTop3 = top3Atual.find(
 u => !top3Anterior.current.includes(u)
 );
 
-if (novoTop3) {
+if(novoTop3){
 
-const aluno = top.find(r => r.username === novoTop3);
+const aluno = top.find(r=>r.username===novoTop3);
 
 setAlerta({
 nome: aluno.fullname || aluno.username,
 turma: aluno.turma,
-pos: top3Atual.indexOf(novoTop3) + 1
+pos: top3Atual.indexOf(novoTop3)+1
 });
 
-setTimeout(() => setAlerta(null), 5000);
+setTimeout(()=>setAlerta(null),5000);
 
 }
 
 top3Anterior.current = top3Atual;
-
-/* atualizar estados */
 
 setRanking(top);
 setUltimos(ultimosComPosicao);
@@ -159,30 +131,35 @@ setLider(top[0]);
 
 }
 
-/* ------------------ EFFECT ------------------ */
-
-useEffect(() => {
+useEffect(()=>{
 
 carregarDados();
 
-const interval = setInterval(carregarDados, 3000);
+const interval = setInterval(()=>{
+carregarDados();
+},3000);
 
-return () => clearInterval(interval);
+return ()=>clearInterval(interval);
 
-}, []);
+},[]);
 
-/* ------------------ UI ------------------ */
+function medalha(i){
+if(i===0) return "🥇";
+if(i===1) return "🥈";
+if(i===2) return "🥉";
+return `${i+1}º`;
+}
 
-return (
+return(
 
 <div style={{
-background: "#0f172a",
-color: "white",
-minHeight: "100vh",
-width: "100vw",
-padding: "40px",
-boxSizing: "border-box",
-fontFamily: "Inter,system-ui,sans-serif"
+background:"#0f172a",
+color:"white",
+minHeight:"100vh",
+width:"100vw",
+padding:"40px",
+boxSizing:"border-box",
+fontFamily:"Inter,system-ui,sans-serif"
 }}>
 
 <style>{`
@@ -245,13 +222,19 @@ opacity:.8;
 margin-bottom:20px;
 }
 
+.titulo{
+font-size:46px;
+font-weight:800;
+margin-bottom:10px;
+}
+
 `}</style>
 
 {alerta && (
 
 <div className="alerta">
 
-<h1>🔥 NOVO TOP 3</h1>
+<h1>🔥 NOVO TOP 3 DO DIA</h1>
 
 <h2>{alerta.nome}</h2>
 
@@ -261,13 +244,15 @@ margin-bottom:20px;
 
 )}
 
+<div className="titulo">
+📅 Ranking de Digitação — Hoje
+</div>
+
 <div className="stats">
 ⚡ {testesHoje} testes realizados hoje
 </div>
 
 <div className="grid">
-
-{/* ESQUERDA */}
 
 <div>
 
@@ -283,14 +268,20 @@ textAlign:"center"
 }}>
 
 <div style={{fontSize:"28px",opacity:.8}}>
-🏆 Líder do Ranking
+🏆 Líder do Dia
 </div>
 
-<div style={{fontSize:"60px",fontWeight:"800"}}>
+<div style={{
+fontSize:"60px",
+fontWeight:"800"
+}}>
 {lider.fullname || lider.username}
 </div>
 
-<div style={{fontSize:"36px",color:"#22c55e"}}>
+<div style={{
+fontSize:"36px",
+color:"#22c55e"
+}}>
 {lider.wpm} WPM • 🎯 {lider.accuracy}%
 </div>
 
@@ -335,12 +326,10 @@ fontSize:"22px"
 
 </div>
 
-{/* DIREITA */}
-
 <div>
 
 <h2 style={{fontSize:"42px",marginBottom:"20px"}}>
-🏆 Top 10
+🏆 Top 10 do Dia
 </h2>
 
 {ranking.map((r,i)=>(
@@ -361,9 +350,16 @@ i===2 ? "#92400e":
 }}
 >
 
-<div style={{display:"flex",justifyContent:"space-between"}}>
+<div style={{
+display:"flex",
+justifyContent:"space-between"
+}}>
 
-<div style={{display:"flex",gap:"12px",alignItems:"center"}}>
+<div style={{
+display:"flex",
+gap:"12px",
+alignItems:"center"
+}}>
 
 <span style={{fontSize:"30px"}}>
 {medalha(i)}
