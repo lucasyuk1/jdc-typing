@@ -4,61 +4,58 @@ import { useEffect, useState } from "react";
 
 export default function TelaoUltra(){
 
-const [rows,setRows] = useState([]);
+const [ranking,setRanking] = useState([]);
 const [ultimos,setUltimos] = useState([]);
 const [leader,setLeader] = useState(null);
 const [hora,setHora] = useState("");
-const [rankAnterior,setRankAnterior] = useState({});
-const [userMap,setUserMap] = useState({});
 
-/* =========================
+/* ======================
 FORMATAR
-========================= */
+====================== */
 
-function formatWPM(v){
-return Math.round(Number(v) || 0);
+function wpm(v){
+return Math.round(Number(v)||0);
 }
 
-function formatACC(v){
-return Math.round(Number(v) || 0);
+function acc(v){
+return Math.round(Number(v)||0);
 }
 
-/* =========================
+/* ======================
+NOME EXIBIDO
+====================== */
+
+function nome(r){
+
+if(r?.fullname && r.fullname.trim()!==""){
+return r.fullname.trim();
+}
+
+return r?.username || "Aluno";
+
+}
+
+/* ======================
 NOME CURTO
-========================= */
+====================== */
 
-function nomeCurto(nome){
-if(!nome) return "";
-return nome.length > 26 ? nome.slice(0,26)+"…" : nome;
-}
+function nomeCurto(n){
 
-/* =========================
-PEGAR NOME
-========================= */
+if(!n) return "";
 
-function displayName(r){
-
-if(!r) return "Aluno";
-
-const fullname = userMap[r.username];
-
-if(fullname && fullname.trim() !== ""){
-return fullname.trim();
-}
-
-return r.username || "Aluno";
+return n.length>26
+? n.slice(0,26)+"…"
+: n;
 
 }
 
-/* =========================
-LOAD
-========================= */
+/* ======================
+CARREGAR RESULTADOS
+====================== */
 
 async function load(){
 
 try{
-
-/* RESULTADOS */
 
 const res = await fetch("/api/results",{cache:"no-store"});
 const json = await res.json();
@@ -67,152 +64,108 @@ const data = json.data || json;
 
 if(!Array.isArray(data)) return;
 
-/* FILTRAR */
+/* ======================
+FILTRAR
+====================== */
 
-const filtrado = data.filter(r =>
-r?.username !== "larbak" &&
-r?.turma?.toLowerCase() !== "prof"
+const filtrado = data.filter(r=>
+r.username!=="larbak" &&
+String(r.turma).toLowerCase()!=="prof"
 );
 
-/* =========================
-BUSCAR USERS
-========================= */
+/* ======================
+MAPA MELHOR RESULTADO
+====================== */
 
-const usernames = [...new Set(filtrado.map(r=>r.username))];
-
-const resUsers = await fetch("/api/users",{cache:"no-store"});
-const usersJson = await resUsers.json();
-
-const users = usersJson.data || usersJson;
-
-const map = {};
-
-users.forEach(u=>{
-map[u.username] = u.fullname;
-});
-
-setUserMap(map);
-
-/* =========================
-MELHOR POR USER
-========================= */
-
-const mapa = {};
+const mapa={};
 
 filtrado.forEach(r=>{
 
-const key = r.username;
+const u = r.username;
 
-if(!mapa[key]){
-mapa[key] = {...r};
+if(!mapa[u]){
+mapa[u]=r;
 return;
 }
 
-if(Number(r.wpm) > Number(mapa[key].wpm)){
-mapa[key] = {...r};
+if(Number(r.wpm)>Number(mapa[u].wpm)){
+mapa[u]=r;
 }
 
 });
 
-const unicos = Object.values(mapa);
-
-/* =========================
+/* ======================
 RANKING
-========================= */
+====================== */
 
-const ranking = [...unicos].sort(
-(a,b)=>Number(b.wpm)-Number(a.wpm)
-);
+const lista = Object.values(mapa);
 
-/* MAPA POSIÇÃO */
+lista.sort((a,b)=>Number(b.wpm)-Number(a.wpm));
 
-const novoRanking={};
+setRanking(lista);
+setLeader(lista[0]||null);
 
-ranking.forEach((r,i)=>{
-novoRanking[r.username]=i+1;
-});
-
-/* =========================
-ULTIMOS
-========================= */
+/* ======================
+ULTIMOS RESULTADOS
+====================== */
 
 const recentes=[...filtrado]
 .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
 .slice(0,10);
 
 setUltimos(recentes);
-setLeader(ranking[0] || null);
-setRows(unicos);
-setRankAnterior(novoRanking);
 
 }catch(e){
-console.error("Erro carregando telão:",e);
-}
+
+console.error("Erro no telão:",e);
 
 }
 
-/* =========================
+}
+
+/* ======================
 AUTO UPDATE
-========================= */
+====================== */
 
 useEffect(()=>{
 
 load();
 
-const interval=setInterval(load,3000);
+const t=setInterval(load,3000);
 
-return()=>clearInterval(interval);
+return()=>clearInterval(t);
 
 },[]);
 
-/* =========================
+/* ======================
 RELÓGIO
-========================= */
+====================== */
 
 useEffect(()=>{
 
-const rel=setInterval(()=>{
+const r=setInterval(()=>{
+
 setHora(new Date().toLocaleTimeString("pt-BR"));
+
 },1000);
 
-return()=>clearInterval(rel);
+return()=>clearInterval(r);
 
 },[]);
 
-/* =========================
-RANKING
-========================= */
+/* ======================
+POSIÇÃO
+====================== */
 
-const rankingCompleto=[...rows].sort(
-(a,b)=>Number(b.wpm)-Number(a.wpm)
-);
+function pos(username){
 
-const rankingDia=rankingCompleto.slice(0,10);
-
-/* POSIÇÃO */
-
-function posicaoGeral(username){
-return rankingCompleto.findIndex(r=>r.username===username)+1;
-}
-
-/* MOVIMENTO */
-
-function movimentoRanking(username){
-
-const atual = posicaoGeral(username);
-const anterior = rankAnterior[username];
-
-if(!anterior) return "novo";
-if(atual < anterior) return "subiu";
-if(atual > anterior) return "desceu";
-
-return "igual";
+return ranking.findIndex(r=>r.username===username)+1;
 
 }
 
-/* =========================
+/* ======================
 UI
-========================= */
+====================== */
 
 return(
 
@@ -222,13 +175,13 @@ return(
 
 <h1>🏆 Ranking de Digitação</h1>
 
-<div className="relogio">
-{hora}
-</div>
+<div className="relogio">{hora}</div>
 
 </header>
 
 <div className="grid">
+
+{/* ESQUERDA */}
 
 <div className="coluna">
 
@@ -239,11 +192,11 @@ return(
 🔥 LÍDER
 
 <div className="leaderNome">
-{nomeCurto(displayName(leader))}
+{nomeCurto(nome(leader))}
 </div>
 
 <div className="leaderStats">
-{formatWPM(leader.wpm)} WPM • {formatACC(leader.accuracy)}%
+{wpm(leader.wpm)} WPM • {acc(leader.accuracy)}%
 </div>
 
 </div>
@@ -254,46 +207,35 @@ return(
 
 <h2>⚡ Últimos Resultados</h2>
 
-{ultimos.map((u,i)=>{
-
-const pos = posicaoGeral(u.username);
-const mov = movimentoRanking(u.username);
-
-return(
+{ultimos.map((u,i)=>(
 
 <div key={i} className="ultimo">
 
 <span className="nome">
-{nomeCurto(displayName(u))}
+{nomeCurto(nome(u))}
 </span>
 
 <span className="wpm">
-{formatWPM(u.wpm)}
+{wpm(u.wpm)}
 </span>
 
 <span className="acc">
-{formatACC(u.accuracy)}%
+{acc(u.accuracy)}%
 </span>
 
-<span className={`rank ${mov}`}>
-
-{pos ? `#${pos}` : "-"}
-
-{mov==="subiu" && " 🔼"}
-{mov==="desceu" && " 🔽"}
-{mov==="novo" && " ✨"}
-
+<span className="rank">
+#{pos(u.username)}
 </span>
 
 </div>
 
-)
-
-})}
+))}
 
 </div>
 
 </div>
+
+{/* DIREITA */}
 
 <div className="coluna">
 
@@ -301,9 +243,9 @@ return(
 
 <h2>📊 Ranking</h2>
 
-{rankingDia.map((r,i)=>{
+{ranking.slice(0,10).map((r,i)=>{
 
-const medalha =
+const medalha=
 i===0?"🥇":
 i===1?"🥈":
 i===2?"🥉":
@@ -313,25 +255,23 @@ return(
 
 <div key={r.username} className="linha">
 
-<div className="pos">
-{medalha}
-</div>
+<div className="pos">{medalha}</div>
 
 <div className="nome">
-{nomeCurto(displayName(r))}
+{nomeCurto(nome(r))}
 </div>
 
 <div className="wpm">
-{formatWPM(r.wpm)}
+{wpm(r.wpm)}
 </div>
 
 <div className="acc">
-{formatACC(r.accuracy)}%
+{acc(r.accuracy)}%
 </div>
 
 </div>
 
-)
+);
 
 })}
 
@@ -413,7 +353,7 @@ margin-bottom:10px;
 
 .ultimo{
 display:grid;
-grid-template-columns:2fr 90px 90px 140px;
+grid-template-columns:2fr 90px 90px 120px;
 align-items:center;
 font-size:24px;
 padding:10px 0;
@@ -429,8 +369,8 @@ white-space:nowrap;
 
 .wpm{
 color:#4ade80;
-font-weight:bold;
 text-align:center;
+font-weight:bold;
 }
 
 .acc{
@@ -439,13 +379,9 @@ text-align:center;
 }
 
 .rank{
-font-weight:bold;
 text-align:center;
+font-weight:bold;
 }
-
-.rank.subiu{ color:#22c55e; }
-.rank.desceu{ color:#ef4444; }
-.rank.novo{ color:#38bdf8; }
 
 .ranking{
 background:#111827;
@@ -476,6 +412,6 @@ text-align:center;
 
 </div>
 
-)
+);
 
 }
