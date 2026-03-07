@@ -9,6 +9,7 @@ const [ultimos,setUltimos] = useState([]);
 const [leader,setLeader] = useState(null);
 const [hora,setHora] = useState("");
 const [rankAnterior,setRankAnterior] = useState({});
+const [userMap,setUserMap] = useState({});
 
 /* =========================
 FORMATAR
@@ -39,8 +40,10 @@ function displayName(r){
 
 if(!r) return "Aluno";
 
-if(r.fullname && r.fullname.trim() !== ""){
-return r.fullname.trim();
+const fullname = userMap[r.username];
+
+if(fullname && fullname.trim() !== ""){
+return fullname.trim();
 }
 
 return r.username || "Aluno";
@@ -55,6 +58,8 @@ async function load(){
 
 try{
 
+/* RESULTADOS */
+
 const res = await fetch("/api/results",{cache:"no-store"});
 const json = await res.json();
 
@@ -62,14 +67,31 @@ const data = json.data || json;
 
 if(!Array.isArray(data)) return;
 
-/* =========================
-FILTRAR
-========================= */
+/* FILTRAR */
 
 const filtrado = data.filter(r =>
 r?.username !== "larbak" &&
 r?.turma?.toLowerCase() !== "prof"
 );
+
+/* =========================
+BUSCAR USERS
+========================= */
+
+const usernames = [...new Set(filtrado.map(r=>r.username))];
+
+const resUsers = await fetch("/api/users",{cache:"no-store"});
+const usersJson = await resUsers.json();
+
+const users = usersJson.data || usersJson;
+
+const map = {};
+
+users.forEach(u=>{
+map[u.username] = u.fullname;
+});
+
+setUserMap(map);
 
 /* =========================
 MELHOR POR USER
@@ -87,14 +109,7 @@ return;
 }
 
 if(Number(r.wpm) > Number(mapa[key].wpm)){
-mapa[key] = {
-...r,
-fullname: r.fullname || mapa[key].fullname
-};
-}
-
-if(!mapa[key].fullname && r.fullname){
-mapa[key].fullname = r.fullname;
+mapa[key] = {...r};
 }
 
 });
@@ -109,9 +124,7 @@ const ranking = [...unicos].sort(
 (a,b)=>Number(b.wpm)-Number(a.wpm)
 );
 
-/* =========================
-MAPA POSIÇÃO
-========================= */
+/* MAPA POSIÇÃO */
 
 const novoRanking={};
 
@@ -125,17 +138,7 @@ ULTIMOS
 
 const recentes=[...filtrado]
 .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
-.slice(0,10)
-.map(r=>{
-
-const melhor = mapa[r.username];
-
-return{
-...r,
-fullname: melhor?.fullname || r.fullname
-};
-
-});
+.slice(0,10);
 
 setUltimos(recentes);
 setLeader(ranking[0] || null);
@@ -186,17 +189,13 @@ const rankingCompleto=[...rows].sort(
 
 const rankingDia=rankingCompleto.slice(0,10);
 
-/* =========================
-POSIÇÃO
-========================= */
+/* POSIÇÃO */
 
 function posicaoGeral(username){
 return rankingCompleto.findIndex(r=>r.username===username)+1;
 }
 
-/* =========================
-MOVIMENTO
-========================= */
+/* MOVIMENTO */
 
 function movimentoRanking(username){
 
@@ -208,6 +207,7 @@ if(atual < anterior) return "subiu";
 if(atual > anterior) return "desceu";
 
 return "igual";
+
 }
 
 /* =========================
@@ -229,8 +229,6 @@ return(
 </header>
 
 <div className="grid">
-
-{/* ESQUERDA */}
 
 <div className="coluna">
 
@@ -296,8 +294,6 @@ return(
 </div>
 
 </div>
-
-{/* DIREITA */}
 
 <div className="coluna">
 
