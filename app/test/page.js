@@ -159,7 +159,8 @@ export default function TestePage() {
       body: JSON.stringify({
         usuario_id: user.usuario_id,
         username: user.username,
-        turma: user.turma,
+        fullname: user.fullname,
+        turma: user.turma,        
         wpm,
         accuracy,
         tempo_segundos: 180,
