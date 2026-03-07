@@ -257,15 +257,6 @@ export default function Telao() {
 
               </div>
 
-              <div className="bar-bg">
-                <div
-                  className="bar-fill"
-                  style={{
-                    width: `${barraWPM(r.wpm)}%`
-                  }}
-                />
-              </div>
-
             </div>
 
           ))}
