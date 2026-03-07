@@ -36,7 +36,15 @@ PEGAR NOME CORRETO
 ========================= */
 
 function displayName(r){
-return r?.fullname || r?.username || "Aluno";
+
+const nome = (r?.fullname || "").trim();
+
+if(nome.length > 0){
+return nome;
+}
+
+return r?.username || "Aluno";
+
 }
 
 /* =========================
@@ -66,7 +74,6 @@ r?.turma?.toLowerCase() !== "prof"
 /* =========================
 REMOVER DUPLICADOS
 MANTENDO MAIOR WPM
-E PRESERVANDO FULLNAME
 ========================= */
 
 const melhores = {};
@@ -76,19 +83,24 @@ filtrado.forEach(r => {
 const key = r.username;
 
 if(!melhores[key]){
-  melhores[key] = {...r};
-  return;
+melhores[key] = {...r};
+return;
 }
 
 if(Number(r.wpm) > Number(melhores[key].wpm)){
-  melhores[key] = {
-    ...r,
-    fullname: r.fullname || melhores[key].fullname
-  };
+
+melhores[key] = {
+...r,
+fullname:
+(r.fullname && r.fullname.trim() !== "")
+? r.fullname
+: melhores[key].fullname
+};
+
 }
 
-if(!melhores[key].fullname && r.fullname){
-  melhores[key].fullname = r.fullname;
+if(!melhores[key].fullname && r.fullname && r.fullname.trim() !== ""){
+melhores[key].fullname = r.fullname;
 }
 
 });
@@ -99,7 +111,9 @@ const unicos = Object.values(melhores);
 RANKING
 ========================= */
 
-const ranking = [...unicos].sort((a,b)=>Number(b.wpm)-Number(a.wpm));
+const ranking = [...unicos].sort(
+(a,b)=>Number(b.wpm)-Number(a.wpm)
+);
 
 /* =========================
 MAPA DE POSIÇÕES
@@ -124,7 +138,10 @@ const melhor = melhores[r.username];
 
 return {
 ...r,
-fullname: melhor?.fullname || r.fullname
+fullname:
+(melhor?.fullname && melhor.fullname.trim() !== "")
+? melhor.fullname
+: r.fullname
 };
 
 });
