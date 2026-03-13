@@ -296,6 +296,7 @@ Selecionar dia:{" "}
 
 <input
 type="date"
+placeholder="MM/DD/YYYY"
 value={dataSelecionada}
 onChange={(e)=>setDataSelecionada(e.target.value)}
 style={{
