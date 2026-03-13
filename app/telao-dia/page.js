@@ -5,33 +5,51 @@ import { supabase } from "@/lib/supabase";
 
 export default function TelaoDia(){
 
+const hoje = new Date();
+
 const [ranking,setRanking] = useState([]);
 const [ultimos,setUltimos] = useState([]);
 const [lider,setLider] = useState(null);
 const [alerta,setAlerta] = useState(null);
 const [testesHoje,setTestesHoje] = useState(0);
+
 const [dataSelecionada,setDataSelecionada] = useState(
-new Date().toISOString().slice(0,10)
+hoje.toISOString().slice(0,10)
 );
 
 const top3Anterior = useRef([]);
+
+
+/* =========================
+FORMATAR DATA
+========================= */
 
 function formatarDataHora(dataISO){
 
 if(!dataISO) return "";
 
-const dia = dataISO.slice(8,10);
-const mes = dataISO.slice(5,7);
-const hora = dataISO.slice(11,16);
+const data = new Date(dataISO);
 
-return `${mes}/${dia} ${hora}`;
+const dia = String(data.getDate()).padStart(2,"0");
+const mes = String(data.getMonth()+1).padStart(2,"0");
+
+const hora = String(data.getHours()).padStart(2,"0");
+const min = String(data.getMinutes()).padStart(2,"0");
+
+return `${dia}/${mes} ${hora}:${min}`;
 
 }
 
+
+/* =========================
+CARREGAR DADOS
+========================= */
+
 async function carregarDados(){
 
-const inicio = `${dataSelecionada}T00:00:00`;
-const fim = `${dataSelecionada}T23:59:59`;
+const inicio = `${dataSelecionada}T00:00:00.000Z`;
+const fim = `${dataSelecionada}T23:59:59.999Z`;
+
 
 /* RESULTADOS DO DIA */
 
@@ -42,6 +60,7 @@ const { data: dataDia } = await supabase
 .lte("created_at",fim)
 .order("created_at",{ascending:false});
 
+
 /* RESULTADOS GERAIS */
 
 const { data: dataGeral } = await supabase
@@ -50,6 +69,7 @@ const { data: dataGeral } = await supabase
 
 if(!dataDia || !dataGeral) return;
 
+
 /* FILTRO */
 
 const filtro = r =>
@@ -57,12 +77,16 @@ r.username !== "larbak" &&
 r.turma &&
 !r.turma.toLowerCase().includes("prof");
 
+
 const hoje = dataDia.filter(filtro);
 const geral = dataGeral.filter(filtro);
 
 setTestesHoje(hoje.length);
 
-/* RANKING GERAL */
+
+/* =========================
+RANKING GERAL
+========================= */
 
 const mapaGeral = {};
 
@@ -90,7 +114,10 @@ if(b.wpm !== a.wpm) return b.wpm - a.wpm;
 return b.accuracy - a.accuracy;
 });
 
-/* RANKING DO DIA */
+
+/* =========================
+RANKING DO DIA
+========================= */
 
 const mapaDia = {};
 
@@ -120,7 +147,10 @@ return b.accuracy - a.accuracy;
 
 const top = rankingDia.slice(0,10);
 
-/* ÚLTIMOS RESULTADOS */
+
+/* =========================
+ULTIMOS RESULTADOS
+========================= */
 
 const ultimosComPosicao = hoje
 .slice(0,8)
@@ -138,7 +168,10 @@ hora: formatarDataHora(r.created_at)
 
 });
 
-/* ALERTA TOP 3 */
+
+/* =========================
+ALERTA TOP 3
+========================= */
 
 const top3Atual = top.slice(0,3).map(r=>r.username);
 
@@ -162,11 +195,17 @@ setTimeout(()=>setAlerta(null),5000);
 
 top3Anterior.current = top3Atual;
 
+
 setRanking(top);
 setUltimos(ultimosComPosicao);
 setLider(top[0]);
 
 }
+
+
+/* =========================
+AUTO UPDATE
+========================= */
 
 useEffect(()=>{
 
@@ -180,12 +219,22 @@ return ()=>clearInterval(interval);
 
 },[dataSelecionada]);
 
+
+/* =========================
+MEDALHAS
+========================= */
+
 function medalha(i){
 if(i===0) return "🥇";
 if(i===1) return "🥈";
 if(i===2) return "🥉";
 return `${i+1}º`;
 }
+
+
+/* =========================
+RENDER
+========================= */
 
 return(
 
@@ -198,6 +247,7 @@ padding:"40px",
 boxSizing:"border-box",
 fontFamily:"Inter,system-ui,sans-serif"
 }}>
+
 
 <style>{`
 
@@ -272,6 +322,7 @@ font-size:20px;
 
 `}</style>
 
+
 {alerta && (
 
 <div className="alerta">
@@ -286,9 +337,11 @@ font-size:20px;
 
 )}
 
+
 <div className="titulo">
 📅 Ranking de Digitação — Dia
 </div>
+
 
 <div className="filtro">
 
@@ -296,7 +349,6 @@ Selecionar dia:{" "}
 
 <input
 type="date"
-placeholder="MM/DD/YYYY"
 value={dataSelecionada}
 onChange={(e)=>setDataSelecionada(e.target.value)}
 style={{
@@ -307,11 +359,14 @@ padding:"6px"
 
 </div>
 
+
 <div className="stats">
 ⚡ {testesHoje} testes neste dia
 </div>
 
+
 <div className="grid">
+
 
 <div>
 
@@ -348,9 +403,11 @@ color:"#22c55e"
 
 )}
 
+
 <h2 style={{fontSize:"36px",marginBottom:"15px"}}>
 ⏱ Últimos Resultados
 </h2>
+
 
 {ultimos.map((r,i)=>(
 
@@ -385,11 +442,13 @@ fontSize:"22px"
 
 </div>
 
+
 <div>
 
 <h2 style={{fontSize:"42px",marginBottom:"20px"}}>
 🏆 Top 10 do Dia
 </h2>
+
 
 {ranking.map((r,i)=>(
 
