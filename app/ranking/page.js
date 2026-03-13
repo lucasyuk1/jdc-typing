@@ -61,10 +61,11 @@ export default function RankingPage() {
     (r) => r.username === "larbak"
   );
 
+  // ⭐ Destaque do usuário logado
   const getRowClass = (r) =>
-    r.username === "larbak"
-      ? "bg-blue-800/70 font-semibold"
-      : "bg-white/5";
+    r.username === user.username
+      ? "bg-blue-800/60 font-semibold ring-2 ring-blue-400 shadow-lg shadow-blue-500/30 transition-all"
+      : "bg-white/5 transition-all";
 
   const getRankingDisplay = (index) => {
     if (index === 0) return "🥇";
@@ -156,6 +157,7 @@ export default function RankingPage() {
                 <th className="px-3 py-2">Data</th>
               </tr>
             </thead>
+
             <tbody>
               {rankingFiltrado.map((r, i) => (
                 <tr
@@ -163,14 +165,22 @@ export default function RankingPage() {
                   className={`${getRowClass(r)} border-b border-gray-700`}
                 >
                   <td className="px-3 py-2">{getRankingDisplay(i)}</td>
-                  <td className="px-3 py-2">{r.fullname ?? r.username}</td>
+
+                  <td className="px-3 py-2">
+                    {r.fullname ?? r.username}
+                    {r.username === user.username && " ⭐"}
+                  </td>
+
                   <td className="px-3 py-2">{r.turma}</td>
+
                   <td className="px-3 py-2">{r.wpm}</td>
+
                   <td className="px-3 py-2">
                     {r.accuracy !== null && r.accuracy !== undefined
                       ? `${r.accuracy}%`
                       : "-"}
                   </td>
+
                   <td className="px-3 py-2">
                     {new Date(r.created_at).toLocaleString("pt-BR")}
                   </td>
