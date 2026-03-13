@@ -24,7 +24,7 @@ const dia = dataISO.slice(8,10);
 const mes = dataISO.slice(5,7);
 const hora = dataISO.slice(11,16);
 
-return `${dia}/${mes} ${hora}`;
+return `${mes}/${dia} ${hora}`;
 
 }
 
