@@ -349,6 +349,7 @@ Selecionar dia:{" "}
 
 <input
 type="date"
+lang="en-US"
 value={dataSelecionada}
 onChange={(e)=>setDataSelecionada(e.target.value)}
 style={{
