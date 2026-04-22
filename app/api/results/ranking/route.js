@@ -9,7 +9,7 @@ export async function POST(req) {
     const { data, error } = await supabase
       .from("results")
       .select("*, users(username, turma, fullname)")
-      .limit(1000);
+      .limit(10000);
 
     if (error) {
       console.error("Supabase error:", error);
