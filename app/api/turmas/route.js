@@ -6,7 +6,7 @@ export async function GET() {
       .from("turmas")
       .select("id, turma_name")
       .order("turma_name", { ascending: true })
-      .range(0, 1000); // garante que todas sejam retornadas
+      .range(0, 10000); // garante que todas sejam retornadas
 
     if (error) {
       return new Response(JSON.stringify({ success: false, error: error.message }), { status: 400 });
